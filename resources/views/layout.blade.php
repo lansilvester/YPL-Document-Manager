@@ -67,7 +67,7 @@
               @endif
             </div>
             <div class="border-t border-slate-100 p-1.5">
-              <form action="{{ route('logout') }}" method="post">@csrf<button class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-bold text-[#c90018] hover:bg-[#c90018]/5">@include('components.icon', ['name' => 'logout', 'class' => 'w-4 h-4']) Keluar</button></form>
+              <form action="{{ route('logout') }}" method="post" onsubmit="return confirm('Yakin ingin keluar dari aplikasi?')">@csrf<button class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-bold text-[#c90018] hover:bg-[#c90018]/5">@include('components.icon', ['name' => 'logout', 'class' => 'w-4 h-4']) Keluar</button></form>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ use App\Models\Document;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -57,7 +58,8 @@ class LokonLibrarySeeder extends Seeder
 
         foreach ($items as [$file, $title, $desc, $cat, $vis, $tagNames]) {
             $path = 'documents/'.$file;
-            if (! file_exists(storage_path('app/public/'.$path))) {
+            $disk = Storage::disk('private');
+            if (! $disk->exists($path)) {
                 $this->command->warn("Lewati (file belum diunduh): {$file}");
                 continue;
             }
@@ -67,7 +69,7 @@ class LokonLibrarySeeder extends Seeder
                 'title' => $title,
                 'description' => $desc,
                 'file_path' => $path,
-                'file_size' => filesize(storage_path('app/public/'.$path)),
+                'file_size' => $disk->size($path),
                 'mime' => 'application/pdf',
                 'visibility' => $vis,
                 'source_type' => 'upload',

@@ -236,7 +236,7 @@ class DocumentController extends Controller
         });
         // Berkas dihapus setelah record ter-commit: tidak ada risiko record tanpa berkas.
         if ($path) {
-            Storage::disk('public')->delete($path);
+            Storage::disk('private')->delete($path);
         }
         ActivityLog::record(auth()->id(), null, 'delete', ['title' => $title]);
 

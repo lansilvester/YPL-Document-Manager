@@ -5,7 +5,10 @@ namespace Database\Seeders;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\User;
+use App\Services\HtmlSanitizer;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
@@ -35,16 +38,27 @@ class DatabaseSeeder extends Seeder
             ['Eksperimen IPA Sederhana', 'Panduan praktikum yang bisa dilakukan di kelas.', 54],
         ];
         foreach ($samples as $i => [$title, $desc, $views]) {
-            Document::firstOrCreate(['slug' => Str::slug($title)], [
+            $content = '<p>'.e($desc).'</p><p>Dokumen contoh untuk Yayasan Pendidikan Lokon.</p>';
+            $doc = Document::firstOrCreate(['slug' => Str::slug($title)], [
                 'user_id' => $admin->id,
                 'category_id' => $cats[$i % $cats->count()]->id,
                 'title' => $title,
                 'description' => $desc,
                 'visibility' => 'public',
                 'source_type' => 'editor',
-                'content' => '<p>'.e($desc).'</p><p>Dokumen contoh untuk Yayasan Pendidikan Lokon.</p>',
+                'content' => $content,
                 'views_count' => $views,
             ]);
+            if (! $doc->file_path) {
+                $path = 'documents/editor-seed-'.Str::lower(Str::random(12)).'.pdf';
+                $safeContent = HtmlSanitizer::clean($doc->content ?? $content);
+                Storage::disk('private')->put($path, Pdf::loadHTML('<h1>'.e($doc->title).'</h1><hr>'.$safeContent)->setPaper('a4')->output());
+                $doc->update([
+                    'file_path' => $path,
+                    'file_size' => Storage::disk('private')->size($path),
+                    'mime' => 'application/pdf',
+                ]);
+            }
         }
     }
 }
