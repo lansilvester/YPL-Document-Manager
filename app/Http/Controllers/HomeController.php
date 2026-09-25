@@ -13,7 +13,7 @@ class HomeController extends Controller
         $q = trim((string) $request->query('q', ''));
         $cat = $request->query('kategori');
 
-        $docs = Document::query()->with(['category', 'user'])
+        $docs = Document::query()->with(['category', 'user', 'tags'])
             ->where('visibility', 'public')
             ->when($q, fn ($s) => $s->where(fn ($w) => $w
                 ->where('title', 'like', "%{$q}%")
@@ -30,6 +30,11 @@ class HomeController extends Controller
             'categories' => Category::orderBy('name')->get(),
             'q' => $q,
             'activeCat' => $cat,
+            'stats' => [
+                'dokumen' => Document::where('visibility', 'public')->count(),
+                'kategori' => Category::count(),
+                'views' => Document::where('visibility', 'public')->sum('views_count'),
+            ],
         ]);
     }
 }

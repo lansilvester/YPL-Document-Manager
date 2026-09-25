@@ -101,4 +101,57 @@ class LokonTest extends TestCase
         $this->assertDatabaseHas('categories', ['name' => 'Olahraga']);
         $this->actingAs($admin)->get('/admin/riwayat')->assertOk();
     }
+
+    public function test_staff_crud_terproteksi_peran(): void
+    {
+        $user = User::factory()->create(['role' => 'user']);
+        $staff = User::factory()->create(['role' => 'staff', 'name' => 'Alan Lengkong']);
+        $this->actingAs($user)->get('/staff/dokumen')->assertForbidden();
+        $this->actingAs($staff)->get('/staff/dokumen')->assertOk()->assertSee('Ruang Kerja Staff');
+    }
+
+    public function test_staff_upload_beri_tag_ganti_file_hapus(): void
+    {
+        $this->seed();
+        $staff = User::factory()->create(['role' => 'staff']);
+        $tag = \App\Models\Tag::create(['name' => 'Unggulan', 'slug' => 'unggulan', 'color' => 'amber']);
+        $pdf = \Illuminate\Http\UploadedFile::fake()->create('materi.pdf', 120, 'application/pdf');
+
+        // tambah / upload + badge
+        $this->actingAs($staff)->post('/staff/dokumen', [
+            'title' => 'Materi Staff', 'visibility' => 'public',
+            'tags' => [$tag->id], 'file' => $pdf,
+        ])->assertRedirect();
+        $doc = Document::where('title', 'Materi Staff')->first();
+        $this->assertNotNull($doc);
+        $this->assertTrue($doc->tags->contains($tag->id));
+
+        // ubah + ganti file + ubah badge
+        $tag2 = \App\Models\Tag::create(['name' => 'Baru', 'slug' => 'baru', 'color' => 'emerald']);
+        $pdf2 = \Illuminate\Http\UploadedFile::fake()->create('materi-v2.pdf', 200, 'application/pdf');
+        $oldPath = $doc->file_path;
+        $this->actingAs($staff)->put("/staff/dokumen/{$doc->id}", [
+            'title' => 'Materi Staff Revisi', 'visibility' => 'restricted',
+            'tags' => [$tag2->id], 'file' => $pdf2,
+        ])->assertRedirect();
+        $doc->refresh();
+        $this->assertEquals('Materi Staff Revisi', $doc->title);
+        $this->assertFalse($doc->tags->contains($tag->id));
+        $this->assertTrue($doc->tags->contains($tag2->id));
+        $this->assertNotEquals($oldPath, $doc->file_path);
+
+        // hapus
+        $this->actingAs($staff)->delete("/staff/dokumen/{$doc->id}")->assertRedirect();
+        $this->assertDatabaseMissing('documents', ['id' => $doc->id]);
+    }
+
+    public function test_staff_kelola_badge(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $this->actingAs($staff)->post('/staff/badge', ['name' => 'Klasik', 'color' => 'rose'])->assertRedirect();
+        $this->assertDatabaseHas('tags', ['slug' => 'klasik']);
+        $tag = \App\Models\Tag::where('slug', 'klasik')->first();
+        $this->actingAs($staff)->delete("/staff/badge/{$tag->id}")->assertRedirect();
+        $this->assertDatabaseMissing('tags', ['slug' => 'klasik']);
+    }
 }

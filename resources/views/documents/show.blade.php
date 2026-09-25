@@ -1,49 +1,63 @@
 @extends('layout')
 @section('title', $document->title)
 @section('content')
-<div class="flex flex-wrap items-start gap-4 mb-4">
-  <div class="flex-1 min-w-60">
-    <div class="text-xs text-emerald-700 font-semibold">{{ $document->category->name ?? 'Tanpa kategori' }} · {{ ucfirst($document->visibility) }}</div>
-    <h1 class="text-2xl font-bold">{{ $document->title }}</h1>
-    <p class="text-sm text-stone-600">Oleh {{ $document->user->name }} · 👁 {{ $document->views_count }} · ⬇ {{ $document->downloads_count }}</p>
-    @if($document->description)<p class="mt-2 text-sm">{{ $document->description }}</p>@endif
-  </div>
-  <div class="flex flex-wrap gap-2 text-sm">
-    @if($document->file_path)<a href="{{ route('documents.download', $document) }}" class="bg-emerald-700 text-white px-3 py-1.5 rounded">⬇ Unduh PDF</a>@endif
-    @auth
-      <form method="post" action="{{ route('documents.favorite', $document) }}">@csrf<button class="border rounded px-3 py-1.5 bg-white">{{ $isFav ? '★ Favorit' : '☆ Favorit' }}</button></form>
-      <a href="{{ route('documents.share', $document) }}" class="border rounded px-3 py-1.5 bg-white">🔗 Bagikan</a>
-      @if(auth()->user()->isAdmin() || $document->user_id === auth()->id())
-        @if($document->source_type === 'editor')
-          <a href="{{ route('editor.edit', $document) }}" class="border rounded px-3 py-1.5 bg-white">✍ Ubah Isi</a>
-        @else
-          <a href="{{ route('documents.edit', $document) }}" class="border rounded px-3 py-1.5 bg-white">✏ Ubah</a>
+<div class="rounded-3xl overflow-hidden text-white shadow-xl shadow-[#002f80]/25 mb-5" style="background:linear-gradient(120deg,#000f2e,#002f80 60%,#0a4fc4)">
+  <div class="p-6 sm:p-8">
+    <div class="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
+      <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ $document->category->name ?? 'Tanpa kategori' }}</span>
+      <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ ucfirst($document->visibility) }}</span>
+      <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ $document->source_type === 'editor' ? 'Editor' : 'PDF' }}</span>
+    </div>
+    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-3">{{ $document->title }}</h1>
+    @if($document->tags->isNotEmpty())
+      <div class="flex flex-wrap gap-1.5 mt-2">@include('components.tag-badges', ['tags' => $document->tags])</div>
+    @endif
+    <p class="text-slate-300 text-sm mt-2 inline-flex items-center gap-1.5">Oleh <strong class="text-white">{{ $document->user->name }}</strong> · <span class="inline-flex items-center gap-1">@include('components.icon', ['name' => 'eye', 'class' => 'w-3.5 h-3.5']) {{ number_format($document->views_count) }}</span> · <span class="inline-flex items-center gap-1">@include('components.icon', ['name' => 'download', 'class' => 'w-3.5 h-3.5']) {{ number_format($document->downloads_count) }}</span></p>
+    @if($document->description)<p class="text-slate-200 text-sm mt-2 max-w-2xl">{{ $document->description }}</p>@endif
+    <div class="flex flex-wrap gap-2 mt-4 text-[13px] font-bold">
+      @if($document->file_path)<a href="{{ route('documents.download', $document) }}" class="bg-white text-[#002f80] rounded-full px-5 py-2 shadow hover:brightness-95 inline-flex items-center gap-2">@include('components.icon', ['name' => 'download', 'class' => 'w-4 h-4']) Unduh PDF</a>@endif
+      @auth
+        <form method="post" action="{{ route('documents.favorite', $document) }}" class="inline">@csrf<button class="rounded-full px-5 py-2 border border-white/40 bg-white/10 backdrop-blur hover:bg-white/20 inline-flex items-center gap-2">@include('components.icon', ['name' => $isFav ? 'star' : 'bookmark', 'class' => 'w-4 h-4']) {{ $isFav ? 'Tersimpan di Favorit' : 'Simpan ke Favorit' }}</button></form>
+        <a href="{{ route('documents.share', $document) }}" class="rounded-full px-5 py-2 border border-white/40 bg-white/10 backdrop-blur hover:bg-white/20 inline-flex items-center gap-2">@include('components.icon', ['name' => 'share', 'class' => 'w-4 h-4']) Bagikan</a>
+        @if(auth()->user()->isAdmin() || $document->user_id === auth()->id())
+          @if($document->source_type === 'editor')
+            <a href="{{ route('editor.edit', $document) }}" class="rounded-full px-5 py-2 border border-white/40 bg-white/10 backdrop-blur hover:bg-white/20 inline-flex items-center gap-2">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Ubah Isi</a>
+          @else
+            <a href="{{ route('documents.edit', $document) }}" class="rounded-full px-5 py-2 border border-white/40 bg-white/10 backdrop-blur hover:bg-white/20 inline-flex items-center gap-2">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Ubah</a>
+          @endif
         @endif
-      @endif
-    @endauth
+      @endauth
+    </div>
   </div>
 </div>
 
 {{-- Fase 1: penampil + atur tampilan + lanjut baca --}}
-<div id="reader" data-theme="{{ $pref->theme }}" class="rounded shadow overflow-hidden border {{ $pref->theme === 'dark' ? 'bg-stone-900' : 'bg-white' }}">
-  <div class="flex flex-wrap items-center gap-2 px-3 py-2 border-b text-sm {{ $pref->theme === 'dark' ? 'bg-stone-800 text-stone-100 border-stone-700' : 'bg-stone-50' }}">
-    <button id="btn-prev" class="border rounded px-2 py-1">←</button>
-    <span><span id="pg-now">1</span> / <span id="pg-total">…</span></span>
-    <button id="btn-next" class="border rounded px-2 py-1">→</button>
-    <label>Zoom <select id="sel-zoom" class="border rounded px-1">
-      @foreach([50,75,100,125,150,200] as $z)<option value="{{ $z }}" {{ (int)$pref->zoom === $z ? 'selected' : '' }}>{{ $z }}%</option>@endforeach
-    </select></label>
-    <label>Tata letak <select id="sel-layout" class="border rounded px-1">
-      <option value="single" {{ $pref->layout === 'single' ? 'selected' : '' }}>Single page</option>
-      <option value="double" {{ $pref->layout === 'double' ? 'selected' : '' }}>Double page</option>
-    </select></label>
-    <button id="btn-theme" class="border rounded px-2 py-1">{{ $pref->theme === 'dark' ? '☀ Terang' : '🌙 Gelap' }}</button>
-    @auth @if($position)<span id="resume-hint" class="text-xs opacity-75">Terakhir dibaca: hal. {{ $position->page }}</span>@endif @endauth
+<div id="reader" data-theme="{{ $pref->theme }}" class="rounded-3xl shadow-xl overflow-hidden border {{ $pref->theme === 'dark' ? 'bg-[#141920] border-white/10' : 'bg-white border-[#d6d6d6]' }}">
+  <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 border-b text-sm sticky top-0 z-10 {{ $pref->theme === 'dark' ? 'bg-[#1c2431] text-stone-100 border-white/10' : 'bg-slate-50/90 backdrop-blur text-slate-700' }}">
+    <div class="flex items-center gap-1.5">
+      <button id="btn-prev" aria-label="Halaman sebelumnya" class="w-8 h-8 rounded-full border border-current/20 grid place-items-center hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition">@include('components.icon', ['name' => 'chev-left', 'class' => 'w-4 h-4'])</button>
+      <span class="text-xs font-bold tabular-nums px-1"><span id="pg-now">1</span> <span class="opacity-50">/</span> <span id="pg-total">…</span></span>
+      <button id="btn-next" aria-label="Halaman berikutnya" class="w-8 h-8 rounded-full border border-current/20 grid place-items-center hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition">@include('components.icon', ['name' => 'chev-right', 'class' => 'w-4 h-4'])</button>
+    </div>
+    <label class="text-xs font-semibold flex items-center gap-1.5">Zoom
+      <select id="sel-zoom" class="rounded-full text-xs font-bold px-2 py-1 bg-transparent border border-current/20 outline-none cursor-pointer">
+        @foreach([50,75,100,125,150,200] as $z)<option value="{{ $z }}" {{ (int)$pref->zoom === $z ? 'selected' : '' }}>{{ $z }}%</option>@endforeach
+      </select>
+    </label>
+    <label class="text-xs font-semibold flex items-center gap-1.5">Tampilan
+      <select id="sel-layout" class="rounded-full text-xs font-bold px-2 py-1 bg-transparent border border-current/20 outline-none cursor-pointer">
+        <option value="single" {{ $pref->layout === 'single' ? 'selected' : '' }}>Single page</option>
+        <option value="double" {{ $pref->layout === 'double' ? 'selected' : '' }}>Double page</option>
+      </select>
+    </label>
+    <button id="btn-theme" class="text-xs font-bold rounded-full px-3 py-1.5 border border-current/20 hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => $pref->theme === 'dark' ? 'sun' : 'moon', 'class' => 'w-3.5 h-3.5']) {{ $pref->theme === 'dark' ? 'Mode Terang' : 'Mode Gelap' }}</button>
+    @auth @if($position)<span id="resume-hint" class="ml-auto text-[11px] font-semibold px-3 py-1.5 rounded-full bg-[#002f80]/10 text-[#002f80] inline-flex items-center gap-1">@include('components.icon', ['name' => 'bookmark', 'class' => 'w-3 h-3']) Terakhir: hal. {{ $position->page }}</span>@endif @endauth
   </div>
-  <div id="pages" class="flex flex-wrap justify-center gap-4 p-4 max-h-[75vh] overflow-auto"></div>
+  <div id="pages" class="flex flex-wrap justify-center items-start gap-5 p-5 max-h-[78vh] overflow-auto {{ $pref->theme === 'dark' ? 'bg-[#141920]' : 'bg-[#dde2e8]' }}"></div>
 </div>
+<p class="text-xs text-slate-400 mt-2">Tips: gunakan tombol panah pada keyboard untuk pindah halaman. Posisi bacamu tersimpan otomatis.</p>
 @if($document->source_type === 'editor' && $document->content)
-  <details class="mt-4 bg-white rounded shadow p-4 text-sm"><summary class="cursor-pointer font-semibold">Lihat teks sumber (editor)</summary><div class="prose max-w-none mt-2">{!! $document->content !!}</div></details>
+  <details class="mt-4 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 text-sm"><summary class="cursor-pointer font-bold text-[#002f80]">Lihat teks sumber (editor)</summary><div class="prose max-w-none mt-2 text-slate-700">{!! $document->content !!}</div></details>
 @endif
 
 @push('scripts')
@@ -69,16 +83,16 @@ async function render() {
   const pages = layout === 'double' && page < pdf.numPages ? [page, page + 1] : [page];
   for (const n of pages) {
     const p = await pdf.getPage(n);
-    const vp = p.getViewport({ scale: (zoom / 100) * 1.2 });
+    const vp = p.getViewport({ scale: (zoom / 100) * 1.35 });
     const cv = document.createElement('canvas');
-    cv.className = theme === 'dark' ? 'rounded shadow' : 'rounded shadow border';
+    cv.className = 'rounded-lg shadow-2xl max-w-full h-auto';
     if (theme === 'dark') cv.style.filter = 'invert(0.92) hue-rotate(180deg)';
     cv.height = vp.height; cv.width = vp.width;
     box.appendChild(cv);
     await p.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
   }
   const hint = document.getElementById('resume-hint');
-  if (hint) hint.textContent = 'Terakhir dibaca: hal. ' + page;
+  if (hint) hint.lastChild.textContent = ' Terakhir: hal. ' + page;
   if (IS_AUTH) { clearTimeout(saveTimer); saveTimer = setTimeout(savePosition, 1200); }
 }
 function savePosition() {
@@ -89,20 +103,14 @@ function savePrefs() {
   if (!IS_AUTH) return;
   fetch(SAVE_PREF_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
     body: JSON.stringify({ theme, zoom, layout }) });
-  document.getElementById('reader').dataset.theme = theme;
 }
 document.getElementById('btn-prev').onclick = () => { page -= layout === 'double' ? 2 : 1; render(); };
 document.getElementById('btn-next').onclick = async () => { pdf = pdf || await pdfjsLib.getDocument(PDF_URL).promise; page = Math.min(page + (layout === 'double' ? 2 : 1), pdf.numPages); render(); };
 document.getElementById('sel-zoom').onchange = e => { zoom = +e.target.value; savePrefs(); render(); };
 document.getElementById('sel-layout').onchange = e => { layout = e.target.value; savePrefs(); render(); };
-document.getElementById('btn-theme').onclick = e => {
-  theme = theme === 'dark' ? 'light' : 'dark';
-  const r = document.getElementById('reader');
-  r.className = 'rounded shadow overflow-hidden border ' + (theme === 'dark' ? 'bg-stone-900' : 'bg-white');
-  e.target.textContent = theme === 'dark' ? '☀ Terang' : '🌙 Gelap';
-  savePrefs(); render();
-};
+document.getElementById('btn-theme').onclick = () => { theme = theme === 'dark' ? 'light' : 'dark'; savePrefs(); setTimeout(() => location.reload(), 350); };
 document.addEventListener('keydown', e => {
+  if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
   if (e.key === 'ArrowRight') document.getElementById('btn-next').click();
   if (e.key === 'ArrowLeft') document.getElementById('btn-prev').click();
 });

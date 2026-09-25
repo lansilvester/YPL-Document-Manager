@@ -30,7 +30,7 @@ class InteractionController extends Controller
     public function favorites()
     {
         $docs = Document::whereIn('id', Favorite::where('user_id', auth()->id())->pluck('document_id'))
-            ->with(['category', 'user'])->latest()->paginate(12);
+            ->with(['category', 'user', 'tags'])->latest()->paginate(12);
 
         return view('documents.favorites', compact('docs'));
     }

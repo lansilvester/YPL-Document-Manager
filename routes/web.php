@@ -7,6 +7,7 @@ use App\Http\Controllers\EditorController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -44,6 +45,15 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::middleware('staff')->prefix('staff')->name('staff.')->group(function () {
+        Route::get('/dokumen', [StaffController::class, 'index'])->name('documents');
+        Route::post('/dokumen', [StaffController::class, 'store'])->name('documents.store');
+        Route::put('/dokumen/{document}', [StaffController::class, 'update'])->name('documents.update');
+        Route::delete('/dokumen/{document}', [StaffController::class, 'destroy'])->name('documents.destroy');
+        Route::post('/badge', [StaffController::class, 'storeTag'])->name('tags.store');
+        Route::delete('/badge/{tag}', [StaffController::class, 'destroyTag'])->name('tags.destroy');
+    });
 
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');

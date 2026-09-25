@@ -20,7 +20,7 @@ class DocumentController extends Controller
         $q = trim((string) $request->query('q', ''));
         $cat = $request->query('kategori');
 
-        $docs = Document::query()->with(['category', 'user'])
+        $docs = Document::query()->with(['category', 'user', 'tags'])
             ->where('visibility', 'public')
             ->when($q, fn ($s) => $s->where(fn ($w) => $w
                 ->where('title', 'like', "%{$q}%")->orWhere('description', 'like', "%{$q}%")))
@@ -36,6 +36,7 @@ class DocumentController extends Controller
     // Fase 1: buka dokumen + lanjut baca + atur tampilan
     public function show(Document $document)
     {
+        $document->load('tags');
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403, 'Dokumen bersifat privat.');
         }

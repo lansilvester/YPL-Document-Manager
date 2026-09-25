@@ -1,15 +1,19 @@
 @extends('layout')
 @section('title', 'Unggah PDF')
 @section('content')
-<div class="max-w-xl mx-auto bg-white rounded shadow p-6">
-  <h1 class="text-xl font-bold mb-4">Unggah File PDF</h1>
-  <form method="post" action="{{ route('documents.store') }}" enctype="multipart/form-data" class="space-y-3">@csrf
-    <div><label class="text-sm">Judul *</label><input name="title" required value="{{ old('title') }}" class="w-full border rounded px-3 py-2"></div>
-    <div><label class="text-sm">Deskripsi</label><textarea name="description" rows="3" class="w-full border rounded px-3 py-2">{{ old('description') }}</textarea></div>
-    <div><label class="text-sm">Kategori</label><select name="category_id" class="w-full border rounded px-3 py-2"><option value="">— Tanpa kategori —</option>@foreach($categories as $c)<option value="{{ $c->id }}">{{ $c->name }}</option>@endforeach</select></div>
-    <div><label class="text-sm">Siapa boleh lihat *</label><select name="visibility" class="w-full border rounded px-3 py-2"><option value="public">Publik (seluruh komunitas YPL)</option><option value="restricted">Terbatas (pengguna login)</option><option value="private">Privat (hanya saya)</option></select></div>
-    <div><label class="text-sm">File PDF (maks 50 MB) *</label><input type="file" name="file" accept="application/pdf" required class="w-full border rounded px-3 py-2"></div>
-    <button class="w-full bg-emerald-700 text-white rounded py-2">Unggah</button>
+<div class="max-w-xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-xl shadow-emerald-900/5 p-7 sm:p-8">
+  <div class="w-12 h-12 rounded-2xl grid place-items-center text-white text-xl mb-3" style="background:linear-gradient(135deg,#059669,#0d9488)">⬆</div>
+  <h1 class="text-xl font-extrabold tracking-tight">Unggah File PDF</h1>
+  <p class="text-sm text-slate-500 mb-5">Bagikan materi ke seluruh komunitas YPL dalam hitungan detik.</p>
+  <form method="post" action="{{ route('documents.store') }}" enctype="multipart/form-data" class="space-y-4">@csrf
+    <div><label class="text-[13px] font-bold">Judul dokumen *</label><input name="title" required value="{{ old('title') }}" placeholder="cth: Panduan Praktikum IPA Kelas 8" class="field mt-1"></div>
+    <div><label class="text-[13px] font-bold">Deskripsi</label><textarea name="description" rows="3" placeholder="Ringkasan isi dokumen…" class="field mt-1">{{ old('description') }}</textarea></div>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div><label class="text-[13px] font-bold">Kategori</label><select name="category_id" class="field mt-1"><option value="">— Tanpa kategori —</option>@foreach($categories as $c)<option value="{{ $c->id }}">{{ $c->name }}</option>@endforeach</select></div>
+      <div><label class="text-[13px] font-bold">Siapa boleh lihat *</label><select name="visibility" class="field mt-1"><option value="public">🌍 Publik — seluruh komunitas</option><option value="restricted">🔒 Terbatas — pengguna login</option><option value="private">🙈 Privat — hanya saya</option></select></div>
+    </div>
+    <div><label class="text-[13px] font-bold">File PDF (maks 50 MB) *</label><input type="file" name="file" accept="application/pdf" required class="field mt-1 file:mr-3 file:rounded-full file:border-0 file:bg-emerald-100 file:text-emerald-800 file:text-xs file:font-bold file:px-4 file:py-2"></div>
+    <button class="btn-primary w-full !py-3">Unggah Dokumen</button>
   </form>
 </div>
 @endsection
