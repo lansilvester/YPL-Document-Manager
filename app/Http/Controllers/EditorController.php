@@ -14,11 +14,15 @@ class EditorController extends Controller
     // Fase 3: tulis isi dokumen langsung di platform
     public function create()
     {
+        abort_unless(\App\Models\Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
+
         return view('editor.create', ['categories' => Category::orderBy('name')->get()]);
     }
 
     public function store(Request $request)
     {
+        abort_unless(\App\Models\Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -50,6 +54,7 @@ class EditorController extends Controller
     // Fase 3: ubah dokumen tersimpan tanpa unggah ulang
     public function edit(Document $document)
     {
+        abort_unless(\App\Models\Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
         if ($document->source_type !== 'editor') {
             return redirect()->route('documents.edit', $document);
         }
@@ -60,6 +65,7 @@ class EditorController extends Controller
 
     public function update(Request $request, Document $document)
     {
+        abort_unless(\App\Models\Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
         $this->authorizeDoc($document);
 
         $data = $request->validate([

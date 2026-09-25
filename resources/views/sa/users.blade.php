@@ -1,12 +1,15 @@
 @extends('layout')
 @section('title', 'Kelola Pengguna')
 @section('content')
+@include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Pusat Kendali SA', route('sa.dashboard')], ['Kelola Pengguna']]])
 <div class="flex items-center gap-3 mb-1">
   <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#7a0010,#c90018)">@include('components.icon', ['name' => 'users', 'class' => 'w-5 h-5'])</span>
-  <div>
+  <div class="flex-1">
     <h1 class="text-2xl font-extrabold tracking-tight text-[#002f80]">Kelola Pengguna</h1>
     <p class="text-sm text-slate-500">Wilayah Super Admin — akun superadmin tidak dapat diubah.</p>
   </div>
+  <a href="{{ route('sa.settings') }}" class="btn-ghost !py-2 text-[13px]">Pengaturan Web</a>
+  <a href="{{ route('sa.dashboard') }}" class="btn-ghost !py-2 text-[13px]">Dasbor SA</a>
 </div>
 <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm mt-5 overflow-hidden">
   <div class="divide-y divide-slate-100">
@@ -23,7 +26,7 @@
             </select>
             <button class="text-[13px] font-bold bg-[#002f80] text-white rounded-full px-4 py-1.5">Simpan</button>
           </form>
-          <form method="post" action="{{ route('sa.users.destroy', $u) }}" onsubmit="return confirm('Hapus akun {{ addslashes($u->name) }}?')">@csrf @method('DELETE')<button class="text-[13px] font-bold text-[#c90018] hover:underline">Hapus</button></form>
+          <form method="post" action="{{ route('sa.users.destroy', $u) }}" data-confirm="Hapus akun ini secara permanen?" class="inline">@csrf @method('DELETE')<button class="text-[13px] font-bold text-[#c90018] hover:underline">Hapus</button></form>
         @endunless
       </div>
     @endforeach

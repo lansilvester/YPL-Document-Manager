@@ -1,6 +1,7 @@
 @extends('layout')
 @section('title', 'Persetujuan Peran')
 @section('content')
+@include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dasbor Admin', route('admin.dashboard')], ['Persetujuan Peran']]])
 <div class="flex items-center gap-3 mb-1">
   <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#001c55,#0046c0)">@include('components.icon', ['name' => 'shield', 'class' => 'w-5 h-5'])</span>
   <div>

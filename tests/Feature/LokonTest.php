@@ -223,7 +223,9 @@ class LokonTest extends TestCase
 
         // admin tidak boleh masuk wilayah SA
         $this->actingAs($admin)->get('/sa/pengguna')->assertForbidden();
+        $this->actingAs($admin)->get('/sa')->assertForbidden();
         $this->actingAs($sa)->get('/sa/pengguna')->assertOk();
+        $this->actingAs($sa)->get('/sa')->assertOk()->assertSee('Pusat Kendali');
 
         // SA tidak bisa diubah/dihapus; hanya 1 SA
         $this->actingAs($sa)->put("/sa/pengguna/{$sa->id}/peran", ['role' => 'admin'])->assertForbidden();
@@ -236,5 +238,174 @@ class LokonTest extends TestCase
         // SA bisa mengubah peran pengguna lain
         $this->actingAs($sa)->put("/sa/pengguna/{$admin->id}/peran", ['role' => 'staff'])->assertRedirect();
         $this->assertEquals('staff', $admin->fresh()->role);
+    }
+
+    public function test_profil_dashboard_dan_update(): void
+    {
+        $user = User::factory()->create(['role' => 'anggota']);
+        $staff = User::factory()->create(['role' => 'staff']);
+        $pdf = \Illuminate\Http\UploadedFile::fake()->create('profil.pdf', 100, 'application/pdf');
+        $this->actingAs($staff)->post('/staff/dokumen', [
+            'title' => 'Untuk Riwayat', 'visibility' => 'public', 'file' => $pdf,
+        ]);
+        $doc = Document::where('title', 'Untuk Riwayat')->first();
+
+        // dasbor profil memuat info, unggahan, dan riwayat
+        $this->actingAs($user)->get(route('documents.show', $doc))->assertOk();
+        $this->actingAs($user)->get('/profil')->assertOk()
+            ->assertSee($user->name)
+            ->assertSee('Terdaftar sejak')
+            ->assertSee('Riwayat Dibaca')
+            ->assertSee('Untuk Riwayat')
+            ->assertSee('Favorit Saya')
+            ->assertSee('Lihat semua favorit')
+            ->assertSee('Profil Saya') // item dropdown profil
+            ->assertSee('Keluar'); // tombol logout dalam dropdown
+
+        // update data non-kritis
+        $this->actingAs($user)->put('/profil', [
+            'name' => 'Nama Baru',
+            'birth_place' => 'Tomohon',
+            'birth_date' => '2005-03-14',
+            'wa_number' => '+6281234567890',
+            'role' => 'superadmin', // percobaan mengubah data penting: harus diabaikan
+        ])->assertRedirect();
+        $user->refresh();
+        $this->assertEquals('Nama Baru', $user->name);
+        $this->assertEquals('Tomohon', $user->birth_place);
+        $this->assertEquals('2005-03-14', $user->birth_date->format('Y-m-d'));
+        $this->assertEquals('+6281234567890', $user->wa_number);
+        $this->assertEquals('anggota', $user->role); // peran terkunci
+    }
+
+    public function test_aturn_foto_profil(): void
+    {
+        $user = User::factory()->create(['role' => 'anggota']);
+
+        // wajib file gambar: pdf ditolak
+        $pdf = \Illuminate\Http\UploadedFile::fake()->create('dok.pdf', 100, 'application/pdf');
+        $this->actingAs($user)->put('/profil', ['name' => $user->name, 'avatar' => $pdf])
+            ->assertSessionHasErrors('avatar');
+
+        // maksimal 2 MB: file 3 MB ditolak
+        $besar = \Illuminate\Http\UploadedFile::fake()->image('besar.jpg')->size(3072);
+        $this->actingAs($user)->put('/profil', ['name' => $user->name, 'avatar' => $besar])
+            ->assertSessionHasErrors('avatar');
+
+        // gambar valid 500 KB diterima
+        $foto = \Illuminate\Http\UploadedFile::fake()->image('foto.jpg', 400, 400)->size(500);
+        $this->actingAs($user)->put('/profil', ['name' => $user->name, 'avatar' => $foto])
+            ->assertRedirect();
+        $this->assertNotNull($user->fresh()->avatar_path);
+    }
+
+    public function test_foto_gagal_upload_server_ada_pesan(): void
+    {
+        $user = User::factory()->create(['role' => 'anggota']);
+
+        // simulasi file yang dibuang PHP karena melebihi batas server (UPLOAD_ERR_INI_SIZE)
+        $tmp = tempnam(sys_get_temp_dir(), 'up').'.jpg';
+        copy(__DIR__.'/../../public/images/logo-ypl.png', $tmp);
+        $rusak = new \Illuminate\Http\UploadedFile($tmp, 'foto.jpg', 'image/jpeg', UPLOAD_ERR_INI_SIZE, true);
+        $this->actingAs($user)->put('/profil', ['name' => $user->name, 'avatar' => $rusak])
+            ->assertSessionHasErrors(['avatar' => 'Foto gagal diunggah — ukurannya melebihi batas server (maks 2 MB). Kecilkan dulu fotonya lalu coba lagi.']);
+        $this->assertNull($user->fresh()->avatar_path);
+        @unlink($tmp);
+    }
+
+    public function test_nomor_wa_dinormalisasi(): void
+    {
+        $user = User::factory()->create(['role' => 'anggota']);
+        $base = ['name' => $user->name];
+
+        $this->actingAs($user)->put('/profil', $base + ['wa_number' => '089612345678'])->assertRedirect();
+        $this->assertEquals('+6289612345678', $user->fresh()->wa_number);
+
+        $this->actingAs($user)->put('/profil', $base + ['wa_number' => '+6289612345678'])->assertRedirect();
+        $this->assertEquals('+6289612345678', $user->fresh()->wa_number);
+
+        $this->actingAs($user)->put('/profil', $base + ['wa_number' => '6289612345678'])->assertRedirect();
+        $this->assertEquals('+6289612345678', $user->fresh()->wa_number);
+
+        $this->actingAs($user)->put('/profil', $base + ['wa_number' => '89612345678'])->assertRedirect();
+        $this->assertEquals('+6289612345678', $user->fresh()->wa_number);
+
+        $this->actingAs($user)->put('/profil', $base + ['wa_number' => '(0896) 123-4567'])->assertRedirect();
+        $this->assertEquals('+628961234567', $user->fresh()->wa_number);
+
+        // salah input: ditolak dengan pesan jelas
+        $this->actingAs($user)->put('/profil', $base + ['wa_number' => 'halo-dunia'])
+            ->assertSessionHasErrors(['wa_number' => 'Nomor WA tidak dikenali. Tulis nomor HP Indonesia, contoh: 089612345678 atau +6289612345678.']);
+    }
+
+    public function test_fitur_preview_suka_unduhhtml_semat(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $pdf = \Illuminate\Http\UploadedFile::fake()->create('fitur.pdf', 100, 'application/pdf');
+        $this->actingAs($staff)->post('/staff/dokumen', [
+            'title' => 'Dokumen Fitur', 'visibility' => 'public', 'file' => $pdf,
+        ]);
+        $doc = Document::where('title', 'Dokumen Fitur')->first();
+        $this->post('/keluar');
+
+        // tamu: tombol suka mengajak login, semat publik bisa dibuka
+        $this->get(route('documents.show', $doc))->assertOk()->assertSee('Masuk untuk menyukai');
+        $this->post(route('documents.like', $doc))->assertRedirect('/masuk');
+        $this->get(route('documents.downloadHtml', $doc))->assertRedirect('/masuk');
+        $this->get(route('documents.embed', $doc))->assertOk()->assertSee('Buka penuh');
+
+        // anggota: suka, unduh html
+        $anggota = User::factory()->create(['role' => 'anggota']);
+        $this->actingAs($anggota)->post(route('documents.like', $doc))->assertRedirect();
+        $this->assertDatabaseHas('likes', ['user_id' => $anggota->id, 'document_id' => $doc->id]);
+        $this->actingAs($anggota)->post(route('documents.like', $doc))->assertRedirect(); // toggle batal
+        $this->assertDatabaseMissing('likes', ['user_id' => $anggota->id, 'document_id' => $doc->id]);
+        $res = $this->actingAs($anggota)->get(route('documents.downloadHtml', $doc))->assertOk();
+        $this->assertStringContainsString('text/html', $res->headers->get('Content-Type'));
+        $this->assertStringContainsString('Dokumen Fitur', $res->streamedContent() ?? $res->getContent());
+
+        // dokumen privat: semat ditolak untuk tamu & anggota lain
+        $owner = User::factory()->create(['role' => 'anggota']);
+        $priv = Document::factory()->for($owner)->create(['slug' => 'privat-semat', 'visibility' => 'private', 'title' => 'Privat']);
+        $this->get(route('documents.embed', $priv))->assertForbidden();
+        $this->actingAs($anggota)->get(route('documents.embed', $priv))->assertForbidden();
+        $this->actingAs($owner)->get(route('documents.embed', $priv))->assertOk();
+    }
+
+    public function test_sa_pengaturan_dan_sakelar_fitur(): void
+    {
+        $sa = User::factory()->create(['role' => 'superadmin']);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        // hanya SA yang boleh membuka pengaturan
+        $this->actingAs($admin)->get('/sa/pengaturan')->assertForbidden();
+        $this->actingAs($sa)->get('/sa/pengaturan')->assertOk()->assertSee('Pengaturan Web');
+
+        // ubah identitas + matikan registrasi & suka
+        $logo = \Illuminate\Http\UploadedFile::fake()->image('logo.png', 200, 200)->size(100);
+        $this->actingAs($sa)->put('/sa/pengaturan', [
+            'site_name' => 'Perpus YPL', 'foundation_name' => 'Yayasan Contoh', 'logo' => $logo,
+            'feat_reg' => '0', 'feat_upload' => '1', 'feat_editor' => '1', 'feat_download' => '1',
+            'feat_like' => '0', 'feat_favorite' => '1', 'feat_share' => '1', 'feat_embed' => '1',
+        ])->assertRedirect();
+        $this->assertEquals('Perpus YPL', \App\Models\Setting::get('site_name'));
+        $this->assertFalse(\App\Models\Setting::feature('reg'));
+        $this->assertFalse(\App\Models\Setting::feature('like'));
+        $this->assertNotNull(\App\Models\Setting::get('logo_path'));
+        $this->actingAs($sa)->get('/')->assertSee('Perpus YPL');
+
+        // fitur mati: URL diblokir
+        $this->get('/daftar')->assertNotFound();
+        $doc = Document::factory()->create(['slug' => 'suka-mati', 'visibility' => 'public', 'title' => 'Suka Mati']);
+        $this->actingAs($admin)->post(route('documents.like', $doc))->assertNotFound();
+
+        // logo kembali ke bawaan
+        $this->actingAs($sa)->put('/sa/pengaturan', [
+            'site_name' => 'Perpus YPL', 'foundation_name' => 'Yayasan Contoh', 'logo_reset' => '1',
+            'feat_reg' => '1', 'feat_upload' => '1', 'feat_editor' => '1', 'feat_download' => '1',
+            'feat_like' => '1', 'feat_favorite' => '1', 'feat_share' => '1', 'feat_embed' => '1',
+        ])->assertRedirect();
+        $this->assertNull(\App\Models\Setting::get('logo_path'));
+        $this->assertTrue(\App\Models\Setting::feature('reg'));
     }
 }

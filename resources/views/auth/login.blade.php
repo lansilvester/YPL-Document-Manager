@@ -1,10 +1,11 @@
 @extends('layout')
 @section('title', 'Masuk')
 @section('content')
+@include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Masuk']]])
 <div class="max-w-md mx-auto">
   <div class="rounded-3xl overflow-hidden shadow-xl border border-[#d6d6d6]">
     <div class="p-6 text-white text-center" style="background:linear-gradient(135deg,#000f2e,#002f80)">
-      <span class="inline-block w-12 h-12 rounded-2xl bg-white/15 border border-white/25 place-items-center grid">@include('components.icon', ['name' => 'book', 'class' => 'w-6 h-6'])</span>
+      <img src="{{ asset('images/logo-ypl.png') }}" alt="Logo YPL" class="h-14 w-auto mx-auto rounded-xl bg-white object-contain px-2 py-1">
       <h1 class="text-xl font-extrabold tracking-tight mt-2">Selamat datang kembali</h1>
       <p class="text-xs text-slate-300">Masuk untuk melanjutkan bacaanmu.</p>
     </div>

@@ -1,6 +1,7 @@
 @extends('layout')
 @section('title', 'Semua Dokumen')
 @section('content')
+@include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Jelajahi Dokumen']]])
 <div class="flex items-center gap-3">
   <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#001c55,#0046c0)">@include('components.icon', ['name' => 'compass', 'class' => 'w-5 h-5'])</span>
   <div>

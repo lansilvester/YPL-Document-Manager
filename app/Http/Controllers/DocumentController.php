@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\Favorite;
+use App\Models\Like;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
 use Illuminate\Http\Request;
@@ -52,12 +53,19 @@ class DocumentController extends Controller
                 ['page' => 1, 'percent' => 0]
             ) : null;
         $isFav = $user ? Favorite::where('user_id', $user->id)->where('document_id', $document->id)->exists() : false;
+        $liked = $user ? Like::where('user_id', $user->id)->where('document_id', $document->id)->exists() : false;
+        $likesCount = $document->likes()->count();
+        // Kode semat hanya ditawarkan untuk dokumen publik, atau kepada staf/pemilik/admin
+        $canEmbed = $document->visibility === 'public'
+            || ($user && ($user->isStaff() || $document->user_id === $user->id));
+        $embedCode = '<iframe src="'.route('documents.embed', $document).'" width="100%" height="600" style="border:1px solid #d6d6d6;border-radius:12px" allowfullscreen loading="lazy" title="'.e($document->title).'"></iframe>';
 
-        return view('documents.show', compact('document', 'pref', 'position', 'isFav'));
+        return view('documents.show', compact('document', 'pref', 'position', 'isFav', 'liked', 'likesCount', 'canEmbed', 'embedCode'));
     }
 
     public function download(Document $document)
     {
+        abort_unless(\App\Models\Setting::feature('download'), 404, 'Fitur unduh dinonaktifkan.');
         if (! $document->isVisibleTo(auth()->user()) || ! $document->file_path) {
             abort(404);
         }
@@ -67,14 +75,56 @@ class DocumentController extends Controller
         return Storage::disk('public')->download($document->file_path, Str::slug($document->title).'.pdf');
     }
 
+    // Unduh sebagai HTML: hanya anggota terdaftar (route di balik auth)
+    public function downloadHtml(Document $document)
+    {
+        abort_unless(\App\Models\Setting::feature('download'), 404, 'Fitur unduh dinonaktifkan.');
+        if (! $document->isVisibleTo(auth()->user())) {
+            abort(403);
+        }
+
+        $body = $document->source_type === 'editor' && $document->content
+            ? $document->content
+            : '<p><em>Dokumen ini berupa berkas PDF. Unduh versi PDF untuk isi lengkapnya.</em></p>'
+              .($document->description ? '<p>'.e($document->description).'</p>' : '');
+
+        $html = '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8">'
+            .'<title>'.e($document->title).' — Lokon Dokumen Digital</title></head>'
+            .'<body style="font-family:sans-serif;max-width:720px;margin:2rem auto;line-height:1.7">'
+            .'<h1>'.e($document->title).'</h1>'
+            .'<p><small>Oleh '.e($document->user->name).' · Yayasan Pendidikan Lokon · Diunduh '.now()->format('d M Y').'</small></p><hr>'
+            .$body.'<hr><p><small>Sumber: '.e(url()->current()).'</small></p></body></html>';
+
+        ActivityLog::record(auth()->id(), $document->id, 'download', ['format' => 'html']);
+
+        return response()->streamDownload(function () use ($html) {
+            echo $html;
+        }, Str::slug($document->title).'.html', ['Content-Type' => 'text/html; charset=utf-8']);
+    }
+
+    // Sematan (embed) minimal untuk iframe. Tamu: hanya dokumen publik.
+    public function embed(Document $document)
+    {
+        abort_unless(\App\Models\Setting::feature('embed'), 404, 'Fitur semat dinonaktifkan.');
+        if (! $document->isVisibleTo(auth()->user())) {
+            abort(403, 'Dokumen tidak dapat disematkan.');
+        }
+
+        return view('documents.embed', compact('document'));
+    }
+
     // Fase 2: unggah PDF + judul & kategori
     public function create()
     {
+        abort_unless(\App\Models\Setting::feature('upload'), 404, 'Fitur unggah dinonaktifkan.');
+
         return view('documents.create', ['categories' => Category::orderBy('name')->get()]);
     }
 
     public function store(Request $request)
     {
+        abort_unless(\App\Models\Setting::feature('upload'), 404, 'Fitur unggah dinonaktifkan.');
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],

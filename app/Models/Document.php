@@ -37,6 +37,11 @@ class Document extends Model
         return $this->hasMany(Favorite::class);
     }
 
+    public function likes(): HasMany
+    {
+        return $this->hasMany(Like::class);
+    }
+
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);

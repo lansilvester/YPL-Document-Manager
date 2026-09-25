@@ -1,6 +1,7 @@
 @extends('layout')
 @section('title', 'Dokumen Saya')
 @section('content')
+@include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dokumen Saya']]])
 <div class="flex items-center justify-between flex-wrap gap-3 mb-5">
   <div class="flex items-center gap-3">
     <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#001c55,#0046c0)">@include('components.icon', ['name' => 'folder', 'class' => 'w-5 h-5'])</span>
@@ -27,7 +28,7 @@
       @else
         <a href="{{ route('documents.edit', $d) }}" class="text-[13px] font-bold border border-[#d6d6d6] rounded-full px-4 py-1.5 hover:border-[#002f80] hover:text-[#002f80] inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'pen', 'class' => 'w-3.5 h-3.5']) Ubah</a>
       @endif
-      <form method="post" action="{{ route('documents.destroy', $d) }}" onsubmit="return confirm('Hapus dokumen ini?')">@csrf @method('DELETE')<button class="text-[13px] font-bold border border-[#c90018]/30 text-[#c90018] rounded-full px-4 py-1.5 hover:bg-[#c90018]/5 inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'trash', 'class' => 'w-3.5 h-3.5']) Hapus</button></form>
+      <form method="post" action="{{ route('documents.destroy', $d) }}" data-confirm="Hapus dokumen ini secara permanen?">@csrf @method('DELETE')<button class="text-[13px] font-bold border border-[#c90018]/30 text-[#c90018] rounded-full px-4 py-1.5 hover:bg-[#c90018]/5 inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'trash', 'class' => 'w-3.5 h-3.5']) Hapus</button></form>
     </div>
   @empty
     <div class="p-10 text-center text-slate-400">

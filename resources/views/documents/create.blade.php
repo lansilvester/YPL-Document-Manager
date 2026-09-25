@@ -1,6 +1,7 @@
 @extends('layout')
 @section('title', 'Unggah PDF')
 @section('content')
+@include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dokumen Saya', route('documents.my')], ['Unggah PDF']]])
 <div class="max-w-xl mx-auto bg-white rounded-3xl border border-[#d6d6d6] shadow-xl shadow-[#002f80]/5 p-7 sm:p-8">
   <div class="w-12 h-12 rounded-2xl grid place-items-center text-white mb-3" style="background:linear-gradient(135deg,#002f80,#0046c0)">@include('components.icon', ['name' => 'upload', 'class' => 'w-5 h-5'])</div>
   <h1 class="text-xl font-extrabold tracking-tight text-[#002f80]">Unggah File PDF</h1>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\Favorite;
+use App\Models\Like;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ class InteractionController extends Controller
     // Fase 3: simpan ke favorit (toggle bookmark)
     public function toggleFavorite(Document $document)
     {
+        abort_unless(\App\Models\Setting::feature('favorite'), 404, 'Fitur favorit dinonaktifkan.');
         $fav = Favorite::where('user_id', auth()->id())->where('document_id', $document->id)->first();
         if ($fav) {
             $fav->delete();
@@ -29,15 +31,38 @@ class InteractionController extends Controller
 
     public function favorites()
     {
+        abort_unless(\App\Models\Setting::feature('favorite'), 404, 'Fitur favorit dinonaktifkan.');
         $docs = Document::whereIn('id', Favorite::where('user_id', auth()->id())->pluck('document_id'))
             ->with(['category', 'user', 'tags'])->latest()->paginate(12);
 
         return view('documents.favorites', compact('docs'));
     }
 
+    // Fitur like: hanya anggota terdaftar (tamu dialihkan ke login oleh middleware auth)
+    public function toggleLike(Document $document)
+    {
+        abort_unless(\App\Models\Setting::feature('like'), 404, 'Fitur suka dinonaktifkan.');
+        if (! $document->isVisibleTo(auth()->user())) {
+            abort(403);
+        }
+
+        $like = Like::where('user_id', auth()->id())->where('document_id', $document->id)->first();
+        if ($like) {
+            $like->delete();
+
+            return back()->with('ok', 'Batal menyukai dokumen.');
+        }
+
+        Like::create(['user_id' => auth()->id(), 'document_id' => $document->id]);
+        ActivityLog::record(auth()->id(), $document->id, 'like');
+
+        return back()->with('ok', 'Kamu menyukai dokumen ini.');
+    }
+
     // Fase 3: bagikan dokumen (tautan internal + medsos)
     public function share(Document $document)
     {
+        abort_unless(\App\Models\Setting::feature('share'), 404, 'Fitur bagikan dinonaktifkan.');
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403);
         }

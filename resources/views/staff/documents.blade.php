@@ -1,6 +1,7 @@
 @extends('layout')
 @section('title', 'Ruang Kerja Staff')
 @section('content')
+@include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Ruang Kerja Staff']]])
 <div class="rounded-3xl p-6 sm:p-7 text-white shadow-xl shadow-[#002f80]/25 mb-6 relative overflow-hidden" style="background:linear-gradient(120deg,#000f2e,#002f80 60%,#0a4fc4)">
   <div class="absolute -right-8 -top-8 w-48 h-48 rounded-full opacity-20" style="background:radial-gradient(circle,#c90018 0%,transparent 70%)" aria-hidden="true"></div>
   <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2.5 relative">@include('components.icon', ['name' => 'tool', 'class' => 'w-6 h-6']) Ruang Kerja Staff</h1>
@@ -66,7 +67,7 @@
                   <button class="btn-primary !py-2">Simpan Perubahan</button>
                 </div>
               </form>
-              <form method="post" action="{{ route('staff.documents.destroy', $d) }}" onsubmit="return confirm('Hapus permanen “{{ addslashes($d->title) }}” dari perpustakaan?')" class="mt-2">@csrf @method('DELETE')<button class="text-[13px] font-bold text-[#c90018] hover:underline inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'trash', 'class' => 'w-3.5 h-3.5']) Hapus dokumen ini</button></form>
+              <form method="post" action="{{ route('staff.documents.destroy', $d) }}" data-confirm="Hapus permanen dari perpustakaan?" class="mt-2">@csrf @method('DELETE')<button class="text-[13px] font-bold text-[#c90018] hover:underline inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'trash', 'class' => 'w-3.5 h-3.5']) Hapus dokumen ini</button></form>
             </details>
           </div>
         @empty
@@ -86,7 +87,7 @@
         @forelse($tags as $t)
           <span class="inline-flex items-center gap-1.5">
             @include('components.tag-badges', ['tags' => collect([$t])])
-            <form method="post" action="{{ route('staff.tags.destroy', $t) }}" onsubmit="return confirm('Hapus badge {{ addslashes($t->name) }}?')" class="inline">@csrf @method('DELETE')<button class="text-slate-300 hover:text-[#c90018]" title="Hapus">@include('components.icon', ['name' => 'x', 'class' => 'w-3.5 h-3.5'])</button></form>
+            <form method="post" action="{{ route('staff.tags.destroy', $t) }}" data-confirm="Hapus badge ini dari semua dokumen?" class="inline">@csrf @method('DELETE')<button class="text-slate-300 hover:text-[#c90018]" title="Hapus">@include('components.icon', ['name' => 'x', 'class' => 'w-3.5 h-3.5'])</button></form>
           </span>
         @empty
           <span class="text-xs text-slate-400">Belum ada badge.</span>

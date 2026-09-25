@@ -12,11 +12,15 @@ class AuthController extends Controller
 {
     public function showRegister()
     {
+        abort_unless(\App\Models\Setting::feature('reg'), 404, 'Pendaftaran ditutup sementara.');
+
         return view('auth.register');
     }
 
     public function register(Request $request)
     {
+        abort_unless(\App\Models\Setting::feature('reg'), 404, 'Pendaftaran ditutup sementara.');
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             // Fase 4: registrasi divalidasi sistem internal YPL (domain email yayasan)

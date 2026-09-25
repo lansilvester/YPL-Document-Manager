@@ -21,6 +21,7 @@ Route::get('/daftar', [AuthController::class, 'showRegister'])->name('register')
 Route::post('/daftar', [AuthController::class, 'register']);
 
 Route::get('/dokumen/{document:slug}', [DocumentController::class, 'show'])->name('documents.show');
+Route::get('/semat/{document:slug}', [DocumentController::class, 'embed'])->name('documents.embed');
 
 Route::middleware('auth')->group(function () {
     Route::post('/keluar', [AuthController::class, 'logout'])->name('logout');
@@ -32,6 +33,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/dokumen/{document:slug}', [DocumentController::class, 'update'])->name('documents.update');
     Route::delete('/dokumen/{document:slug}', [DocumentController::class, 'destroy'])->name('documents.destroy');
     Route::get('/dokumen/{document:slug}/unduh', [DocumentController::class, 'download'])->name('documents.download');
+    Route::get('/dokumen/{document:slug}/unduh-html', [DocumentController::class, 'downloadHtml'])->name('documents.downloadHtml');
+    Route::post('/dokumen/{document:slug}/suka', [InteractionController::class, 'toggleLike'])->name('documents.like');
     Route::get('/dokumen/{document:slug}/bagikan', [InteractionController::class, 'share'])->name('documents.share');
 
     Route::get('/tulis', [EditorController::class, 'create'])->name('editor.create');
@@ -70,8 +73,11 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('superadmin')->prefix('sa')->name('sa.')->group(function () {
+        Route::get('/', [SuperAdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/pengguna', [SuperAdminController::class, 'users'])->name('users');
         Route::put('/pengguna/{user}/peran', [SuperAdminController::class, 'updateRole'])->name('users.role');
         Route::delete('/pengguna/{user}', [SuperAdminController::class, 'destroy'])->name('users.destroy');
+        Route::get('/pengaturan', [SuperAdminController::class, 'settings'])->name('settings');
+        Route::put('/pengaturan', [SuperAdminController::class, 'updateSettings'])->name('settings.update');
     });
 });

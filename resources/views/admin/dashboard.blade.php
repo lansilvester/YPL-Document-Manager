@@ -1,6 +1,7 @@
 @extends('layout')
 @section('title', 'Dasbor Admin')
 @section('content')
+@include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dasbor Admin']]])
 <h1 class="text-2xl font-extrabold tracking-tight text-[#002f80]">Dasbor Yayasan</h1>
 <p class="text-sm text-slate-500 mb-5">Pantau kesehatan platform dalam sekejap.</p>
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -13,10 +14,11 @@
   <a href="{{ route('admin.logs') }}" class="btn-ghost">Riwayat Aktivitas</a>
   <a href="{{ route('admin.approvals') }}" class="btn-ghost">Persetujuan Peran @if($pendingApprovals)<span class="bg-[#c90018] text-white text-[11px] rounded-full px-2 py-0.5">{{ $pendingApprovals }}</span>@endif</a>
   @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.users') }}" class="btn-ghost">Kelola Pengguna</a>@endif
+  @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.settings') }}" class="btn-ghost">Pengaturan Web</a>@endif
 </div>
 <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
   <h2 class="font-extrabold mb-3 text-[#002f80]">Aktivitas Terbaru</h2>
   <div class="overflow-x-auto"><table class="w-full text-sm min-w-[560px]"><thead><tr class="text-left text-xs uppercase tracking-wider text-slate-400"><th class="pb-2">Waktu</th><th class="pb-2">Pengguna</th><th class="pb-2">Aksi</th><th class="pb-2">Dokumen</th></tr></thead>
-  <tbody>@foreach($logs as $l)<tr class="border-t border-slate-100"><td class="py-2 text-slate-500">{{ $l->created_at->format('d M H:i') }}</td><td class="py-2 font-semibold">{{ $l->user->name ?? '—' }}</td><td class="py-2"><span class="text-[11px] font-bold bg-slate-100 rounded-full px-2.5 py-0.5">{{ $l->action }}</span></td><td class="py-2 text-slate-500">{{ $l->document->title ?? '—' }}</td></tr>@endforeach</tbody></table></div>
+  <tbody>@foreach($logs as $l)<tr class="border-t border-slate-100"><td class="py-2 text-slate-500">{{ $l->created_at->format('d M H:i') }}</td><td class="py-2 font-semibold">{{ $l->user->name ?? '—' }}</td><td class="py-2">@include('components.activity-badge', ['action' => $l->action])</td><td class="py-2 text-slate-500">{{ $l->document->title ?? '—' }}</td></tr>@endforeach</tbody></table></div>
 </div>
 @endsection

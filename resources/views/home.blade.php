@@ -24,7 +24,7 @@
       <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110 inline-flex items-center gap-2" style="background:linear-gradient(135deg,#002f80,#0046c0)">@include('components.icon', ['name' => 'search', 'class' => 'w-4 h-4']) Cari Dokumen</button>
     </form>
     @guest
-      <p class="mt-3 text-xs text-slate-300">Punya materi untuk dibagikan? <a href="{{ route('register') }}" class="underline font-bold text-white">Daftar dengan email YPL</a> — gratis.</p>
+      @if(\App\Models\Setting::feature('reg'))<p class="mt-3 text-xs text-slate-300">Punya materi untuk dibagikan? <a href="{{ route('register') }}" class="underline font-bold text-white">Daftar dengan email YPL</a> — gratis.</p>@endif
     @endguest
   </div>
 </section>
@@ -78,15 +78,15 @@
       <div class="font-extrabold flex items-center gap-2">Bagikan pengetahuanmu @include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4'])</div>
       <p class="text-xs text-slate-300 mt-1 mb-3">Unggah PDF atau tulis langsung di platform.</p>
       <div class="flex gap-2 text-xs font-bold">
-        <a href="{{ route('documents.create') }}" class="bg-white text-[#002f80] rounded-full px-4 py-2 inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'upload', 'class' => 'w-3.5 h-3.5']) Unggah</a>
-        <a href="{{ route('editor.create') }}" class="bg-white/15 border border-white/30 rounded-full px-4 py-2 inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'pen', 'class' => 'w-3.5 h-3.5']) Tulis</a>
+        @if(\App\Models\Setting::feature('upload'))<a href="{{ route('documents.create') }}" class="bg-white text-[#002f80] rounded-full px-4 py-2 inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'upload', 'class' => 'w-3.5 h-3.5']) Unggah</a>@endif
+        @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="bg-white/15 border border-white/30 rounded-full px-4 py-2 inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'pen', 'class' => 'w-3.5 h-3.5']) Tulis</a>@endif
       </div>
     </div>
     @else
     <div class="rounded-2xl p-5 text-white shadow-lg" style="background:linear-gradient(135deg,#001c55,#002f80)">
       <div class="font-extrabold flex items-center gap-2">Warga YPL? Bergabunglah @include('components.icon', ['name' => 'cap', 'class' => 'w-4 h-4'])</div>
       <p class="text-xs text-slate-300 mt-1 mb-3">Simpan favorit, lanjutkan bacaan, dan unggah dokumen.</p>
-      <a href="{{ route('register') }}" class="btn-accent !py-2 text-xs">Daftar Gratis @include('components.icon', ['name' => 'arrow-right', 'class' => 'w-3.5 h-3.5'])</a>
+      @if(\App\Models\Setting::feature('reg'))<a href="{{ route('register') }}" class="btn-accent !py-2 text-xs">Daftar Gratis @include('components.icon', ['name' => 'arrow-right', 'class' => 'w-3.5 h-3.5'])</a>@endif
     </div>
     @endauth
   </aside>
