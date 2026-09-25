@@ -408,4 +408,83 @@ class LokonTest extends TestCase
         $this->assertNull(\App\Models\Setting::get('logo_path'));
         $this->assertTrue(\App\Models\Setting::feature('reg'));
     }
+
+    public function test_ganti_file_gagal_tidak_kehilangan_berkas(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $pdf = \Illuminate\Http\UploadedFile::fake()->create('aman.pdf', 100, 'application/pdf');
+        $this->actingAs($staff)->post('/staff/dokumen', [
+            'title' => 'Dokumen Aman', 'visibility' => 'public', 'file' => $pdf,
+        ]);
+        $doc = Document::where('title', 'Dokumen Aman')->first();
+        $oldPath = $doc->file_path;
+        $this->assertTrue(\Illuminate\Support\Facades\Storage::disk('private')->exists($oldPath));
+
+        // ganti dengan file bukan PDF: ditolak, berkas lama utuh
+        $txt = \Illuminate\Http\UploadedFile::fake()->create('jahat.txt', 50, 'text/plain');
+        $this->actingAs($staff)->put("/staff/dokumen/{$doc->id}", [
+            'title' => 'Dokumen Aman', 'visibility' => 'public', 'file' => $txt,
+        ])->assertSessionHasErrors('file');
+        $this->assertEquals($oldPath, $doc->fresh()->file_path);
+        $this->assertTrue(\Illuminate\Support\Facades\Storage::disk('private')->exists($oldPath));
+    }
+
+    public function test_upload_dibatasi_rate_limit(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        for ($i = 1; $i <= 12; $i++) {
+            $pdf = \Illuminate\Http\UploadedFile::fake()->create("spam-$i.pdf", 50, 'application/pdf');
+            $this->actingAs($staff)->post('/staff/dokumen', [
+                'title' => "Spam $i", 'visibility' => 'private', 'file' => $pdf,
+            ])->assertRedirect();
+        }
+        $pdf = \Illuminate\Http\UploadedFile::fake()->create('spam-13.pdf', 50, 'application/pdf');
+        $this->actingAs($staff)->post('/staff/dokumen', [
+            'title' => 'Spam 13', 'visibility' => 'private', 'file' => $pdf,
+        ])->assertStatus(429);
+    }
+
+    public function test_file_private_hanya_bisa_di_stream_pemilik(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $pdf = \Illuminate\Http\UploadedFile::fake()->create('rahasia.pdf', 100, 'application/pdf');
+        $this->actingAs($owner)->post('/staff/dokumen', [
+            'title' => 'Dokumen Privat', 'visibility' => 'private', 'file' => $pdf,
+        ])->assertRedirect();
+        $doc = Document::where('title', 'Dokumen Privat')->firstOrFail();
+
+        $this->post('/keluar');
+        $this->get(route('documents.stream', $doc))->assertNotFound();
+        $this->actingAs(User::factory()->create())->get(route('documents.stream', $doc))->assertNotFound();
+        $this->actingAs($owner)->get(route('documents.stream', $doc))->assertOk();
+    }
+
+    public function test_editor_membersihkan_html_berbahaya(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post('/tulis', [
+            'title' => 'Materi Aman',
+            'visibility' => 'public',
+            'content' => '<script>alert(1)</script><p>Isi aman</p><img src="https://evil.test/x">',
+        ])->assertRedirect();
+
+        $content = Document::where('title', 'Materi Aman')->value('content');
+        $this->assertStringNotContainsString('<script', $content);
+        $this->assertStringNotContainsString('<img', $content);
+        $this->assertStringContainsString('Isi aman', $content);
+    }
+
+    public function test_akun_baru_harus_verifikasi_email_sebelum_upload(): void
+    {
+        $this->post('/daftar', [
+            'name' => 'Pengguna Baru',
+            'email' => 'baru@lokon.or.id',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect('/');
+
+        $this->assertAuthenticated();
+        $this->assertNull(User::where('email', 'baru@lokon.or.id')->value('email_verified_at'));
+        $this->get('/unggah')->assertRedirect(route('verification.notice'));
+    }
 }

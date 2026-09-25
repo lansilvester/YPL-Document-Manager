@@ -9,6 +9,7 @@ use App\Models\Like;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class InteractionController extends Controller
 {
@@ -16,17 +17,27 @@ class InteractionController extends Controller
     public function toggleFavorite(Document $document)
     {
         abort_unless(\App\Models\Setting::feature('favorite'), 404, 'Fitur favorit dinonaktifkan.');
-        $fav = Favorite::where('user_id', auth()->id())->where('document_id', $document->id)->first();
-        if ($fav) {
-            $fav->delete();
+        $added = DB::transaction(function () use ($document) {
+            $favorite = Favorite::where('user_id', auth()->id())
+                ->where('document_id', $document->id)
+                ->lockForUpdate()
+                ->first();
+            if ($favorite) {
+                $favorite->delete();
 
-            return back()->with('ok', 'Dihapus dari favorit.');
+                return false;
+            }
+
+            Favorite::create(['user_id' => auth()->id(), 'document_id' => $document->id]);
+
+            return true;
+        });
+
+        if ($added) {
+            ActivityLog::record(auth()->id(), $document->id, 'favorite');
         }
 
-        Favorite::create(['user_id' => auth()->id(), 'document_id' => $document->id]);
-        ActivityLog::record(auth()->id(), $document->id, 'favorite');
-
-        return back()->with('ok', 'Ditambahkan ke favorit.');
+        return back()->with('ok', $added ? 'Ditambahkan ke favorit.' : 'Dihapus dari favorit.');
     }
 
     public function favorites()
@@ -46,17 +57,27 @@ class InteractionController extends Controller
             abort(403);
         }
 
-        $like = Like::where('user_id', auth()->id())->where('document_id', $document->id)->first();
-        if ($like) {
-            $like->delete();
+        $added = DB::transaction(function () use ($document) {
+            $like = Like::where('user_id', auth()->id())
+                ->where('document_id', $document->id)
+                ->lockForUpdate()
+                ->first();
+            if ($like) {
+                $like->delete();
 
-            return back()->with('ok', 'Batal menyukai dokumen.');
+                return false;
+            }
+
+            Like::create(['user_id' => auth()->id(), 'document_id' => $document->id]);
+
+            return true;
+        });
+
+        if ($added) {
+            ActivityLog::record(auth()->id(), $document->id, 'like');
         }
 
-        Like::create(['user_id' => auth()->id(), 'document_id' => $document->id]);
-        ActivityLog::record(auth()->id(), $document->id, 'like');
-
-        return back()->with('ok', 'Kamu menyukai dokumen ini.');
+        return back()->with('ok', $added ? 'Kamu menyukai dokumen ini.' : 'Batal menyukai dokumen.');
     }
 
     // Fase 3: bagikan dokumen (tautan internal + medsos)

@@ -75,8 +75,8 @@
   <div id="pages" class="flex flex-wrap justify-center items-start gap-5 p-5 max-h-[78vh] overflow-auto {{ $pref->theme === 'dark' ? 'bg-[#141920]' : 'bg-[#dde2e8]' }}"></div>
 </div>
 <p class="text-xs text-slate-400 mt-2">Tips: gunakan tombol panah pada keyboard untuk pindah halaman. Posisi bacamu tersimpan otomatis.</p>
-@if($document->source_type === 'editor' && $document->content)
-  <details class="mt-4 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 text-sm"><summary class="cursor-pointer font-bold text-[#002f80]">Lihat teks sumber (editor)</summary><div class="prose max-w-none mt-2 text-slate-700">{!! $document->content !!}</div></details>
+@if($safeContent)
+  <details class="mt-4 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 text-sm"><summary class="cursor-pointer font-bold text-[#002f80]">Lihat teks sumber (editor)</summary><div class="prose max-w-none mt-2 text-slate-700">{!! $safeContent !!}</div></details>
 @endif
 
 <style>#reader:fullscreen #pages { max-height: 100vh; }</style>

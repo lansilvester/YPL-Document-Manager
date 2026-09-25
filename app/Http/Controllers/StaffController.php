@@ -46,19 +46,25 @@ class StaffController extends Controller
             'file' => ['required', 'file', 'mimes:pdf', 'max:51200'],
         ]);
 
-        $doc = Document::create([
-            'user_id' => auth()->id(),
-            'category_id' => $data['category_id'] ?? null,
-            'title' => $data['title'],
-            'slug' => Str::slug($data['title']).'-'.Str::lower(Str::random(6)),
-            'description' => $data['description'] ?? null,
-            'file_path' => $request->file('file')->store('documents', 'public'),
-            'file_size' => $request->file('file')->getSize(),
-            'mime' => 'application/pdf',
-            'visibility' => $data['visibility'],
-            'source_type' => 'upload',
-        ]);
-        $doc->tags()->sync($data['tags'] ?? []);
+        $doc = \App\Services\DocumentFiles::transactional(function (array &$gate) use ($request, $data) {
+            [$path, $size] = \App\Services\DocumentFiles::storeUpload($request->file('file'), $gate);
+
+            $doc = Document::create([
+                'user_id' => auth()->id(),
+                'category_id' => $data['category_id'] ?? null,
+                'title' => $data['title'],
+                'slug' => Str::slug($data['title']).'-'.Str::lower(Str::random(6)),
+                'description' => $data['description'] ?? null,
+                'file_path' => $path,
+                'file_size' => $size,
+                'mime' => 'application/pdf',
+                'visibility' => $data['visibility'],
+                'source_type' => 'upload',
+            ]);
+            $doc->tags()->sync($data['tags'] ?? []);
+
+            return $doc;
+        });
 
         ActivityLog::record(auth()->id(), $doc->id, 'upload', ['via' => 'staff']);
 
@@ -77,22 +83,20 @@ class StaffController extends Controller
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
         ]);
 
-        if ($request->hasFile('file')) {
-            if ($document->file_path) {
-                Storage::disk('public')->delete($document->file_path);
+        \App\Services\DocumentFiles::transactional(function (array &$gate) use ($request, $data, $document) {
+            if ($request->hasFile('file')) {
+                [$document->file_path, $document->file_size] = \App\Services\DocumentFiles::replace($document->file_path, $request->file('file'), $gate);
+                $document->mime = 'application/pdf';
             }
-            $document->file_path = $request->file('file')->store('documents', 'public');
-            $document->file_size = $request->file('file')->getSize();
-            $document->mime = 'application/pdf';
-        }
 
-        $document->fill([
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'category_id' => $data['category_id'] ?? null,
-            'visibility' => $data['visibility'],
-        ])->save();
-        $document->tags()->sync($data['tags'] ?? []);
+            $document->fill([
+                'title' => $data['title'],
+                'description' => $data['description'] ?? null,
+                'category_id' => $data['category_id'] ?? null,
+                'visibility' => $data['visibility'],
+            ])->save();
+            $document->tags()->sync($data['tags'] ?? []);
+        });
 
         ActivityLog::record(auth()->id(), $document->id, 'update', ['via' => 'staff']);
 
@@ -101,12 +105,16 @@ class StaffController extends Controller
 
     public function destroy(Document $document)
     {
-        if ($document->file_path) {
-            Storage::disk('public')->delete($document->file_path);
+        $path = $document->file_path;
+        $title = $document->title;
+        \Illuminate\Support\Facades\DB::transaction(function () use ($document) {
+            $document->tags()->detach();
+            $document->delete();
+        });
+        if ($path) {
+            Storage::disk('private')->delete($path);
         }
-        ActivityLog::record(auth()->id(), $document->id, 'delete', ['via' => 'staff', 'title' => $document->title]);
-        $document->tags()->detach();
-        $document->delete();
+        ActivityLog::record(auth()->id(), null, 'delete', ['via' => 'staff', 'title' => $title]);
 
         return back()->with('ok', 'Dokumen dihapus dari perpustakaan.');
     }

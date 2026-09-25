@@ -6,6 +6,8 @@ use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -32,11 +34,12 @@ class AuthController extends Controller
         // Default registrasi web = Anggota. Peningkatan peran wajib lewat persetujuan Admin/Super Admin.
         $user = User::create([
             ...$data,
-            'ypl_verified' => true,
+            'ypl_verified' => false,
             'role' => 'anggota',
         ]);
 
         Auth::login($user);
+        $user->sendEmailVerificationNotification();
         ActivityLog::record($user->id, null, 'register');
         $request->session()->regenerate();
 
@@ -72,5 +75,30 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('home');
+    }
+
+    public function verifyEmail(EmailVerificationRequest $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->route('home');
+        }
+
+        if ($request->user()->markEmailAsVerified()) {
+            event(new Verified($request->user()));
+            $request->user()->update(['ypl_verified' => true]);
+        }
+
+        return redirect()->route('home')->with('ok', 'Email berhasil diverifikasi.');
+    }
+
+    public function resendVerification(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->route('home');
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('ok', 'Tautan verifikasi telah dikirim ulang.');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Document;
+use App\Services\HtmlSanitizer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -30,21 +31,26 @@ class EditorController extends Controller
             'visibility' => ['required', 'in:public,private,restricted'],
             'content' => ['required', 'string', 'max:200000'],
         ]);
+        $data['content'] = HtmlSanitizer::clean($data['content']);
 
-        $pdfPath = $this->renderPdf($data['title'], $data['content']);
+        $doc = \App\Services\DocumentFiles::transactional(function (array &$gate) use ($data) {
+            $pdfPath = 'documents/editor-'.Str::random(12).'.pdf';
+            \App\Services\DocumentFiles::putAtomically($pdfPath, Pdf::loadHTML('<h1>'.e($data['title']).'</h1><hr>'.$data['content'])->setPaper('a4')->output());
+            $gate['paths'][] = $pdfPath;
 
-        $doc = Document::create([
-            'user_id' => auth()->id(),
-            'category_id' => $data['category_id'] ?? null,
-            'title' => $data['title'],
-            'slug' => Str::slug($data['title']).'-'.Str::lower(Str::random(6)),
-            'description' => $data['description'] ?? null,
-            'file_path' => $pdfPath,
-            'mime' => 'application/pdf',
-            'visibility' => $data['visibility'],
-            'source_type' => 'editor',
-            'content' => $data['content'],
-        ]);
+            return Document::create([
+                'user_id' => auth()->id(),
+                'category_id' => $data['category_id'] ?? null,
+                'title' => $data['title'],
+                'slug' => Str::slug($data['title']).'-'.Str::lower(Str::random(6)),
+                'description' => $data['description'] ?? null,
+                'file_path' => $pdfPath,
+                'mime' => 'application/pdf',
+                'visibility' => $data['visibility'],
+                'source_type' => 'editor',
+                'content' => $data['content'],
+            ]);
+        });
 
         ActivityLog::record(auth()->id(), $doc->id, 'upload', ['via' => 'editor']);
 
@@ -58,7 +64,7 @@ class EditorController extends Controller
         if ($document->source_type !== 'editor') {
             return redirect()->route('documents.edit', $document);
         }
-        $this->authorizeDoc($document);
+        $this->authorize('update', $document);
 
         return view('editor.edit', ['document' => $document, 'categories' => Category::orderBy('name')->get()]);
     }
@@ -66,7 +72,7 @@ class EditorController extends Controller
     public function update(Request $request, Document $document)
     {
         abort_unless(\App\Models\Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
-        $this->authorizeDoc($document);
+        $this->authorize('update', $document);
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -75,16 +81,20 @@ class EditorController extends Controller
             'visibility' => ['required', 'in:public,private,restricted'],
             'content' => ['required', 'string', 'max:200000'],
         ]);
+        $data['content'] = HtmlSanitizer::clean($data['content']);
 
-        $document->fill([
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'category_id' => $data['category_id'] ?? null,
-            'visibility' => $data['visibility'],
-            'content' => $data['content'],
-            'file_path' => $this->renderPdf($data['title'], $data['content'], $document->file_path),
-            'mime' => 'application/pdf',
-        ])->save();
+        \App\Services\DocumentFiles::transactional(function () use ($data, $document) {
+            $this->renderPdf($data['title'], $data['content'], $document->file_path);
+
+            $document->fill([
+                'title' => $data['title'],
+                'description' => $data['description'] ?? null,
+                'category_id' => $data['category_id'] ?? null,
+                'visibility' => $data['visibility'],
+                'content' => $data['content'],
+                'mime' => 'application/pdf',
+            ])->save();
+        });
 
         ActivityLog::record(auth()->id(), $document->id, 'update', ['via' => 'editor']);
 
@@ -93,21 +103,15 @@ class EditorController extends Controller
 
     private function renderPdf(string $title, string $html, ?string $existing = null): string
     {
-        $safe = '<h1>'.e($title).'</h1><hr>'.$html; // konten editor (disanitasi saat tampil)
+        $safe = '<h1>'.e($title).'</h1><hr>'.$html;
         $pdf = Pdf::loadHTML($safe)->setPaper('a4');
         $path = $existing && str_starts_with($existing, 'documents/editor-')
             ? $existing
             : 'documents/editor-'.Str::random(12).'.pdf';
-        \Illuminate\Support\Facades\Storage::disk('public')->put($path, $pdf->output());
+        // Tulis atomik (temp + rename): pembaca concurrent tidak pernah melihat file setengah tulis.
+        \App\Services\DocumentFiles::putAtomically($path, $pdf->output());
 
         return $path;
     }
 
-    private function authorizeDoc(Document $document): void
-    {
-        if (auth()->user()->isAdmin() || $document->user_id === auth()->id()) {
-            return;
-        }
-        abort(403);
-    }
 }

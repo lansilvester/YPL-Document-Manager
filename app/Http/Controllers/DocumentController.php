@@ -9,6 +9,7 @@ use App\Models\Favorite;
 use App\Models\Like;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
+use App\Services\HtmlSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -42,8 +43,15 @@ class DocumentController extends Controller
             abort(403, 'Dokumen bersifat privat.');
         }
 
-        $document->increment('views_count');
-        ActivityLog::record(auth()->id(), $document->id, 'view');
+        $recentView = ActivityLog::where('document_id', $document->id)
+            ->where('action', 'view')
+            ->where('created_at', '>=', now()->subMinutes(5))
+            ->when(auth()->check(), fn ($query) => $query->where('user_id', auth()->id()), fn ($query) => $query->whereNull('user_id')->where('ip', request()->ip()))
+            ->exists();
+        if (! $recentView) {
+            $document->increment('views_count');
+            ActivityLog::record(auth()->id(), $document->id, 'view');
+        }
 
         $user = auth()->user();
         $pref = $user?->readingPref ?? new ReadingPref(['theme' => 'light', 'zoom' => 100, 'layout' => 'single']);
@@ -59,20 +67,37 @@ class DocumentController extends Controller
         $canEmbed = $document->visibility === 'public'
             || ($user && ($user->isStaff() || $document->user_id === $user->id));
         $embedCode = '<iframe src="'.route('documents.embed', $document).'" width="100%" height="600" style="border:1px solid #d6d6d6;border-radius:12px" allowfullscreen loading="lazy" title="'.e($document->title).'"></iframe>';
+        $safeContent = $document->source_type === 'editor' && $document->content
+            ? HtmlSanitizer::clean($document->content)
+            : null;
 
-        return view('documents.show', compact('document', 'pref', 'position', 'isFav', 'liked', 'likesCount', 'canEmbed', 'embedCode'));
+        return view('documents.show', compact('document', 'pref', 'position', 'isFav', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent'));
+    }
+
+    public function stream(Document $document)
+    {
+        abort_unless($document->isVisibleTo(auth()->user()) && $document->file_path, 404);
+
+        $disk = Storage::disk('private');
+        abort_unless($disk->exists($document->file_path), 404);
+
+        return $disk->response($document->file_path, Str::slug($document->title).'.pdf', [
+            'Content-Type' => $document->mime ?: 'application/pdf',
+            'Content-Disposition' => 'inline',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function download(Document $document)
     {
         abort_unless(\App\Models\Setting::feature('download'), 404, 'Fitur unduh dinonaktifkan.');
-        if (! $document->isVisibleTo(auth()->user()) || ! $document->file_path) {
+        if (! $document->isVisibleTo(auth()->user()) || ! $document->file_path || ! Storage::disk('private')->exists($document->file_path)) {
             abort(404);
         }
         $document->increment('downloads_count');
         ActivityLog::record(auth()->id(), $document->id, 'download');
 
-        return Storage::disk('public')->download($document->file_path, Str::slug($document->title).'.pdf');
+        return Storage::disk('private')->download($document->file_path, Str::slug($document->title).'.pdf');
     }
 
     // Unduh sebagai HTML: hanya anggota terdaftar (route di balik auth)
@@ -84,7 +109,7 @@ class DocumentController extends Controller
         }
 
         $body = $document->source_type === 'editor' && $document->content
-            ? $document->content
+            ? HtmlSanitizer::clean($document->content)
             : '<p><em>Dokumen ini berupa berkas PDF. Unduh versi PDF untuk isi lengkapnya.</em></p>'
               .($document->description ? '<p>'.e($document->description).'</p>' : '');
 
@@ -133,20 +158,22 @@ class DocumentController extends Controller
             'file' => ['required', 'file', 'mimes:pdf', 'max:51200'],
         ]);
 
-        $path = $request->file('file')->store('documents', 'public');
+        $doc = \App\Services\DocumentFiles::transactional(function (array &$gate) use ($request, $data) {
+            [$path, $size] = \App\Services\DocumentFiles::storeUpload($request->file('file'), $gate);
 
-        $doc = Document::create([
-            'user_id' => auth()->id(),
-            'category_id' => $data['category_id'] ?? null,
-            'title' => $data['title'],
-            'slug' => Str::slug($data['title']).'-'.Str::lower(Str::random(6)),
-            'description' => $data['description'] ?? null,
-            'file_path' => $path,
-            'file_size' => $request->file('file')->getSize(),
-            'mime' => 'application/pdf',
-            'visibility' => $data['visibility'],
-            'source_type' => 'upload',
-        ]);
+            return Document::create([
+                'user_id' => auth()->id(),
+                'category_id' => $data['category_id'] ?? null,
+                'title' => $data['title'],
+                'slug' => Str::slug($data['title']).'-'.Str::lower(Str::random(6)),
+                'description' => $data['description'] ?? null,
+                'file_path' => $path,
+                'file_size' => $size,
+                'mime' => 'application/pdf',
+                'visibility' => $data['visibility'],
+                'source_type' => 'upload',
+            ]);
+        });
 
         ActivityLog::record(auth()->id(), $doc->id, 'upload');
 
@@ -163,14 +190,14 @@ class DocumentController extends Controller
 
     public function edit(Document $document)
     {
-        $this->authorizeDoc($document);
+        $this->authorize('update', $document);
 
         return view('documents.edit', ['document' => $document, 'categories' => Category::orderBy('name')->get()]);
     }
 
     public function update(Request $request, Document $document)
     {
-        $this->authorizeDoc($document);
+        $this->authorize('update', $document);
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -180,21 +207,19 @@ class DocumentController extends Controller
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
         ]);
 
-        if ($request->hasFile('file')) {
-            if ($document->file_path) {
-                Storage::disk('public')->delete($document->file_path);
+        \App\Services\DocumentFiles::transactional(function (array &$gate) use ($request, $data, $document) {
+            if ($request->hasFile('file')) {
+                [$document->file_path, $document->file_size] = \App\Services\DocumentFiles::replace($document->file_path, $request->file('file'), $gate);
+                $document->mime = 'application/pdf';
             }
-            $document->file_path = $request->file('file')->store('documents', 'public');
-            $document->file_size = $request->file('file')->getSize();
-            $document->mime = 'application/pdf';
-        }
 
-        $document->fill([
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'category_id' => $data['category_id'] ?? null,
-            'visibility' => $data['visibility'],
-        ])->save();
+            $document->fill([
+                'title' => $data['title'],
+                'description' => $data['description'] ?? null,
+                'category_id' => $data['category_id'] ?? null,
+                'visibility' => $data['visibility'],
+            ])->save();
+        });
 
         ActivityLog::record(auth()->id(), $document->id, 'update');
 
@@ -203,21 +228,19 @@ class DocumentController extends Controller
 
     public function destroy(Document $document)
     {
-        $this->authorizeDoc($document);
-        if ($document->file_path) {
-            Storage::disk('public')->delete($document->file_path);
+        $this->authorize('delete', $document);
+        $path = $document->file_path;
+        $title = $document->title;
+        \Illuminate\Support\Facades\DB::transaction(function () use ($document) {
+            $document->delete();
+        });
+        // Berkas dihapus setelah record ter-commit: tidak ada risiko record tanpa berkas.
+        if ($path) {
+            Storage::disk('public')->delete($path);
         }
-        ActivityLog::record(auth()->id(), $document->id, 'delete', ['title' => $document->title]);
-        $document->delete();
+        ActivityLog::record(auth()->id(), null, 'delete', ['title' => $title]);
 
         return redirect()->route('documents.my')->with('ok', 'Dokumen dihapus.');
     }
 
-    private function authorizeDoc(Document $document): void
-    {
-        if (auth()->user()->isAdmin() || $document->user_id === auth()->id()) {
-            return;
-        }
-        abort(403);
-    }
 }
