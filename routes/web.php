@@ -7,7 +7,9 @@ use App\Http\Controllers\EditorController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\SuperAdminController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -45,6 +47,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profil/permintaan-peran', [PromotionController::class, 'store'])->name('profile.role-request');
 
     Route::middleware('staff')->prefix('staff')->name('staff.')->group(function () {
         Route::get('/dokumen', [StaffController::class, 'index'])->name('documents');
@@ -61,5 +64,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/kategori', [AdminController::class, 'storeCategory'])->name('categories.store');
         Route::delete('/kategori/{category:slug}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
         Route::get('/riwayat', [AdminController::class, 'logs'])->name('logs');
+        Route::get('/persetujuan', [PromotionController::class, 'index'])->name('approvals');
+        Route::post('/persetujuan/{request}/setujui', [PromotionController::class, 'approve'])->name('approvals.approve');
+        Route::post('/persetujuan/{request}/tolak', [PromotionController::class, 'reject'])->name('approvals.reject');
+    });
+
+    Route::middleware('superadmin')->prefix('sa')->name('sa.')->group(function () {
+        Route::get('/pengguna', [SuperAdminController::class, 'users'])->name('users');
+        Route::put('/pengguna/{user}/peran', [SuperAdminController::class, 'updateRole'])->name('users.role');
+        Route::delete('/pengguna/{user}', [SuperAdminController::class, 'destroy'])->name('users.destroy');
     });
 });

@@ -15,7 +15,13 @@
     <p class="text-slate-300 text-sm mt-2 inline-flex items-center gap-1.5">Oleh <strong class="text-white">{{ $document->user->name }}</strong> · <span class="inline-flex items-center gap-1">@include('components.icon', ['name' => 'eye', 'class' => 'w-3.5 h-3.5']) {{ number_format($document->views_count) }}</span> · <span class="inline-flex items-center gap-1">@include('components.icon', ['name' => 'download', 'class' => 'w-3.5 h-3.5']) {{ number_format($document->downloads_count) }}</span></p>
     @if($document->description)<p class="text-slate-200 text-sm mt-2 max-w-2xl">{{ $document->description }}</p>@endif
     <div class="flex flex-wrap gap-2 mt-4 text-[13px] font-bold">
-      @if($document->file_path)<a href="{{ route('documents.download', $document) }}" class="bg-white text-[#002f80] rounded-full px-5 py-2 shadow hover:brightness-95 inline-flex items-center gap-2">@include('components.icon', ['name' => 'download', 'class' => 'w-4 h-4']) Unduh PDF</a>@endif
+      @if($document->file_path)
+        @auth
+          <a href="{{ route('documents.download', $document) }}" class="bg-white text-[#002f80] rounded-full px-5 py-2 shadow hover:brightness-95 inline-flex items-center gap-2">@include('components.icon', ['name' => 'download', 'class' => 'w-4 h-4']) Unduh PDF</a>
+        @else
+          <a href="{{ route('login') }}" class="bg-white/20 border border-white/40 text-white rounded-full px-5 py-2 inline-flex items-center gap-2 hover:bg-white/30">@include('components.icon', ['name' => 'lock', 'class' => 'w-4 h-4']) Masuk untuk mengunduh</a>
+        @endauth
+      @endif
       @auth
         <form method="post" action="{{ route('documents.favorite', $document) }}" class="inline">@csrf<button class="rounded-full px-5 py-2 border border-white/40 bg-white/10 backdrop-blur hover:bg-white/20 inline-flex items-center gap-2">@include('components.icon', ['name' => $isFav ? 'star' : 'bookmark', 'class' => 'w-4 h-4']) {{ $isFav ? 'Tersimpan di Favorit' : 'Simpan ke Favorit' }}</button></form>
         <a href="{{ route('documents.share', $document) }}" class="rounded-full px-5 py-2 border border-white/40 bg-white/10 backdrop-blur hover:bg-white/20 inline-flex items-center gap-2">@include('components.icon', ['name' => 'share', 'class' => 'w-4 h-4']) Bagikan</a>

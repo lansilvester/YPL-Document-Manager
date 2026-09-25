@@ -8,7 +8,12 @@ class ProfileController extends Controller
 {
     public function edit()
     {
-        return view('profile.edit', ['user' => auth()->user()]);
+        $user = auth()->user();
+
+        return view('profile.edit', [
+            'user' => $user,
+            'pendingRequest' => \App\Models\RoleRequest::where('user_id', $user->id)->where('status', 'pending')->first(),
+        ]);
     }
 
     public function update(Request $request)

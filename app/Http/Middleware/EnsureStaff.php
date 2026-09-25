@@ -10,8 +10,7 @@ class EnsureStaff
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
-        if (! $user || ! in_array($user->role, ['admin', 'staff'], true)) {
+        if (! $request->user()?->isStaff()) {
             abort(403, 'Hanya staff dan administrator YPL.');
         }
 

@@ -9,6 +9,7 @@ use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 /**
  * Ruang kerja Staff: satu tampilan CRUD untuk tambah/upload PDF,
@@ -114,7 +115,7 @@ class StaffController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:50'],
-            'color' => ['required', 'in:emerald,sky,violet,amber,rose,slate'],
+            'color' => ['required', Rule::in(Tag::COLORS)],
         ]);
 
         Tag::firstOrCreate(

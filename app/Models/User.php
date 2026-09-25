@@ -34,8 +34,20 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['admin', 'superadmin'], true);
     }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'superadmin';
+    }
+
+    public function isStaff(): bool
+    {
+        return in_array($this->role, ['staff', 'admin', 'superadmin'], true);
+    }
+
+    protected $attributes = ['role' => 'anggota'];
 
     /**
      * Get the attributes that should be cast.

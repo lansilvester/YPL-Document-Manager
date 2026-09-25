@@ -10,7 +10,7 @@ class EnsureAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user() || ! $request->user()->isAdmin()) {
+        if (! $request->user()?->isAdmin()) {
             abort(403, 'Hanya administrator YPL.');
         }
 

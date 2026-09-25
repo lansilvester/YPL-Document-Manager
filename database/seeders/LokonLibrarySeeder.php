@@ -32,7 +32,7 @@ class LokonLibrarySeeder extends Seeder
         }
 
         $tags = [];
-        foreach (['Unggulan' => 'amber', 'Baru' => 'emerald', 'Referensi' => 'sky', 'Soal Latihan' => 'violet', 'Klasik' => 'rose', 'Buku Teks' => 'slate'] as $name => $color) {
+        foreach (['Unggulan' => 'gold', 'Baru' => 'navy', 'Referensi' => 'steel', 'Soal Latihan' => 'charcoal', 'Klasik' => 'red', 'Buku Teks' => 'slate'] as $name => $color) {
             $tags[$name] = Tag::firstOrCreate(['slug' => Str::slug($name)], ['name' => $name, 'color' => $color]);
         }
 

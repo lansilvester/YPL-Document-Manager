@@ -60,6 +60,7 @@
         <a href="{{ route('documents.my') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition hidden lg:inline">Milik Saya</a>
         <a href="{{ route('favorites.index') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition hidden lg:inline">Favorit</a>
         @if(auth()->user()->isAdmin())<a href="{{ route('admin.dashboard') }}" class="px-3 py-1.5 rounded-full bg-[#002f80] text-white hover:bg-[#001c55] transition">Admin</a>@endif
+        @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.users') }}" class="px-3 py-1.5 rounded-full bg-[#c90018] text-white hover:bg-[#7a0010] transition">SA</a>@endif
         @if(in_array(auth()->user()->role, ['admin', 'staff'], true))<a href="{{ route('staff.documents') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1">@include('components.icon', ['name' => 'tool', 'class' => 'w-4 h-4']) Staff</a>@endif
         <a href="{{ route('profile.edit') }}" title="Profil" class="w-9 h-9 rounded-full grid place-items-center text-white text-sm font-bold shadow" style="background:linear-gradient(135deg,#002f80,#0046c0)">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</a>
         <form action="{{ route('logout') }}" method="post" class="inline">@csrf<button class="text-slate-400 hover:text-[#c90018] inline-flex items-center gap-1 text-xs font-semibold px-1" title="Keluar">@include('components.icon', ['name' => 'logout', 'class' => 'w-4 h-4'])</button></form>

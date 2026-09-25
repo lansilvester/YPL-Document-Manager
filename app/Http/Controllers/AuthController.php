@@ -25,10 +25,11 @@ class AuthController extends Controller
             'academic_info' => ['nullable', 'string', 'max:255'],
         ], ['email.regex' => 'Gunakan email resmi YPL untuk mendaftar.']);
 
+        // Default registrasi web = Anggota. Peningkatan peran wajib lewat persetujuan Admin/Super Admin.
         $user = User::create([
             ...$data,
             'ypl_verified' => true,
-            'role' => User::count() === 0 ? 'admin' : 'user', // pendaftar pertama jadi admin
+            'role' => 'anggota',
         ]);
 
         Auth::login($user);

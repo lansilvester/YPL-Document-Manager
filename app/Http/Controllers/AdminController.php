@@ -20,6 +20,7 @@ class AdminController extends Controller
                 'pengguna' => \App\Models\User::count(),
             ],
             'logs' => ActivityLog::with(['user', 'document'])->latest()->limit(30)->get(),
+            'pendingApprovals' => \App\Models\RoleRequest::pending()->count(),
         ]);
     }
 
