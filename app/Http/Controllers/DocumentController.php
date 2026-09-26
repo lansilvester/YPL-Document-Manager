@@ -24,8 +24,7 @@ class DocumentController extends Controller
 
         $docs = Document::query()->with(['category', 'user', 'tags'])
             ->where('visibility', 'public')
-            ->when($q, fn ($s) => $s->where(fn ($w) => $w
-                ->where('title', 'like', "%{$q}%")->orWhere('description', 'like', "%{$q}%")))
+            ->when($q, fn ($s) => $s->search($q))
             ->when($cat, fn ($s) => $s->whereHas('category', fn ($c) => $c->where('slug', $cat)))
             ->latest()->paginate(12)->withQueryString();
 

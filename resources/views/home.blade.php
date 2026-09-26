@@ -1,9 +1,8 @@
 @extends('layout')
 @section('title', 'Beranda')
-@section('content')
-
-{{-- Hero --}}
-<section class="rounded-3xl overflow-hidden text-white relative shadow-xl shadow-[#002f80]/25" style="background:linear-gradient(115deg,#001233 5%,#002f80 55%,#0a4fc4 100%)">
+@section('hero')
+{{-- Hero full-bleed: 100% lebar layar --}}
+<section class="w-full overflow-hidden text-white relative shadow-xl shadow-[#002f80]/25" style="background:linear-gradient(115deg,#001233 5%,#002f80 55%,#0a4fc4 100%)">
   <div class="absolute inset-y-0 right-0 w-1/2 opacity-20 hidden md:block" aria-hidden="true">
     <svg class="h-full w-full" viewBox="0 0 400 300" fill="none" preserveAspectRatio="xMidYMid slice">
       <rect x="60" y="40" width="120" height="220" rx="10" fill="white" opacity=".25"/>
@@ -15,9 +14,10 @@
     </svg>
   </div>
   <div class="absolute top-0 right-0 w-40 h-40 rounded-full opacity-25" style="background:radial-gradient(circle,#c90018 0%,transparent 70%)" aria-hidden="true"></div>
-  <div class="relative p-7 sm:p-10 max-w-2xl">
+  <div class="relative max-w-6xl mx-auto px-4 py-10 sm:py-14">
+   <div class="max-w-2xl">
     <div class="inline-flex items-center gap-2 bg-white/10 border border-white/25 rounded-full px-3 py-1 text-xs font-semibold tracking-wide">@include('components.icon', ['name' => 'sparkles', 'class' => 'w-3.5 h-3.5']) PERPUSTAKAAN DIGITAL YPL</div>
-    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mt-3 leading-tight">Semua pengetahuan Lokon,<br class="hidden sm:block"> dalam satu tempat.</h1>
+    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mt-3 leading-tight">Semua pengetahuan Lokon,<br class="hidden sm:block"> dalam satu tempat.</h1>
     <p class="text-slate-200 mt-2 text-sm sm:text-base">Jelajahi {{ number_format($stats['dokumen']) }} dokumen · {{ $stats['kategori'] }} kategori · {{ number_format($stats['views']) }} kali dibaca komunitas.</p>
     <form action="{{ route('home') }}" method="get" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg max-w-xl">
       <input name="q" value="{{ $q }}" placeholder="Coba: “matematika”, “panduan”, “praktikum”…" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
@@ -26,8 +26,11 @@
     @guest
       @if(\App\Models\Setting::feature('reg'))<p class="mt-3 text-xs text-slate-300">Punya materi untuk dibagikan? <a href="{{ route('register') }}" class="underline font-bold text-white">Daftar dengan email YPL</a> — gratis.</p>@endif
     @endguest
+   </div>
   </div>
 </section>
+@endsection
+@section('content')
 
 <div class="grid lg:grid-cols-3 gap-6 mt-6">
   <div class="lg:col-span-2">

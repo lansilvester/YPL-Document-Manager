@@ -22,8 +22,7 @@ class StaffController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $docs = Document::query()->with(['category', 'user', 'tags'])
-            ->when($q, fn ($s) => $s->where(fn ($w) => $w
-                ->where('title', 'like', "%{$q}%")->orWhere('description', 'like', "%{$q}%")))
+            ->when($q, fn ($s) => $s->search($q))
             ->latest()->paginate(15)->withQueryString();
 
         return view('staff.documents', [

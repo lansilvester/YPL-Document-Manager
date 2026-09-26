@@ -54,6 +54,7 @@ class SuperAdminController extends Controller
         $data = $request->validate([
             'site_name' => ['required', 'string', 'max:60'],
             'foundation_name' => ['required', 'string', 'max:80'],
+            'reg_domains' => ['nullable', 'string', 'max:255'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:2048'],
             'logo_reset' => ['nullable', 'boolean'],
         ], [
@@ -66,6 +67,7 @@ class SuperAdminController extends Controller
 
         \App\Models\Setting::set('site_name', $data['site_name']);
         \App\Models\Setting::set('foundation_name', $data['foundation_name']);
+        \App\Models\Setting::set('reg_domains', trim($data['reg_domains'] ?? ''));
 
         if ($request->boolean('logo_reset')) {
             $old = \App\Models\Setting::get('logo_path');

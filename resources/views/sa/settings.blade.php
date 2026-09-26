@@ -17,6 +17,8 @@
     <div class="space-y-3">
       <div><label class="text-[13px] font-bold">Nama situs *</label><input name="site_name" required maxlength="60" value="{{ old('site_name', \App\Models\Setting::get('site_name')) }}" class="field mt-1 !py-2 !text-[13px]"></div>
       <div><label class="text-[13px] font-bold">Nama yayasan *</label><input name="foundation_name" required maxlength="80" value="{{ old('foundation_name', \App\Models\Setting::get('foundation_name')) }}" class="field mt-1 !py-2 !text-[13px]"></div>
+      <div><label class="text-[13px] font-bold">Domain email pendaftaran <span class="font-normal text-slate-400">(opsional)</span></label><input name="reg_domains" maxlength="255" value="{{ old('reg_domains', \App\Models\Setting::get('reg_domains')) }}" placeholder="cth: lokon.or.id, ypl.ac.id — kosongkan = email bebas" class="field mt-1 !py-2 !text-[13px]">
+        <p class="text-[11px] text-slate-400 mt-1">Pisahkan beberapa domain dengan koma. Berguna bila domain YPL berubah.</p></div>
       <div>
         <label class="text-[13px] font-bold">Logo web <span class="font-normal text-slate-400">(JPG/PNG/GIF/WebP, maks 2 MB)</span></label>
         <div class="flex items-center gap-3 mt-1.5">

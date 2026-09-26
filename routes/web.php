@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profil/kata-sandi', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/profil/permintaan-peran', [PromotionController::class, 'store'])->middleware('verified')->name('profile.role-request');
 
     Route::middleware('staff')->prefix('staff')->name('staff.')->group(function () {

@@ -1,7 +1,6 @@
 @extends('layout')
 @section('title', 'Masuk')
 @section('content')
-@include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Masuk']]])
 <div class="max-w-md mx-auto">
   <div class="rounded-3xl overflow-hidden shadow-xl border border-[#d6d6d6]">
     <div class="p-6 text-white text-center" style="background:linear-gradient(135deg,#000f2e,#002f80)">
@@ -14,7 +13,7 @@
       <div><label class="text-[13px] font-bold">Kata sandi</label><input name="password" type="password" required class="field mt-1"></div>
       <label class="text-[13px] flex gap-2 items-center text-slate-500"><input type="checkbox" name="remember" value="1" class="accent-[#002f80]"> Ingat saya</label>
       <button class="btn-primary w-full !py-3">Masuk @include('components.icon', ['name' => 'arrow-right', 'class' => 'w-4 h-4'])</button>
-      <p class="text-[13px] text-center text-slate-500">Belum punya akun? <a class="text-[#002f80] underline font-bold" href="{{ route('register') }}">Daftar</a></p>
+      <p class="text-[13px] text-center text-slate-500">Jika belum punya akun, silahkan <a class="text-[#002f80] underline font-bold" href="{{ route('register') }}">Daftar</a></p>
     </form>
   </div>
 </div>

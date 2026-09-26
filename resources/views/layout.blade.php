@@ -10,6 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
+@layer components {
   :root { --ypl-navy: #002f80; --ypl-red: #c90018; --ypl-gray: #d6d6d6; }
   body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -28,17 +29,18 @@
   .btn-ghost:hover { border-color: #002f80; color: #002f80; }
   .card-hover { transition: transform .25s ease, box-shadow .25s ease; }
   .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -18px rgba(0,30,80,.35); }
+}
 </style>
 </head>
 <body class="bg-[#eef1f4] text-slate-800 min-h-screen flex flex-col antialiased">
 
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#d6d6d6] shadow-[0_2px_20px_-12px_rgba(0,30,80,.45)]">
   <div class="h-1" style="background:linear-gradient(90deg,#002f80 60%,#c90018 60%)"></div>
-  {{-- Baris 1: logo + pencarian + akun --}}
-  <div class="max-w-6xl mx-auto px-4 pt-3 pb-2 flex items-center gap-3">
-    <a href="{{ route('home') }}" class="flex items-center gap-2.5 shrink-0">
-      <img src="{{ \App\Models\Setting::logoUrl() }}" alt="Logo {{ \App\Models\Setting::get('foundation_name') }}" class="h-12 w-auto rounded-lg bg-white object-contain">
-      <span class="leading-tight hidden sm:block">
+  {{-- Baris 1: logo + pencarian + akun + toggle kanan --}}
+  <div class="max-w-6xl mx-auto px-4 pt-3 pb-2 flex items-center gap-2 sm:gap-3">
+    <a href="{{ route('home') }}" class="flex items-center gap-2.5 shrink-0 min-w-0">
+      <img src="{{ \App\Models\Setting::logoUrl() }}" alt="Logo {{ \App\Models\Setting::get('foundation_name') }}" class="h-10 sm:h-12 w-auto rounded-lg bg-white object-contain">
+      <span class="leading-tight hidden min-[420px]:block">
         <span class="block font-extrabold tracking-tight text-slate-900 text-[15px]">{{ \App\Models\Setting::get('site_name') }}</span>
         <span class="block text-[11px] font-bold tracking-wide text-[#c90018]">{{ strtoupper(\App\Models\Setting::get('foundation_name')) }}</span>
       </span>
@@ -67,18 +69,25 @@
               @endif
             </div>
             <div class="border-t border-slate-100 p-1.5">
-              <form action="{{ route('logout') }}" method="post" onsubmit="return confirm('Yakin ingin keluar dari aplikasi?')">@csrf<button class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-bold text-[#c90018] hover:bg-[#c90018]/5">@include('components.icon', ['name' => 'logout', 'class' => 'w-4 h-4']) Keluar</button></form>
+              <form action="{{ route('logout') }}" method="post" data-confirm="Yakin ingin keluar dari aplikasi?">@csrf<button class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-bold text-[#c90018] hover:bg-[#c90018]/5">@include('components.icon', ['name' => 'logout', 'class' => 'w-4 h-4']) Keluar</button></form>
             </div>
           </div>
         </div>
       @else
-        <a href="{{ route('login') }}" class="px-4 py-1.5 rounded-full text-sm font-semibold hover:bg-[#002f80]/5 hover:text-[#002f80] transition">Masuk</a>
-        @if(\App\Models\Setting::feature('reg'))<a href="{{ route('register') }}" class="btn-primary !py-1.5">Daftar Gratis</a>@endif
+        @unless(request()->routeIs('register', 'login'))
+        <a href="{{ route('login') }}" class="hidden md:inline-block px-4 py-1.5 rounded-full text-sm font-semibold hover:bg-[#002f80]/5 hover:text-[#002f80] transition">Masuk</a>
+        @if(\App\Models\Setting::feature('reg'))<a href="{{ route('register') }}" class="btn-primary !py-1.5 hidden md:inline-flex">Daftar Gratis</a>@endif
+        @endunless
       @endauth
     </div>
+    {{-- Toggle menu mobile di kanan --}}
+    <button type="button" id="nav-toggle" aria-label="Buka menu" aria-expanded="false" aria-controls="mobile-nav" class="md:hidden w-10 h-10 rounded-xl grid place-items-center border border-[#d6d6d6] text-[#002f80] shrink-0">
+      <span id="nav-icon-open">@include('components.icon', ['name' => 'menu', 'class' => 'w-5 h-5'])</span>
+      <span id="nav-icon-close" class="hidden">@include('components.icon', ['name' => 'x', 'class' => 'w-5 h-5'])</span>
+    </button>
   </div>
-  {{-- Baris 2: menu navigasi (geser horizontal, anti-tumpuk) --}}
-  <nav class="border-t border-slate-100">
+  {{-- Baris 2: menu navigasi desktop (geser horizontal, anti-tumpuk) --}}
+  <nav class="border-t border-slate-100 hidden md:block" aria-label="Navigasi utama">
     <div class="max-w-6xl mx-auto px-4 flex items-center gap-1 text-sm font-semibold overflow-x-auto whitespace-nowrap py-1.5" style="scrollbar-width:none">
       <a href="{{ route('home') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Beranda</a>
       <a href="{{ route('documents.index') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'compass', 'class' => 'w-4 h-4']) Jelajahi</a>
@@ -93,7 +102,33 @@
       @endauth
     </div>
   </nav>
+  {{-- Panel menu mobile (hamburger) --}}
+  <nav id="mobile-nav" class="hidden md:hidden border-t border-slate-100 bg-white" aria-label="Menu mobile">
+    <div class="px-4 py-2 grid gap-1 text-sm font-semibold">
+      @guest
+        @unless(request()->routeIs('register', 'login'))
+        <a href="{{ route('login') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'logout', 'class' => 'w-4 h-4 scale-x-[-1]']) Masuk</a>
+        @if(\App\Models\Setting::feature('reg'))<a href="{{ route('register') }}" class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-white" style="background:linear-gradient(135deg,#002f80,#0046c0)">@include('components.icon', ['name' => 'plus', 'class' => 'w-4 h-4']) Daftar Gratis</a>@endif
+        <div class="border-t border-slate-100 my-1"></div>
+        @endunless
+      @endguest
+      <a href="{{ route('home') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Beranda</a>
+      <a href="{{ route('documents.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'compass', 'class' => 'w-4 h-4']) Jelajahi Dokumen</a>
+      @auth
+        <div class="border-t border-slate-100 my-1"></div>
+        @if(\App\Models\Setting::feature('upload'))<a href="{{ route('documents.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'upload', 'class' => 'w-4 h-4']) Unggah PDF</a>@endif
+        @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Tulis Dokumen</a>@endif
+        <a href="{{ route('documents.my') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'folder', 'class' => 'w-4 h-4']) Dokumen Saya</a>
+        @if(\App\Models\Setting::feature('favorite'))<a href="{{ route('favorites.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Favorit Saya</a>@endif
+        @if(auth()->user()->isStaff())<a href="{{ route('staff.documents') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'tool', 'class' => 'w-4 h-4']) Ruang Staff</a>@endif
+        @if(auth()->user()->isAdmin())<a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#002f80] text-white">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Dasbor Admin</a>@endif
+        @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#c90018] text-white">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Pusat Kendali SA</a>@endif
+      @endauth
+    </div>
+  </nav>
 </header>
+
+@yield('hero')
 
 <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-1">
   @yield('content')
@@ -127,6 +162,37 @@
 </footer>
 <script>
 (function () {
+  // Toggle menu mobile (hamburger)
+  var navToggle = document.getElementById('nav-toggle');
+  var navPanel = document.getElementById('mobile-nav');
+  var navIconOpen = document.getElementById('nav-icon-open');
+  var navIconClose = document.getElementById('nav-icon-close');
+  function setNav(open) {
+    if (!navToggle || !navPanel) return;
+    navPanel.classList.toggle('hidden', !open);
+    navIconOpen.classList.toggle('hidden', open);
+    navIconClose.classList.toggle('hidden', !open);
+    navToggle.setAttribute('aria-expanded', String(open));
+    navToggle.setAttribute('aria-label', open ? 'Tutup menu' : 'Buka menu');
+  }
+  if (navToggle && navPanel) {
+    navToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setNav(navPanel.classList.contains('hidden'));
+    });
+    navPanel.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () { setNav(false); });
+    });
+    document.addEventListener('click', function (e) {
+      if (!navPanel.classList.contains('hidden') && !navPanel.contains(e.target)) setNav(false);
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setNav(false); });
+    // Jika layar membesar saat panel terbuka, tutup otomatis
+    window.addEventListener('resize', function () {
+      if (window.innerWidth >= 768) setNav(false);
+    });
+  }
+
   var btn = document.getElementById('profile-menu-btn');
   var panel = document.getElementById('profile-menu-panel');
   if (!btn || !panel) return;
@@ -145,34 +211,63 @@
 {{-- Notifikasi global ala SweetAlert untuk setiap simpan/ubah --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  var navy = '#002f80', red = '#c90018';
+
+  // Toast sukses: ringkas, jeda saat disentuh, bisa ditutup manual
   var Toast = Swal.mixin({
-    toast: true, position: 'top-end', showConfirmButton: false,
-    timer: 3500, timerProgressBar: true,
-    customClass: { popup: 'rounded-2xl' },
+    toast: true, position: 'top-end', showConfirmButton: false, showCloseButton: true,
+    timer: 4000, timerProgressBar: true,
+    customClass: { popup: 'rounded-2xl', title: '!text-sm', closeButton: '!text-xs' },
+    didOpen: function (t) {
+      t.addEventListener('mouseenter', Swal.stopTimer);
+      t.addEventListener('mouseleave', Swal.resumeTimer);
+    },
   });
+
   @if(session('ok'))
-    Toast.fire({ icon: 'success', title: @json(session('ok')) });
+    Toast.fire({ icon: 'success', title: 'Berhasil!', text: @json(session('ok')) });
   @endif
+
   @if($errors->any())
-    Swal.fire({
-      icon: 'error', title: 'Periksa kembali',
-      html: @json('<ul style="text-align:left">' . collect($errors->all())->map(fn ($e) => '<li>' . e($e) . '</li>')->implode('') . '</ul>'),
-      confirmButtonText: 'Mengerti',
-      confirmButtonColor: '#002f80',
-      customClass: { popup: 'rounded-3xl' },
-    });
+    (function () {
+      var items = @json($errors->all()).map(function (m, i) {
+        return '<li style="display:flex;gap:.5rem;align-items:flex-start;padding:.35rem 0;border-bottom:1px solid #f1f5f9">'
+          + '<span style="min-width:1.35rem;height:1.35rem;border-radius:9999px;background:#fbe0e4;color:#a30014;font-size:.7rem;font-weight:800;display:inline-flex;align-items:center;justify-content:center">' + (i + 1) + '</span>'
+          + '<span>' + m.replace(/</g, '&lt;') + '</span></li>';
+      }).join('');
+      Swal.fire({
+        icon: 'error',
+        title: 'Ada ' + @json(count($errors->all())) + ' hal yang perlu diperbaiki',
+        html: '<ul style="text-align:left;list-style:none;margin:0;padding:0">' + items + '</ul>',
+        confirmButtonText: 'Mengerti, saya perbaiki',
+        confirmButtonColor: navy,
+        showCloseButton: true,
+        customClass: { popup: 'rounded-3xl', title: '!text-lg' },
+      });
+    })();
   @endif
+
   // Konfirmasi cantik untuk form destruktif (data-confirm="pesan…?")
   document.querySelectorAll('form[data-confirm]').forEach(function (form) {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       Swal.fire({
-        icon: 'warning', title: 'Yakin?',
+        icon: 'warning', title: 'Yakin melanjutkan?',
         text: form.getAttribute('data-confirm'),
-        showCancelButton: true, confirmButtonText: 'Ya, lanjutkan', cancelButtonText: 'Batal',
-        confirmButtonColor: '#c90018', cancelButtonColor: '#002f80',
-        customClass: { popup: 'rounded-3xl' },
-      }).then(function (r) { if (r.isConfirmed) form.submit(); });
+        showCancelButton: true, confirmButtonText: 'Ya, lanjutkan', cancelButtonText: 'Batalkan',
+        confirmButtonColor: red, cancelButtonColor: navy,
+        reverseButtons: true, focusCancel: true, showCloseButton: true,
+        customClass: { popup: 'rounded-3xl', title: '!text-lg' },
+      }).then(function (r) {
+        if (r.isConfirmed) {
+          Swal.fire({
+            title: 'Memproses…', allowOutsideClick: false, showConfirmButton: false,
+            customClass: { popup: 'rounded-3xl' },
+            didOpen: function () { Swal.showLoading(); },
+          });
+          form.submit();
+        }
+      });
     });
   });
 });

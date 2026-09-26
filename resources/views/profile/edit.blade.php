@@ -116,12 +116,19 @@ $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STA
   </div>
 
   <aside class="space-y-5">
-    {{-- Tombol buka modal edit --}}
-    {{-- <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 text-center">
-      <h2 class="font-extrabold text-[#002f80]">Kelola profile</h2>
-      <p class="text-xs text-slate-400 mt-1 mb-3">Perbarui nama, TTL, nomor WA, info akademik, dan foto profil.</p>
-      <button type="button" onclick="openProfileModal(event)" class="btn-primary w-full !py-2.5">Edit Profile</button>
-    </div> --}}
+    {{-- Ganti kata sandi --}}
+    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+      <h2 class="font-extrabold text-[#002f80] flex items-center gap-2">@include('components.icon', ['name' => 'lock', 'class' => 'w-4 h-4']) Ganti Kata Sandi</h2>
+      <form method="post" action="{{ route('profile.password') }}" class="space-y-3 mt-3">@csrf @method('PUT')
+        <div><label class="text-[13px] font-bold">Kata sandi saat ini</label><input type="password" name="current_password" required autocomplete="current-password" class="field mt-1 !py-2 !text-[13px]">
+          @error('current_password')<p class="text-xs font-semibold text-[#c90018] mt-1">{{ $message }}</p>@enderror</div>
+        <div><label class="text-[13px] font-bold">Kata sandi baru</label><input type="password" name="password" required autocomplete="new-password" class="field mt-1 !py-2 !text-[13px]">
+          @error('password')<p class="text-xs font-semibold text-[#c90018] mt-1">{{ $message }}</p>@enderror</div>
+        <div><label class="text-[13px] font-bold">Konfirmasi kata sandi baru</label><input type="password" name="password_confirmation" required autocomplete="new-password" class="field mt-1 !py-2 !text-[13px]"></div>
+        <p class="text-[11px] text-slate-400">Min. 8 karakter: huruf besar, huruf kecil, angka, dan karakter khusus.</p>
+        <button class="btn-primary w-full !py-2.5">Ganti Kata Sandi</button>
+      </form>
+    </div>
 
     {{-- Peningkatan peran --}}
     @if($user->role === 'anggota')

@@ -6,11 +6,20 @@ use App\Models\Category;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class LokonTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Fake disks agar upload test tidak mengotori storage dev
+        Storage::fake('private');
+        Storage::fake('public');
+    }
 
     public function test_home_galeri_publik(): void
     {
@@ -24,6 +33,33 @@ class LokonTest extends TestCase
         $this->get('/?q=Matematika')->assertStatus(200)->assertSee('Matematika');
         $cat = Category::first()->slug;
         $this->get('/?kategori='.$cat)->assertStatus(200);
+    }
+
+    public function test_pencarian_fulltext(): void
+    {
+        $user = User::factory()->create(['role' => 'staff']);
+        Document::factory()->for($user)->create([
+            'slug' => 'fts-a', 'title' => 'Rumus Kalkulus Lengkap', 'description' => 'Lembar contekan turunan dan integral',
+            'visibility' => 'public',
+        ]);
+        Document::factory()->for($user)->create([
+            'slug' => 'fts-b', 'title' => 'Sejarah Kerajaan', 'description' => 'Tidak ada kaitan sama sekali',
+            'visibility' => 'public',
+        ]);
+
+        // dua kata = AND, hanya dokumen relevan yang kembali
+        $hasil = Document::search('kalkulus integral')->pluck('slug')->all();
+        $this->assertContains('fts-a', $hasil);
+        $this->assertNotContains('fts-b', $hasil);
+
+        // karakter operator FTS dinetralkan, tidak error
+        $this->get('/?q=' . urlencode('"kalkulus" OR * integral^'))->assertStatus(200);
+
+        // satu huruf: fallback aman, tidak error
+        $this->get('/?q=' . urlencode('a'))->assertStatus(200);
+
+        // query kosong: semua dokumen publik
+        $this->assertGreaterThanOrEqual(2, Document::search('')->where('visibility', 'public')->count());
     }
 
     public function test_dokumen_populer_dan_show(): void
@@ -42,8 +78,8 @@ class LokonTest extends TestCase
         $this->post('/daftar', [
             'name' => 'Guru YPL',
             'email' => 'guru@lokon.or.id',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Lokon#2026',
+            'password_confirmation' => 'Lokon#2026',
         ])->assertRedirect('/unggah'); // redirect ke halaman yang awalnya dituju (intended)
         $this->assertAuthenticated();
     }
@@ -180,9 +216,38 @@ class LokonTest extends TestCase
     {
         $this->post('/daftar', [
             'name' => 'Siswa YPL', 'email' => 'siswa@lokon.or.id',
-            'password' => 'password123', 'password_confirmation' => 'password123',
+            'password' => 'Lokon#2026', 'password_confirmation' => 'Lokon#2026',
+            'wa_number' => '089612345678',
         ])->assertRedirect('/');
-        $this->assertEquals('anggota', User::where('email', 'siswa@lokon.or.id')->value('role'));
+        $siswa = User::where('email', 'siswa@lokon.or.id')->first();
+        $this->assertEquals('anggota', $siswa->role);
+        $this->assertEquals('+6289612345678', $siswa->wa_number);
+
+        // WA salah format: ditolak
+        $this->post('/daftar', [
+            'name' => 'Siswa Dua', 'email' => 'siswa2@lokon.or.id',
+            'password' => 'Lokon#2026', 'password_confirmation' => 'Lokon#2026',
+            'wa_number' => 'bukan-nomor',
+        ])->assertSessionHasErrors('wa_number');
+        $this->assertNull(User::where('email', 'siswa2@lokon.or.id')->first());
+    }
+
+    public function test_password_registrasi_harus_kuat(): void
+    {
+        $lemah = ['password123', 'PASSWORD123#', 'Password###', 'Pass1234', 'Loklokok'];
+        foreach ($lemah as $i => $pw) {
+            $this->post('/daftar', [
+                'name' => "Lemah $i", 'email' => "lemah$i@lokon.or.id",
+                'password' => $pw, 'password_confirmation' => $pw,
+            ])->assertSessionHasErrors('password');
+            $this->assertNull(User::where('email', "lemah$i@lokon.or.id")->first());
+        }
+
+        $this->post('/daftar', [
+            'name' => 'Kuat', 'email' => 'kuat@lokon.or.id',
+            'password' => 'Lokon#2026', 'password_confirmation' => 'Lokon#2026',
+        ])->assertRedirect('/');
+        $this->assertNotNull(User::where('email', 'kuat@lokon.or.id')->first());
     }
 
     public function test_alur_persetujuan_peran(): void
@@ -338,6 +403,32 @@ class LokonTest extends TestCase
             ->assertSessionHasErrors(['wa_number' => 'Nomor WA tidak dikenali. Tulis nomor HP Indonesia, contoh: 089612345678 atau +6289612345678.']);
     }
 
+    public function test_ganti_kata_sandi(): void
+    {
+        $user = User::factory()->create(['role' => 'anggota', 'password' => 'Lama#1234']);
+
+        // sandi saat ini salah: ditolak
+        $this->actingAs($user)->put('/profil/kata-sandi', [
+            'current_password' => 'Salah#1234',
+            'password' => 'Baru#5678', 'password_confirmation' => 'Baru#5678',
+        ])->assertSessionHasErrors('current_password');
+
+        // sandi baru lemah: ditolak
+        $this->actingAs($user)->put('/profil/kata-sandi', [
+            'current_password' => 'Lama#1234',
+            'password' => 'lemah123', 'password_confirmation' => 'lemah123',
+        ])->assertSessionHasErrors('password');
+
+        // berhasil: bisa masuk dengan sandi baru
+        $this->actingAs($user)->put('/profil/kata-sandi', [
+            'current_password' => 'Lama#1234',
+            'password' => 'Baru#5678', 'password_confirmation' => 'Baru#5678',
+        ])->assertRedirect();
+        $this->post('/keluar');
+        $this->post('/masuk', ['email' => $user->email, 'password' => 'Baru#5678'])->assertRedirect('/');
+        $this->assertAuthenticatedAs($user->fresh());
+    }
+
     public function test_fitur_preview_suka_unduhhtml_semat(): void
     {
         $staff = User::factory()->create(['role' => 'staff']);
@@ -479,12 +570,35 @@ class LokonTest extends TestCase
         $this->post('/daftar', [
             'name' => 'Pengguna Baru',
             'email' => 'baru@lokon.or.id',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Lokon#2026',
+            'password_confirmation' => 'Lokon#2026',
         ])->assertRedirect('/');
 
         $this->assertAuthenticated();
         $this->assertNull(User::where('email', 'baru@lokon.or.id')->value('email_verified_at'));
         $this->get('/unggah')->assertRedirect(route('verification.notice'));
+    }
+
+    public function test_email_pendaftaran_bebas_dan_bisa_dibatasi(): void
+    {
+        $pw = ['password' => 'Lokon#2026', 'password_confirmation' => 'Lokon#2026'];
+
+        // default: email bebas (gmail dsb. diterima)
+        $this->post('/daftar', ['name' => 'Bebas', 'email' => 'bebas@gmail.com'] + $pw)->assertRedirect('/');
+        $this->assertNotNull(User::where('email', 'bebas@gmail.com')->first());
+
+        // SA membatasi domain
+        $sa = User::factory()->create(['role' => 'superadmin']);
+        $this->actingAs($sa)->put('/sa/pengaturan', [
+            'site_name' => 'X', 'foundation_name' => 'Y',
+            'reg_domains' => 'lokon.or.id, ypl.ac.id',
+            'feat_reg' => '1', 'feat_upload' => '1', 'feat_editor' => '1', 'feat_download' => '1',
+            'feat_like' => '1', 'feat_favorite' => '1', 'feat_share' => '1', 'feat_embed' => '1',
+        ])->assertRedirect();
+
+        $this->post('/daftar', ['name' => 'Tolak', 'email' => 'tolak@gmail.com'] + $pw)
+            ->assertSessionHasErrors('email');
+        $this->post('/daftar', ['name' => 'Terima', 'email' => 'terima@ypl.ac.id'] + $pw)->assertRedirect('/');
+        $this->assertNotNull(User::where('email', 'terima@ypl.ac.id')->first());
     }
 }

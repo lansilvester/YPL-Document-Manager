@@ -80,6 +80,9 @@
 @case('compass')
 <circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/>
 @break
+@case('menu')
+<path d="M4 6h16M4 12h16M4 18h16"/>
+@break
 @case('x')
 <path d="M18 6 6 18M6 6l12 12"/>
 @break

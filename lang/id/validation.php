@@ -1,0 +1,68 @@
+<?php
+
+// Pesan validasi Bahasa Indonesia (kunci yang tidak ada memakai fallback Inggris).
+return [
+    'required' => 'Kolom :attribute wajib diisi.',
+    'string' => 'Kolom :attribute harus berupa teks.',
+    'email' => 'Kolom :attribute harus alamat email yang valid.',
+    'unique' => ':Attribute sudah terdaftar.',
+    'exists' => ':Attribute yang dipilih tidak valid.',
+    'confirmed' => 'Konfirmasi :attribute tidak cocok.',
+    'in' => ':Attribute yang dipilih tidak valid.',
+    'array' => 'Kolom :attribute harus berupa pilihan.',
+    'file' => 'Kolom :attribute harus berupa berkas.',
+    'image' => 'Kolom :attribute harus berupa gambar.',
+    'boolean' => 'Kolom :attribute harus benar atau salah.',
+    'date' => 'Kolom :attribute harus tanggal yang valid.',
+    'integer' => 'Kolom :attribute harus bilangan bulat.',
+    'numeric' => 'Kolom :attribute harus angka.',
+
+    'min' => [
+        'string' => 'Kolom :attribute minimal :min karakter.',
+        'file' => 'Kolom :attribute minimal :min kilobita.',
+    ],
+    'max' => [
+        'string' => 'Kolom :attribute maksimal :max karakter.',
+        'file' => 'Kolom :attribute maksimal :max kilobita.',
+    ],
+    'before' => 'Kolom :attribute harus sebelum :date.',
+    'after' => 'Kolom :attribute harus setelah :date.',
+    'mimes' => 'Kolom :attribute harus bertipe: :values.',
+    'regex' => 'Format kolom :attribute tidak valid.',
+
+    'password' => [
+        'letters' => 'Kolom :attribute wajib mengandung huruf.',
+        'mixed' => 'Kolom :attribute wajib mengandung huruf besar dan huruf kecil.',
+        'numbers' => 'Kolom :attribute wajib mengandung angka.',
+        'symbols' => 'Kolom :attribute wajib mengandung karakter khusus.',
+        'uncompromised' => 'Kolom :attribute terdeteksi bocor di data publik. Gunakan yang lain.',
+    ],
+
+    'attributes' => [
+        'name' => 'nama',
+        'email' => 'email',
+        'password' => 'kata sandi',
+        'password_confirmation' => 'konfirmasi kata sandi',
+        'title' => 'judul',
+        'description' => 'deskripsi',
+        'category_id' => 'kategori',
+        'visibility' => 'visibilitas',
+        'file' => 'berkas',
+        'content' => 'isi dokumen',
+        'tags' => 'tag',
+        'color' => 'warna',
+        'avatar' => 'foto profil',
+        'academic_info' => 'info akademik',
+        'birth_place' => 'tempat lahir',
+        'birth_date' => 'tanggal lahir',
+        'wa_number' => 'nomor WA',
+        'requested_role' => 'peran yang diminta',
+        'reason' => 'alasan',
+        'role' => 'peran',
+        'site_name' => 'nama situs',
+        'foundation_name' => 'nama yayasan',
+        'reg_domains' => 'domain email',
+        'logo' => 'logo',
+        'q' => 'pencarian',
+    ],
+];

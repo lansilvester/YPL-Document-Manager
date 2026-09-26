@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Document extends Model
 {
@@ -45,6 +46,102 @@ class Document extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
+    }
+
+    /**
+     * Pencarian full-text yang optimal per driver DB:
+     * - sqlite → FTS5 + peringkat bm25 (relevansi, bukan abjad/terbaru)
+     * - mysql  → FULLTEXT boolean mode + fallback LIKE untuk recall
+     * - lain   → LIKE (fallback aman)
+     * Input pengguna selalu disanitasi agar operator FTS/wildcard tidak merusak query.
+     */
+    public function scopeSearch($query, string $term)
+    {
+        $term = trim($term);
+        if ($term === '') {
+            return $query;
+        }
+
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            return $this->applyFts($query, $term);
+        }
+        if ($driver === 'mysql') {
+            return $this->applyFulltext($query, $term);
+        }
+
+        return $this->applyLike($query, $term);
+    }
+
+    private function applyFts($query, string $term)
+    {
+        $match = static::ftsMatch($term);
+        if ($match === null) {
+            return $this->applyLike($query, $term);
+        }
+
+        return $query->select('documents.*')
+            ->join('documents_fts', 'documents_fts.rowid', '=', 'documents.id')
+            ->whereRaw('documents_fts MATCH ?', [$match])
+            ->orderByRaw('bm25(documents_fts)');
+    }
+
+    private function applyFulltext($query, string $term)
+    {
+        $bool = static::booleanMatch($term);
+        $like = static::likePattern($term);
+
+        return $query
+            ->where(fn ($w) => $w
+                ->whereRaw('MATCH(title, description) AGAINST(? IN BOOLEAN MODE)', [$bool])
+                ->orWhere('title', 'like', $like)
+                ->orWhere('description', 'like', $like))
+            ->orderByRaw('MATCH(title, description) AGAINST(? IN NATURAL LANGUAGE MODE) DESC', [$term]);
+    }
+
+    private function applyLike($query, string $term)
+    {
+        $like = static::likePattern($term);
+
+        return $query->where(fn ($w) => $w
+            ->where('title', 'like', $like)
+            ->orWhere('description', 'like', $like));
+    }
+
+    /** "kata1 kata2" → '"kata1" "kata2"' (implisit AND, operator FTS dinetralkan). */
+    public static function ftsMatch(string $term): ?string
+    {
+        $terms = preg_split('/\s+/u', $term, 12, PREG_SPLIT_NO_EMPTY) ?: [];
+        $quoted = [];
+        foreach ($terms as $t) {
+            $t = trim(str_replace('"', '', $t), "*^:.()");
+            if (mb_strlen($t) >= 2) {
+                $quoted[] = '"'.$t.'"';
+            }
+        }
+
+        return $quoted ? implode(' ', $quoted) : null;
+    }
+
+    /** "kata1 kata2" → '+kata1* +kata2*' untuk boolean mode MySQL. */
+    public static function booleanMatch(string $term): string
+    {
+        $terms = preg_split('/\s+/u', $term, 12, PREG_SPLIT_NO_EMPTY) ?: [];
+        $out = [];
+        foreach ($terms as $t) {
+            $t = preg_replace('/[^0-9A-Za-z\x{80}-\x{10FFFF}]/u', '', $t) ?? '';
+            if (mb_strlen($t) >= 2) {
+                $out[] = '+'.$t.'*';
+            }
+        }
+
+        return $out ? implode(' ', $out) : '+'.preg_replace('/\W/u', '', $term);
+    }
+
+    /** Pola LIKE aman (% dan _ milik user di-escape). */
+    public static function likePattern(string $term): string
+    {
+        return '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $term).'%';
     }
 
     public function isVisibleTo(?User $user): bool

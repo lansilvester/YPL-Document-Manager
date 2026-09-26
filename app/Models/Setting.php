@@ -34,6 +34,7 @@ class Setting extends Model
         'favorite_enabled' => '1',
         'share_enabled' => '1',
         'embed_enabled' => '1',
+        'reg_domains' => '',
     ];
 
     public const FEATURES = [

@@ -94,6 +94,22 @@ class ProfileController extends Controller
         return back()->with('ok', 'Profil diperbarui.');
     }
 
+    public function updatePassword(Request $request)
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
+        ], [
+            'current_password.required' => 'Kata sandi saat ini wajib diisi.',
+            'current_password.current_password' => 'Kata sandi saat ini salah.',
+        ]);
+
+        $request->user()->update(['password' => $data['password']]);
+        \App\Models\ActivityLog::record(auth()->id(), null, 'password_change');
+
+        return back()->with('ok', 'Kata sandi berhasil diganti. Gunakan kata sandi baru saat masuk berikutnya.');
+    }
+
     /**
      * Normalisasi nomor HP Indonesia ke format +62….
      * Menerima: 0896…, +62896…, 62896…, 896…, (0896) 123-4567, dst.
@@ -101,24 +117,6 @@ class ProfileController extends Controller
      */
     private function normalizeWa(string $input): ?string
     {
-        $input = trim($input);
-        $hasPlus = str_starts_with($input, '+');
-        $digits = preg_replace('/\D/', '', $input) ?? '';
-        if ($digits === '') {
-            return null;
-        }
-
-        if ($hasPlus) {
-            $norm = '+'.$digits;
-        } elseif (str_starts_with($digits, '62')) {
-            $norm = '+'.$digits;
-        } elseif (str_starts_with($digits, '0')) {
-            $norm = '+62'.substr($digits, 1);
-        } else {
-            $norm = '+62'.$digits; // tanpa awalan, mis. 896xxxxxxx
-        }
-
-        // Nomor HP Indonesia: +62 + 8–13 digit
-        return preg_match('/^\+62\d{8,13}$/', $norm) ? $norm : null;
+        return \App\Services\WaNumber::normalize($input);
     }
 }
