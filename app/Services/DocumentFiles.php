@@ -19,6 +19,20 @@ class DocumentFiles
     private const DISK = 'private';
 
     /**
+     * Pastikan file yang dicoba diunggah valid. File yang dibuang PHP secara diam-diam
+     * (melebihi upload_max_filesize) terdeteksi di sini agar tidak lolos tanpa pesan.
+     */
+    public static function ensureValidUpload(\Illuminate\Http\Request $request, string $key = 'file'): void
+    {
+        $file = $request->file($key);
+        if ($file && ! $file->isValid()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                $key => 'File gagal diunggah — ukurannya melebihi batas server (maks 55 MB). Kecilkan atau kompres dulu PDF-nya.',
+            ]);
+        }
+    }
+
+    /**
      * Jalankan $callback dalam transaksi; bila gagal, hapus berkas baru yang sempat tersimpan.
      *
      * @param callable(array &$gate): mixed $callback  isi $gate['paths'][] untuk berkas baru

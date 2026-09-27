@@ -270,6 +270,67 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     });
   });
+
+  // Upload interaktif: progress bar + tombol batal untuk semua form multipart berisi file
+  document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      var fileInput = form.querySelector('input[type="file"]');
+      var file = fileInput && fileInput.files[0];
+      if (!file) return; // tanpa file: submit normal
+      e.preventDefault();
+
+      var bar = document.createElement('div');
+      bar.id = 'upload-progress-handler';
+      bar.innerHTML = '<div style="display:flex;align-items:center;gap:.6rem;background:#fff;border:1px solid #d6d6d6;border-radius:1rem;padding:.7rem 1rem;margin-bottom:.8rem;box-shadow:0 10px 30px -12px rgba(0,30,80,.35)">'
+        + '<div style="flex:1;height:.6rem;border-radius:9999px;background:#eef1f4;overflow:hidden"><div data-role="fill" style="height:100%;width:0%;border-radius:9999px;background:linear-gradient(90deg,#002f80,#0046c0);transition:width .15s"></div></div>'
+        + '<strong data-role="pct" style="font-size:.8rem;color:#002f80;min-width:3rem;text-align:right">0%</strong>'
+        + '<button type="button" data-role="cancel" style="font-size:.75rem;font-weight:700;color:#c90018">Batal</button></div>';
+      form.prepend(bar);
+      var fill = bar.querySelector('[data-role="fill"]');
+      var pct = bar.querySelector('[data-role="pct"]');
+      var submitBtn = form.querySelector('[type="submit"], button:not([type])');
+      if (submitBtn) submitBtn.disabled = true;
+
+      var xhr = new XMLHttpRequest();
+      bar.querySelector('[data-role="cancel"]').addEventListener('click', function () { xhr.abort(); });
+      xhr.upload.addEventListener('progress', function (ev) {
+        if (!ev.lengthComputable) return;
+        var p = Math.round(ev.loaded / ev.total * 100);
+        fill.style.width = p + '%';
+        pct.textContent = p + '%';
+      });
+      xhr.addEventListener('load', function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          fill.style.width = '100%';
+          pct.textContent = '100%';
+          window.location.href = xhr.responseURL || window.location.href;
+          return;
+        }
+        bar.remove();
+        if (submitBtn) submitBtn.disabled = false;
+        var msg = 'Unggahan gagal (kode ' + xhr.status + ').';
+        try {
+          var res = JSON.parse(xhr.responseText);
+          if (res && res.errors) msg = Object.values(res.errors).flat().join(' ');
+          else if (res && res.message) msg = res.message;
+        } catch (err) { /* pakai pesan default */ }
+        Swal.fire({ icon: 'error', title: 'Unggahan gagal', text: msg, confirmButtonText: 'Mengerti', confirmButtonColor: '#002f80', customClass: { popup: 'rounded-3xl' } });
+      });
+      xhr.addEventListener('error', function () {
+        bar.remove();
+        if (submitBtn) submitBtn.disabled = false;
+        Swal.fire({ icon: 'error', title: 'Koneksi terputus', text: 'Periksa internet lalu coba lagi.', confirmButtonText: 'Mengerti', confirmButtonColor: '#002f80', customClass: { popup: 'rounded-3xl' } });
+      });
+      xhr.addEventListener('abort', function () {
+        bar.remove();
+        if (submitBtn) submitBtn.disabled = false;
+      });
+      xhr.open('POST', form.action);
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      xhr.setRequestHeader('X-CSRF-TOKEN', form.querySelector('input[name="_token"]').value);
+      xhr.send(new FormData(form));
+    });
+  });
 });
 </script>
 @stack('scripts')

@@ -565,7 +565,7 @@ class LokonTest extends TestCase
         $this->assertStringContainsString('Isi aman', $content);
     }
 
-    public function test_akun_baru_harus_verifikasi_email_sebelum_upload(): void
+    public function test_akun_baru_langsung_bisa_upload_tanpa_verifikasi(): void
     {
         $this->post('/daftar', [
             'name' => 'Pengguna Baru',
@@ -575,8 +575,7 @@ class LokonTest extends TestCase
         ])->assertRedirect('/');
 
         $this->assertAuthenticated();
-        $this->assertNull(User::where('email', 'baru@lokon.or.id')->value('email_verified_at'));
-        $this->get('/unggah')->assertRedirect(route('verification.notice'));
+        $this->get('/unggah')->assertOk();
     }
 
     public function test_email_pendaftaran_bebas_dan_bisa_dibatasi(): void
@@ -600,5 +599,14 @@ class LokonTest extends TestCase
             ->assertSessionHasErrors('email');
         $this->post('/daftar', ['name' => 'Terima', 'email' => 'terima@ypl.ac.id'] + $pw)->assertRedirect('/');
         $this->assertNotNull(User::where('email', 'terima@ypl.ac.id')->first());
+    }
+
+    public function test_form_upload_memiliki_progress_handler(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $html = $this->actingAs($staff)->get('/unggah')->getContent();
+        $this->assertStringContainsString('enctype="multipart/form-data"', $html);
+        $this->assertStringContainsString('upload-progress-handler', $html);
+        $this->assertStringContainsString('XMLHttpRequest', $html);
     }
 }

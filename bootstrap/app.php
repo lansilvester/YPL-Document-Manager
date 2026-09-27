@@ -22,4 +22,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+        // 413 dari ValidatePostSize (melebihi post_max_size server) → kembalikan ke form
+        // dengan pesan Bahasa Indonesia, bukan halaman error kosong.
+        $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return null;
+            }
+
+            return back()->withErrors(['file' => 'File terlalu besar untuk server (maks 55 MB). Kecilkan atau kompres dulu PDF-nya.'])->withInput();
+        });
     })->create();

@@ -19,9 +19,6 @@ Route::get('/masuk', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/masuk', [AuthController::class, 'login'])->middleware('throttle:login');
 Route::get('/daftar', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/daftar', [AuthController::class, 'register']);
-Route::get('/email/verifikasi', fn () => view('auth.verify-email'))->middleware('auth')->name('verification.notice');
-Route::get('/email/verifikasi/{id}/{hash}', [AuthController::class, 'verifyEmail'])
-    ->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
 
 Route::get('/dokumen/{document:slug}', [DocumentController::class, 'show'])->name('documents.show');
 Route::get('/dokumen/{document:slug}/lihat', [DocumentController::class, 'stream'])->name('documents.stream');
@@ -29,11 +26,9 @@ Route::get('/semat/{document:slug}', [DocumentController::class, 'embed'])->name
 
 Route::middleware('auth')->group(function () {
     Route::post('/keluar', [AuthController::class, 'logout'])->name('logout');
-    Route::post('/email/verifikasi/kirim-ulang', [AuthController::class, 'resendVerification'])
-        ->middleware('throttle:6,1')->name('verification.send');
 
-    Route::get('/unggah', [DocumentController::class, 'create'])->middleware('verified')->name('documents.create');
-    Route::post('/unggah', [DocumentController::class, 'store'])->middleware(['verified', 'throttle:uploads'])->name('documents.store');
+    Route::get('/unggah', [DocumentController::class, 'create'])->name('documents.create');
+    Route::post('/unggah', [DocumentController::class, 'store'])->middleware('throttle:uploads')->name('documents.store');
     Route::get('/dokumen-saya', [DocumentController::class, 'my'])->name('documents.my');
     Route::get('/dokumen/{document:slug}/ubah', [DocumentController::class, 'edit'])->name('documents.edit');
     Route::put('/dokumen/{document:slug}', [DocumentController::class, 'update'])->name('documents.update');
@@ -43,8 +38,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/dokumen/{document:slug}/suka', [InteractionController::class, 'toggleLike'])->middleware('throttle:interactions')->name('documents.like');
     Route::get('/dokumen/{document:slug}/bagikan', [InteractionController::class, 'share'])->name('documents.share');
 
-    Route::get('/tulis', [EditorController::class, 'create'])->middleware('verified')->name('editor.create');
-    Route::post('/tulis', [EditorController::class, 'store'])->middleware(['verified', 'throttle:uploads'])->name('editor.store');
+    Route::get('/tulis', [EditorController::class, 'create'])->name('editor.create');
+    Route::post('/tulis', [EditorController::class, 'store'])->middleware('throttle:uploads')->name('editor.store');
     Route::get('/tulis/{document:slug}/ubah', [EditorController::class, 'edit'])->name('editor.edit');
     Route::put('/tulis/{document:slug}', [EditorController::class, 'update'])->name('editor.update');
 
@@ -57,7 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profil/kata-sandi', [ProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::post('/profil/permintaan-peran', [PromotionController::class, 'store'])->middleware('verified')->name('profile.role-request');
+    Route::post('/profil/permintaan-peran', [PromotionController::class, 'store'])->name('profile.role-request');
 
     Route::middleware('staff')->prefix('staff')->name('staff.')->group(function () {
         Route::get('/dokumen', [StaffController::class, 'index'])->name('documents');

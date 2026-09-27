@@ -147,6 +147,7 @@ class DocumentController extends Controller
 
     public function store(Request $request)
     {
+        \App\Services\DocumentFiles::ensureValidUpload($request);
         abort_unless(\App\Models\Setting::feature('upload'), 404, 'Fitur unggah dinonaktifkan.');
 
         $data = $request->validate([
@@ -196,6 +197,7 @@ class DocumentController extends Controller
 
     public function update(Request $request, Document $document)
     {
+        \App\Services\DocumentFiles::ensureValidUpload($request);
         $this->authorize('update', $document);
 
         $data = $request->validate([

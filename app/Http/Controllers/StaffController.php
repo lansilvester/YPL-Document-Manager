@@ -35,6 +35,7 @@ class StaffController extends Controller
 
     public function store(Request $request)
     {
+        \App\Services\DocumentFiles::ensureValidUpload($request);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -72,6 +73,7 @@ class StaffController extends Controller
 
     public function update(Request $request, Document $document)
     {
+        \App\Services\DocumentFiles::ensureValidUpload($request);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
