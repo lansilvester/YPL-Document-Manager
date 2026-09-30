@@ -46,6 +46,11 @@ class StaffController extends Controller
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:tags,id'],
             'file' => ['required', 'file', 'mimes:pdf', 'max:9216'],
+            'doc_type' => ['nullable', 'string', 'in:'.implode(',', Document::TYPES)],
+            'classification' => ['nullable', 'string', 'in:internal,confidential,public'],
+            'version' => ['nullable', 'string', 'max:20'],
+            'effective_at' => ['nullable', 'date'],
+            'review_at' => ['nullable', 'date', 'after_or_equal:effective_at'],
         ]);
 
         $doc = DocumentFiles::transactional(function (array &$gate) use ($request, $data) {
@@ -62,7 +67,13 @@ class StaffController extends Controller
                 'mime' => 'application/pdf',
                 'visibility' => $data['visibility'],
                 'source_type' => 'upload',
+                'doc_type' => $data['doc_type'] ?? null,
+                'classification' => $data['classification'] ?? null,
+                'version' => $data['version'] ?? '1.0',
+                'effective_at' => $data['effective_at'] ?? null,
+                'review_at' => $data['review_at'] ?? null,
             ]);
+            $doc->update(['doc_code' => 'YPL-'.strtoupper($doc->doc_type ?? 'DOC').'-'.$doc->id]);
             $doc->tags()->sync($data['tags'] ?? []);
 
             return $doc;
@@ -84,6 +95,11 @@ class StaffController extends Controller
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:tags,id'],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:9216'],
+            'doc_type' => ['nullable', 'string', 'in:'.implode(',', Document::TYPES)],
+            'classification' => ['nullable', 'string', 'in:internal,confidential,public'],
+            'version' => ['nullable', 'string', 'max:20'],
+            'effective_at' => ['nullable', 'date'],
+            'review_at' => ['nullable', 'date', 'after_or_equal:effective_at'],
         ]);
 
         DocumentFiles::transactional(function (array &$gate) use ($request, $data, $document) {
@@ -97,6 +113,11 @@ class StaffController extends Controller
                 'description' => $data['description'] ?? null,
                 'category_id' => $data['category_id'] ?? null,
                 'visibility' => $data['visibility'],
+                'doc_type' => $data['doc_type'] ?? $document->doc_type,
+                'classification' => $data['classification'] ?? $document->classification,
+                'version' => $data['version'] ?? $document->version,
+                'effective_at' => $data['effective_at'] ?? $document->effective_at,
+                'review_at' => $data['review_at'] ?? $document->review_at,
             ])->save();
             $document->tags()->sync($data['tags'] ?? []);
         });

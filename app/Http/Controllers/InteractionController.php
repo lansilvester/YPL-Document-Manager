@@ -8,6 +8,7 @@ use App\Models\Favorite;
 use App\Models\Like;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +17,7 @@ class InteractionController extends Controller
     // Fase 3: simpan ke favorit (toggle bookmark)
     public function toggleFavorite(Document $document)
     {
-        abort_unless(\App\Models\Setting::feature('favorite'), 404, 'Fitur favorit dinonaktifkan.');
+        abort_unless(Setting::feature('favorite'), 404, 'Fitur favorit dinonaktifkan.');
         $added = DB::transaction(function () use ($document) {
             $favorite = Favorite::where('user_id', auth()->id())
                 ->where('document_id', $document->id)
@@ -42,7 +43,7 @@ class InteractionController extends Controller
 
     public function favorites()
     {
-        abort_unless(\App\Models\Setting::feature('favorite'), 404, 'Fitur favorit dinonaktifkan.');
+        abort_unless(Setting::feature('favorite'), 404, 'Fitur favorit dinonaktifkan.');
         $docs = Document::whereIn('id', Favorite::where('user_id', auth()->id())->pluck('document_id'))
             ->with(['category', 'user', 'tags'])->latest()->paginate(12);
 
@@ -52,7 +53,7 @@ class InteractionController extends Controller
     // Fitur like: hanya anggota terdaftar (tamu dialihkan ke login oleh middleware auth)
     public function toggleLike(Document $document)
     {
-        abort_unless(\App\Models\Setting::feature('like'), 404, 'Fitur suka dinonaktifkan.');
+        abort_unless(Setting::feature('like'), 404, 'Fitur suka dinonaktifkan.');
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403);
         }
@@ -83,7 +84,7 @@ class InteractionController extends Controller
     // Fase 3: bagikan dokumen (tautan internal + medsos)
     public function share(Document $document)
     {
-        abort_unless(\App\Models\Setting::feature('share'), 404, 'Fitur bagikan dinonaktifkan.');
+        abort_unless(Setting::feature('share'), 404, 'Fitur bagikan dinonaktifkan.');
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403);
         }
@@ -104,7 +105,7 @@ class InteractionController extends Controller
         ReadingPosition::updateOrCreate(
             ['user_id' => auth()->id(), 'document_id' => $document->id],
             ['page' => $data['page'], 'total_pages' => $data['total_pages'] ?? null,
-             'percent' => $data['percent'] ?? 0]
+                'percent' => $data['percent'] ?? 0]
         );
 
         return response()->json(['ok' => true]);

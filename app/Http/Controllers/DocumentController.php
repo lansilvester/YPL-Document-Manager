@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Document;
+use App\Models\DocumentRelation;
+use App\Models\DocumentVersion;
 use App\Models\Favorite;
 use App\Models\Like;
 use App\Models\ReadingPosition;
@@ -40,7 +42,7 @@ class DocumentController extends Controller
     // Fase 1: buka dokumen + lanjut baca + atur tampilan
     public function show(Document $document)
     {
-        $document->load('tags');
+        $document->load(['tags', 'approver', 'versions.user', 'outgoingRelations.related']);
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403, 'Dokumen bersifat privat.');
         }
@@ -100,7 +102,81 @@ class DocumentController extends Controller
             ->limit(6)
             ->get();
 
-        return view('documents.show', compact('document', 'pref', 'position', 'isFav', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'related', 'popular'));
+        // Phase 3 — transisi lifecycle yang boleh dilakukan user ini.
+        $transitions = [];
+        if (auth()->check()) {
+            foreach (Document::TRANSITIONS[$document->status] ?? [] as $next) {
+                if (auth()->user()->can('transition', [$document, $next])) {
+                    $transitions[] = $next;
+                }
+            }
+        }
+
+        return view('documents.show', compact('document', 'pref', 'position', 'isFav', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'related', 'popular', 'transitions'));
+    }
+
+    /**
+     * Phase 3 — pindahkan status lifecycle dengan audit trail versi.
+     */
+    public function transition(Request $request, Document $document)
+    {
+        $data = $request->validate([
+            'to' => ['required', 'string', 'in:'.implode(',', Document::STATUSES)],
+            'change_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $this->authorize('transition', [$document, $data['to']]);
+
+        $from = $document->status;
+        DB::transaction(function () use ($document, $data, $from) {
+            DocumentVersion::create([
+                'document_id' => $document->id,
+                'user_id' => auth()->id(),
+                'version' => $document->version,
+                'from_status' => $from,
+                'to_status' => $data['to'],
+                'change_note' => $data['change_note'] ?? null,
+            ]);
+            $document->update(array_filter([
+                'status' => $data['to'],
+                'approver_id' => $data['to'] === 'active' ? auth()->id() : $document->approver_id,
+            ]));
+        });
+        ActivityLog::record(auth()->id(), $document->id, 'transition', ['from' => $from, 'to' => $data['to']]);
+
+        return back()->with('ok', "Status berubah: {$from} → {$data['to']}.");
+    }
+
+    /**
+     * Phase 3 — sambungkan dokumen terkait (connected knowledge).
+     */
+    public function attachRelation(Request $request, Document $document)
+    {
+        $this->authorize('relate', $document);
+
+        $data = $request->validate([
+            'related_slug' => ['required', 'string', 'max:255'],
+            'relation_type' => ['required', 'string', 'in:'.implode(',', DocumentRelation::TYPES)],
+        ]);
+
+        $related = Document::where('slug', $data['related_slug'])->firstOrFail();
+        abort_if($related->id === $document->id, 422, 'Dokumen tidak dapat direlasikan ke dirinya sendiri.');
+
+        DocumentRelation::firstOrCreate(
+            ['document_id' => $document->id, 'related_id' => $related->id],
+            ['relation_type' => $data['relation_type']]
+        );
+
+        return back()->with('ok', 'Relasi pengetahuan ditambahkan.');
+    }
+
+    public function detachRelation(Document $document, DocumentRelation $relation)
+    {
+        abort_unless($relation->document_id === $document->id, 404);
+        $this->authorize('relate', $document);
+        $relation->delete();
+
+        return back()->with('ok', 'Relasi pengetahuan dihapus.');
     }
 
     public function stream(Document $document)
@@ -186,12 +262,17 @@ class DocumentController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'visibility' => ['required', 'in:public,private,restricted'],
             'file' => ['required', 'file', 'mimes:pdf', 'max:9216'],
+            'doc_type' => ['nullable', 'string', 'in:'.implode(',', Document::TYPES)],
+            'classification' => ['nullable', 'string', 'in:internal,confidential,public'],
+            'version' => ['nullable', 'string', 'max:20'],
+            'effective_at' => ['nullable', 'date'],
+            'review_at' => ['nullable', 'date', 'after_or_equal:effective_at'],
         ]);
 
         $doc = DocumentFiles::transactional(function (array &$gate) use ($request, $data) {
             [$path, $size] = DocumentFiles::storeUpload($request->file('file'), $gate);
 
-            return Document::create([
+            $doc = Document::create([
                 'user_id' => auth()->id(),
                 'category_id' => $data['category_id'] ?? null,
                 'title' => $data['title'],
@@ -202,7 +283,15 @@ class DocumentController extends Controller
                 'mime' => 'application/pdf',
                 'visibility' => $data['visibility'],
                 'source_type' => 'upload',
+                'doc_type' => $data['doc_type'] ?? null,
+                'classification' => $data['classification'] ?? null,
+                'version' => $data['version'] ?? '1.0',
+                'effective_at' => $data['effective_at'] ?? null,
+                'review_at' => $data['review_at'] ?? null,
             ]);
+            $doc->update(['doc_code' => 'YPL-'.strtoupper($doc->doc_type ?? 'DOC').'-'.$doc->id]);
+
+            return $doc;
         });
 
         ActivityLog::record(auth()->id(), $doc->id, 'upload');
@@ -236,6 +325,11 @@ class DocumentController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
             'visibility' => ['required', 'in:public,private,restricted'],
             'file' => ['nullable', 'file', 'mimes:pdf', 'max:9216'],
+            'doc_type' => ['nullable', 'string', 'in:'.implode(',', Document::TYPES)],
+            'classification' => ['nullable', 'string', 'in:internal,confidential,public'],
+            'version' => ['nullable', 'string', 'max:20'],
+            'effective_at' => ['nullable', 'date'],
+            'review_at' => ['nullable', 'date', 'after_or_equal:effective_at'],
         ]);
 
         DocumentFiles::transactional(function (array &$gate) use ($request, $data, $document) {
@@ -249,6 +343,11 @@ class DocumentController extends Controller
                 'description' => $data['description'] ?? null,
                 'category_id' => $data['category_id'] ?? null,
                 'visibility' => $data['visibility'],
+                'doc_type' => $data['doc_type'] ?? $document->doc_type,
+                'classification' => $data['classification'] ?? $document->classification,
+                'version' => $data['version'] ?? $document->version,
+                'effective_at' => $data['effective_at'] ?? $document->effective_at,
+                'review_at' => $data['review_at'] ?? $document->review_at,
             ])->save();
         });
 

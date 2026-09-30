@@ -30,19 +30,63 @@ class AdminController extends Controller
 
     public function categories()
     {
-        return view('admin.categories', ['categories' => Category::withCount('documents')->orderBy('name')->get()]);
+        $categories = Category::withCount('documents')->orderBy('sort_order')->orderBy('name')->get();
+
+        return view('admin.categories', [
+            'categories' => $categories,
+            'handbooks' => $categories->where('collection', 'handbook'),
+            'others' => $categories->where('collection', '!=', 'handbook'),
+        ]);
     }
 
     public function storeCategory(Request $request)
     {
-        $data = $request->validate(['name' => ['required', 'string', 'max:100'], 'description' => ['nullable', 'string']]);
-        Category::create(['name' => $data['name'], 'slug' => Str::slug($data['name']).'-'.Str::lower(Str::random(4)), 'description' => $data['description'] ?? null]);
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string'],
+            'code' => ['nullable', 'string', 'max:10', 'unique:categories,code'],
+            'collection' => ['nullable', 'string', Rule::in(['handbook', 'governance', 'academic', 'boarding', 'staff', 'parent', 'public'])],
+            'color' => ['nullable', 'string', 'max:20'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:999'],
+        ]);
+        Category::create([
+            'name' => $data['name'],
+            'slug' => Str::slug($data['name']).'-'.Str::lower(Str::random(4)),
+            'description' => $data['description'] ?? null,
+            'code' => $data['code'] ?? null,
+            'collection' => $data['collection'] ?? null,
+            'color' => $data['color'] ?? null,
+            'sort_order' => $data['sort_order'] ?? 99,
+        ]);
 
         return back()->with('ok', 'Kategori ditambahkan.');
     }
 
+    public function updateCategory(Request $request, Category $category)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string'],
+            'code' => ['nullable', 'string', 'max:10', Rule::unique('categories', 'code')->ignore($category->id)],
+            'collection' => ['nullable', 'string', Rule::in(['handbook', 'governance', 'academic', 'boarding', 'staff', 'parent', 'public'])],
+            'color' => ['nullable', 'string', 'max:20'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:999'],
+        ]);
+        // Slug dipertahankan agar URL bookshelf stabil.
+        $category->update($data);
+        ActivityLog::record(auth()->id(), null, 'category_update', ['category' => $category->code ?? $category->slug]);
+
+        return back()->with('ok', "Handbook {$category->code} diperbarui.");
+    }
+
     public function destroyCategory(Category $category)
     {
+        if ($category->collection === 'handbook') {
+            return back()->withErrors(['category' => 'Handbook B01–B10 dilindungi dan tidak dapat dihapus.']);
+        }
+        if ($category->documents()->exists()) {
+            return back()->withErrors(['category' => 'Tidak dapat dihapus: masih ada dokumen di dalamnya. Pindahkan dulu dokumennya.']);
+        }
         $category->delete();
 
         return back()->with('ok', 'Kategori dihapus.');

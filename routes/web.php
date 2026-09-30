@@ -6,8 +6,12 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EditorController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InteractionController;
+use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\PortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\ReaderController;
+use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\SuperAdminController;
 use App\Models\ActivityLog;
@@ -55,6 +59,16 @@ Route::get('/deploy/{secret}', function (string $secret) {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/dokumen', [DocumentController::class, 'index'])->name('documents.index');
 
+// YPL SDL Phase 1 — Information Architecture.
+Route::get('/perpustakaan', [LibraryController::class, 'index'])->name('library.index');
+Route::get('/perpustakaan/{category:slug}', [LibraryController::class, 'show'])->name('library.show');
+Route::get('/tata-kelola', [PortalController::class, 'governance'])->name('governance.index');
+Route::get('/layanan', [PortalController::class, 'services'])->name('services.index');
+Route::get('/komunitas', [PortalController::class, 'community'])->name('community.index');
+Route::get('/kalender', [PortalController::class, 'calendar'])->name('calendar.index');
+Route::get('/tanya', [PortalController::class, 'ask'])->name('ask.index');
+Route::get('/wawasan', [PortalController::class, 'insight'])->name('insight.index');
+
 Route::get('/masuk', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/masuk', [AuthController::class, 'login'])->middleware('throttle:login');
 Route::get('/daftar', [AuthController::class, 'showRegister'])->name('register');
@@ -66,6 +80,7 @@ Route::get('/reset-password', [AuthController::class, 'showReset'])->name('passw
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:sensitive')->name('password.update');
 
 Route::get('/dokumen/{document:slug}', [DocumentController::class, 'show'])->name('documents.show');
+Route::get('/baca/{document:slug}', [ReaderController::class, 'show'])->name('reader.show');
 Route::get('/dokumen/{document:slug}/lihat', [DocumentController::class, 'stream'])->name('documents.stream');
 Route::get('/semat/{document:slug}', [DocumentController::class, 'embed'])->name('documents.embed');
 
@@ -91,6 +106,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/dokumen/{document:slug}/favorit', [InteractionController::class, 'toggleFavorite'])->middleware('throttle:interactions')->name('documents.favorite');
     Route::get('/favorit', [InteractionController::class, 'favorites'])->name('favorites.index');
 
+    // Phase 4 — Services: pengajuan layanan + permintaan saya.
+    Route::get('/layanan/minta/{type}', [ServiceRequestController::class, 'create'])->name('services.request');
+    Route::post('/layanan/minta', [ServiceRequestController::class, 'store'])->middleware('throttle:sensitive')->name('services.store');
+    Route::get('/permintaan-saya', [ServiceRequestController::class, 'my'])->name('services.my');
+
+    // Phase 3 — Governance lifecycle + connected knowledge.
+    Route::post('/dokumen/{document:slug}/transisi', [DocumentController::class, 'transition'])->middleware('throttle:sensitive')->name('documents.transition');
+    Route::post('/dokumen/{document:slug}/relasi', [DocumentController::class, 'attachRelation'])->middleware('throttle:sensitive')->name('documents.relations.store');
+    Route::delete('/dokumen/{document:slug}/relasi/{relation}', [DocumentController::class, 'detachRelation'])->middleware('throttle:sensitive')->name('documents.relations.destroy');
+
     Route::post('/api/dokumen/{document:slug}/posisi', [InteractionController::class, 'savePosition'])->middleware('throttle:interactions')->name('api.position');
     Route::post('/api/preferensi-baca', [InteractionController::class, 'savePrefs'])->middleware('throttle:interactions')->name('api.prefs');
 
@@ -106,12 +131,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/dokumen/{document}', [StaffController::class, 'destroy'])->name('documents.destroy');
         Route::post('/badge', [StaffController::class, 'storeTag'])->name('tags.store');
         Route::delete('/badge/{tag}', [StaffController::class, 'destroyTag'])->name('tags.destroy');
+        Route::get('/permintaan', [ServiceRequestController::class, 'manage'])->name('requests');
+        Route::post('/permintaan/{serviceRequest}/putus', [ServiceRequestController::class, 'decide'])->middleware('throttle:sensitive')->name('requests.decide');
     });
 
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/kategori', [AdminController::class, 'categories'])->name('categories');
         Route::post('/kategori', [AdminController::class, 'storeCategory'])->name('categories.store');
+        Route::put('/kategori/{category:slug}', [AdminController::class, 'updateCategory'])->name('categories.update');
         Route::delete('/kategori/{category:slug}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
         Route::get('/pengguna', [AdminController::class, 'users'])->name('users');
         Route::put('/pengguna/{user}', [AdminController::class, 'updateUser'])->name('users.update');
@@ -129,5 +157,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/pengguna/{user}', [SuperAdminController::class, 'destroy'])->name('users.destroy');
         Route::get('/pengaturan', [SuperAdminController::class, 'settings'])->name('settings');
         Route::put('/pengaturan', [SuperAdminController::class, 'updateSettings'])->name('settings.update');
+        Route::get('/peran', [SuperAdminController::class, 'roles'])->name('roles');
+        Route::post('/peran', [SuperAdminController::class, 'storeRole'])->name('roles.store');
+        Route::put('/peran/{role}', [SuperAdminController::class, 'updateRoleDefinition'])->name('roles.update');
+        Route::delete('/peran/{role}', [SuperAdminController::class, 'destroyRole'])->name('roles.destroy');
     });
 });

@@ -12,15 +12,65 @@ use Illuminate\Support\Facades\DB;
 class Document extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        'user_id', 'category_id', 'title', 'slug', 'description',
+        'user_id', 'approver_id', 'category_id', 'title', 'slug', 'description',
         'file_path', 'file_size', 'mime', 'visibility', 'source_type',
         'content', 'views_count', 'downloads_count',
+        'doc_code', 'doc_type', 'version', 'status',
+        'effective_at', 'review_at', 'classification',
+    ];
+
+    public const STATUSES = ['draft', 'review', 'approval', 'active', 'review_due', 'archived'];
+
+    public const TYPES = ['policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision', 'form', 'evidence', 'handbook', 'other'];
+
+    /**
+     * Mesin transisi lifecycle: DRAFT → REVIEW → APPROVAL → ACTIVE → REVIEW_DUE → ARCHIVED.
+     *
+     * @var array<string, array<int, string>>
+     */
+    public const TRANSITIONS = [
+        'draft' => ['review', 'archived'],
+        'review' => ['approval', 'draft', 'archived'],
+        'approval' => ['active', 'draft', 'archived'],
+        'active' => ['review_due', 'archived'],
+        'review_due' => ['review', 'active', 'archived'],
+        'archived' => ['draft'],
     ];
 
     protected function casts(): array
     {
-        return ['views_count' => 'integer', 'downloads_count' => 'integer'];
+        return [
+            'views_count' => 'integer', 'downloads_count' => 'integer',
+            'effective_at' => 'date', 'review_at' => 'date',
+        ];
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approver_id');
+    }
+
+    public function versions(): HasMany
+    {
+        return $this->hasMany(DocumentVersion::class)->latest();
+    }
+
+    public function outgoingRelations(): HasMany
+    {
+        return $this->hasMany(DocumentRelation::class);
+    }
+
+    public function relatedDocuments(): BelongsToMany
+    {
+        return $this->belongsToMany(Document::class, 'document_relations', 'document_id', 'related_id')
+            ->withPivot('relation_type')->withTimestamps();
+    }
+
+    public function canTransitionTo(string $to): bool
+    {
+        return in_array($to, static::TRANSITIONS[$this->status] ?? [], true);
     }
 
     public function user(): BelongsTo
@@ -114,7 +164,7 @@ class Document extends Model
         $terms = preg_split('/\s+/u', $term, 12, PREG_SPLIT_NO_EMPTY) ?: [];
         $quoted = [];
         foreach ($terms as $t) {
-            $t = trim(str_replace('"', '', $t), "*^:.()");
+            $t = trim(str_replace('"', '', $t), '*^:.()');
             if (mb_strlen($t) >= 2) {
                 $quoted[] = '"'.$t.'"';
             }
@@ -155,6 +205,7 @@ class Document extends Model
         if ($user->role === 'admin' || $this->user_id === $user->id) {
             return true;
         }
+
         // restricted = hanya pengguna login (komunitas YPL)
         return $this->visibility === 'restricted';
     }

@@ -28,7 +28,7 @@ class LokonTest extends TestCase
     public function test_home_galeri_publik(): void
     {
         $this->seed();
-        $this->get('/')->assertStatus(200)->assertSee('Galeri Dokumen Publik');
+        $this->get('/')->assertStatus(200)->assertSee("WHAT'S NEW", false);
     }
 
     public function test_pencarian_dan_filter_kategori(): void

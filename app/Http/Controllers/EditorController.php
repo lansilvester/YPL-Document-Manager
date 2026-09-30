@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Document;
+use App\Models\Setting;
+use App\Services\DocumentFiles;
 use App\Services\HtmlSanitizer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -15,14 +17,14 @@ class EditorController extends Controller
     // Fase 3: tulis isi dokumen langsung di platform
     public function create()
     {
-        abort_unless(\App\Models\Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
+        abort_unless(Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
 
         return view('editor.create', ['categories' => Category::orderBy('name')->get()]);
     }
 
     public function store(Request $request)
     {
-        abort_unless(\App\Models\Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
+        abort_unless(Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -33,9 +35,9 @@ class EditorController extends Controller
         ]);
         $data['content'] = HtmlSanitizer::clean($data['content']);
 
-        $doc = \App\Services\DocumentFiles::transactional(function (array &$gate) use ($data) {
+        $doc = DocumentFiles::transactional(function (array &$gate) use ($data) {
             $pdfPath = 'documents/editor-'.Str::random(12).'.pdf';
-            \App\Services\DocumentFiles::putAtomically($pdfPath, Pdf::loadHTML('<h1>'.e($data['title']).'</h1><hr>'.$data['content'])->setPaper('a4')->output());
+            DocumentFiles::putAtomically($pdfPath, Pdf::loadHTML('<h1>'.e($data['title']).'</h1><hr>'.$data['content'])->setPaper('a4')->output());
             $gate['paths'][] = $pdfPath;
 
             return Document::create([
@@ -60,7 +62,7 @@ class EditorController extends Controller
     // Fase 3: ubah dokumen tersimpan tanpa unggah ulang
     public function edit(Document $document)
     {
-        abort_unless(\App\Models\Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
+        abort_unless(Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
         if ($document->source_type !== 'editor') {
             return redirect()->route('documents.edit', $document);
         }
@@ -71,7 +73,7 @@ class EditorController extends Controller
 
     public function update(Request $request, Document $document)
     {
-        abort_unless(\App\Models\Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
+        abort_unless(Setting::feature('editor'), 404, 'Fitur tulis dinonaktifkan.');
         $this->authorize('update', $document);
 
         $data = $request->validate([
@@ -83,7 +85,7 @@ class EditorController extends Controller
         ]);
         $data['content'] = HtmlSanitizer::clean($data['content']);
 
-        \App\Services\DocumentFiles::transactional(function () use ($data, $document) {
+        DocumentFiles::transactional(function () use ($data, $document) {
             $this->renderPdf($data['title'], $data['content'], $document->file_path);
 
             $document->fill([
@@ -109,9 +111,8 @@ class EditorController extends Controller
             ? $existing
             : 'documents/editor-'.Str::random(12).'.pdf';
         // Tulis atomik (temp + rename): pembaca concurrent tidak pernah melihat file setengah tulis.
-        \App\Services\DocumentFiles::putAtomically($path, $pdf->output());
+        DocumentFiles::putAtomically($path, $pdf->output());
 
         return $path;
     }
-
 }

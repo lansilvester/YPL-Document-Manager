@@ -13,6 +13,10 @@ use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Seed awal pasca-briefing YPL SDL: hanya taxonomy handbook B01-B10
+     * + koleksi library + akun admin. Tanpa kategori/format lama.
+     */
     public function run(): void
     {
         $admin = User::firstOrCreate(['email' => 'admin@lokon.or.id'], [
@@ -23,25 +27,24 @@ class DatabaseSeeder extends Seeder
             'academic_info' => 'Administrator Yayasan',
         ]);
 
-        $cats = collect([
-            ['Matematika', 'Materi dan soal matematika'],
-            ['Bahasa Indonesia', 'Materi bahasa dan sastra'],
-            ['IPA', 'Ilmu pengetahuan alam'],
-            ['Administrasi Yayasan', 'Dokumen departemen yayasan'],
-        ])->map(fn ($c) => Category::firstOrCreate(['slug' => Str::slug($c[0])], [
-            'name' => $c[0], 'description' => $c[1],
-        ]));
+        $this->call(YplHandbooksSeeder::class);
+        $this->call(YplGovernanceSeeder::class);
+        $this->call(RoleSeeder::class);
 
         $samples = [
-            ['Panduan Belajar Matematika Kelas 8', 'Kumpulan rumus dan contoh soal semester ganjil.', 128],
-            ['Tata Bahasa Indonesia Praktis', 'Panduan menulis dan ejaan untuk tugas sekolah.', 86],
-            ['Eksperimen IPA Sederhana', 'Panduan praktikum yang bisa dilakukan di kelas.', 54],
+            ['B01', 'Contoh Dokumen B01 — Ketentuan Umum', 'Dokumen contoh awal untuk koleksi B01 pasca-briefing.', 12],
+            ['B02', 'Contoh Dokumen B02 — Akademik', 'Dokumen contoh awal untuk koleksi B02 pasca-briefing.', 8],
         ];
-        foreach ($samples as $i => [$title, $desc, $views]) {
-            $content = '<p>'.e($desc).'</p><p>Dokumen contoh untuk Yayasan Pendidikan Lokon.</p>';
+
+        foreach ($samples as [$code, $title, $desc, $views]) {
+            $cat = Category::where('code', $code)->first();
+            if (! $cat) {
+                continue;
+            }
+            $content = '<p>'.e($desc).'</p><p>Dokumen contoh YPL Smart Digital Library.</p>';
             $doc = Document::firstOrCreate(['slug' => Str::slug($title)], [
                 'user_id' => $admin->id,
-                'category_id' => $cats[$i % $cats->count()]->id,
+                'category_id' => $cat->id,
                 'title' => $title,
                 'description' => $desc,
                 'visibility' => 'public',

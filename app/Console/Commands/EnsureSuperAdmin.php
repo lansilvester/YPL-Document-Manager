@@ -24,6 +24,7 @@ class EnsureSuperAdmin extends Command
         if ($existing->isNotEmpty() && ! $existing->contains('email', $email)) {
             if (! $this->option('force')) {
                 $this->error('Super Admin sudah ada: '.$existing->pluck('email')->join(', ').'. Gunakan --force untuk memindahkan.');
+
                 return self::FAILURE;
             }
             foreach ($existing as $old) {

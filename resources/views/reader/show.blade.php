@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ $document->title }} — Reader Mode · YPL</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root { --ypl-navy: #002f80; --ypl-red: #c90018; --paper: #faf6ec; }
+  html, body { height: 100%; }
+  body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
+  .font-reading { font-family: Georgia, 'Times New Roman', serif; }
+  #stage { perspective: 2200px; }
+  #pages { transform-style: preserve-3d; }
+  #pages.flipping { animation: pageturn .55s ease; }
+  @keyframes pageturn {
+    0% { transform: rotateY(0deg); opacity: 1; }
+    40% { transform: rotateY(-9deg); opacity: .85; }
+    100% { transform: rotateY(0deg); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #pages.flipping { animation: none; }
+  }
+  #reader-dark #pages canvas { filter: invert(0.92) hue-rotate(180deg); }
+  .pg-grid button:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #2f6bff; outline-offset: 2px; }
+</style>
+</head>
+<body id="reader-root" class="{{ $pref->theme === 'dark' ? 'bg-[#141920] text-stone-100' : 'bg-[#10182e] text-white' }} min-h-screen flex flex-col">
+<div class="h-1 shrink-0" style="background:linear-gradient(90deg,#002f80 60%,#c90018 60%)"></div>
+
+{{-- Top slim bar: kembali + kode/judul + menu --}}
+<header class="shrink-0 bg-[#0b1330] text-white">
+  <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2 flex items-center gap-3 text-sm">
+    <a href="{{ $document->category ? route('library.show', $document->category) : route('library.index') }}" class="w-9 h-9 rounded-full grid place-items-center hover:bg-white/10 shrink-0" aria-label="Kembali ke Library">←</a>
+    <div class="min-w-0 flex-1 text-center sm:text-left">
+      <span class="font-bold">{{ $document->category->code ?? 'YPL' }}</span>
+      <span class="opacity-50 mx-1.5">•</span>
+      <span class="truncate">{{ $document->title }}</span>
+    </div>
+    <div class="relative shrink-0">
+      <button id="btn-menu" class="w-9 h-9 rounded-full grid place-items-center hover:bg-white/10 font-bold" aria-haspopup="true" aria-expanded="false" aria-label="Menu pembaca">…</button>
+      <div id="menu-panel" class="hidden absolute right-0 mt-1 w-52 rounded-2xl bg-white text-slate-800 shadow-xl overflow-hidden z-50 text-sm font-semibold">
+        <button id="btn-theme" class="w-full text-left px-4 py-2.5 hover:bg-slate-100">{{ $pref->theme === 'dark' ? '☀ Tema Terang' : '☾ Tema Gelap' }}</button>
+        <button id="btn-full" class="w-full text-left px-4 py-2.5 hover:bg-slate-100">⛶ Layar Penuh</button>
+        <a href="{{ route('documents.show', $document) }}" class="block px-4 py-2.5 hover:bg-slate-100">Lihat halaman detail →</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+{{-- Stage + TOC drawer --}}
+<div class="flex-1 flex min-h-0 relative">
+  <aside id="toc-drawer" class="hidden absolute z-30 left-0 top-0 bottom-0 w-80 max-w-[85vw] overflow-y-auto bg-[#f5f1e8] text-slate-800 shadow-2xl">
+    <div class="flex items-center justify-between px-5 pt-4">
+      <h2 class="font-extrabold tracking-wide text-[#002f80]">CONTENTS</h2>
+      <button id="btn-toc-close" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 hover:bg-slate-200" aria-label="Tutup daftar isi">✕</button>
+    </div>
+    <div class="px-3 py-2 space-y-0.5">
+      <a href="{{ route('reader.show', $document) }}" class="block px-3 py-2.5 rounded-xl bg-[#002f80]/10 font-bold text-sm text-[#002f80]">▶ {{ $document->title }} <span class="block text-[11px] font-normal text-slate-500">Sedang dibaca</span></a>
+      @foreach($chapters as $i => $c)
+        <a href="{{ route('reader.show', $c) }}" class="block px-3 py-2 rounded-xl hover:bg-[#002f80]/5 text-sm"><span class="text-slate-400 font-bold mr-2">{{ $i + 2 }}.</span>{{ $c->title }}</a>
+      @endforeach
+    </div>
+    <div class="px-5 pb-5">
+      <h2 class="text-xs font-bold tracking-widest text-slate-400 mt-3 mb-2">TABLE OF CONTENTS</h2>
+      <p class="text-xs text-slate-500">Bab = dokumen lain dalam koleksi {{ $document->category->name ?? 'ini' }}.</p>
+      <h2 class="text-xs font-bold tracking-widest text-slate-400 mt-4 mb-2">DIRECT PAGE JUMP</h2>
+      <form id="form-jump" class="flex gap-2">
+        <input id="in-jump" type="number" min="1" placeholder="No. halaman" class="w-full rounded-full bg-white border border-slate-300 px-3 py-2 text-sm outline-none" aria-label="Lompat ke halaman">
+        <button class="shrink-0 rounded-full bg-[#002f80] text-white font-bold text-sm px-4">Go</button>
+      </form>
+      <h2 class="text-xs font-bold tracking-widest text-slate-400 mt-4 mb-2">PAGES</h2>
+      <div id="pg-grid" class="pg-grid flex flex-wrap gap-1.5"></div>
+    </div>
+  </aside>
+
+  <main id="stage" class="flex-1 min-w-0 overflow-y-auto">
+    <div id="search-panel" class="hidden mx-auto max-w-2xl mt-3 px-3">
+      <form id="form-search" class="flex gap-2 bg-white rounded-full p-1.5 shadow-xl">
+        <input id="in-search" placeholder="Search in book…" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0" aria-label="Cari dalam buku">
+        <button class="shrink-0 rounded-full font-bold text-sm px-5 py-2 text-white bg-[#002f80]">Find</button>
+      </form>
+      <div id="search-meta" class="text-xs text-slate-300 mt-1.5 px-1"></div>
+      <div id="search-hits" class="mt-1 space-y-1"></div>
+    </div>
+    <div id="aa-panel" class="hidden mx-auto max-w-2xl mt-3 px-3">
+      <div class="bg-[#f5f1e8] text-slate-800 rounded-2xl p-4 shadow-xl flex flex-wrap items-center gap-4 text-sm font-semibold">
+        <label class="flex items-center gap-2">Ukuran huruf
+          <select id="sel-zoom" class="rounded-full text-sm font-bold px-3 py-1.5 bg-white border border-slate-300 outline-none cursor-pointer">
+            @foreach([75, 100, 125, 150, 200] as $z)<option value="{{ $z }}" {{ (int) $pref->zoom === $z ? 'selected' : '' }}>{{ $z }}%</option>@endforeach
+          </select>
+        </label>
+        <label class="flex items-center gap-2">Tampilan
+          <select id="sel-layout" class="rounded-full text-sm font-bold px-3 py-1.5 bg-white border border-slate-300 outline-none cursor-pointer">
+            <option value="single" {{ $pref->layout === 'single' ? 'selected' : '' }}>Single page</option>
+            <option value="double" {{ $pref->layout === 'double' ? 'selected' : '' }}>Double page</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div id="pages" class="flex flex-wrap justify-center items-start gap-5 p-4 sm:p-6 min-h-[60vh]"></div>
+  </main>
+</div>
+
+{{-- Bottom toolbar ala blueprint --}}
+<footer class="shrink-0 bg-[#0b1330] border-t border-white/10 text-white">
+  <div class="max-w-7xl mx-auto px-2 sm:px-4 py-2 flex items-center gap-1 sm:gap-2 text-sm font-bold overflow-x-auto whitespace-nowrap">
+    <button id="btn-toc" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="toc-drawer">☰ <span class="hidden sm:inline">Contents</span></button>
+    <button id="btn-search" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="search-panel">⌕ <span class="hidden sm:inline">Search</span></button>
+    @auth
+      <form method="post" action="{{ route('documents.favorite', $document) }}" class="inline">@csrf<button class="px-3 py-2 rounded-full hover:bg-white/10" aria-label="Bookmark">{{ $isFav ? '★' : '☆' }} <span class="hidden sm:inline">Bookmark</span></button></form>
+    @else
+      <a href="{{ route('login') }}" class="px-3 py-2 rounded-full hover:bg-white/10">☆ <span class="hidden sm:inline">Bookmark</span></a>
+    @endauth
+    <button id="btn-aa" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="aa-panel">Aa</button>
+    <a href="{{ route('ask.index') }}" class="px-3 py-2 rounded-full hover:bg-white/10">✦ <span class="hidden sm:inline">Ask YPL</span></a>
+    <span class="flex-1"></span>
+    <button id="btn-prev" aria-label="Halaman sebelumnya" class="w-9 h-9 rounded-full grid place-items-center hover:bg-white/10 shrink-0">◀</button>
+    <span class="text-sm font-bold tabular-nums px-1 shrink-0"><span id="pg-now">1</span> / <span id="pg-total">…</span></span>
+    <button id="btn-next" aria-label="Halaman berikutnya" class="w-9 h-9 rounded-full grid place-items-center hover:bg-white/10 shrink-0">▶</button>
+    <span id="reading-pct" class="text-xs text-slate-300 tabular-nums pl-2 shrink-0">Reading 0%</span>
+  </div>
+</footer>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const PDF_URL = @json($document->fileUrl());
+const START_PAGE = @json(auth()->check() && $position ? (int) $position->page : 1);
+const IS_AUTH = @json(auth()->check());
+const SAVE_POS_URL = @json(auth()->check() ? route('api.position', $document) : null);
+const SAVE_PREF_URL = @json(auth()->check() ? route('api.prefs') : null);
+const CSRF = @json(csrf_token());
+let pdf = null, page = START_PAGE, zoom = @json((int) $pref->zoom), layout = @json($pref->layout);
+let theme = @json($pref->theme);
+if (window.matchMedia('(max-width: 767px)').matches && layout === 'double') layout = 'single';
+let saveTimer = null, pageTexts = {};
+
+async function render(flip = true) {
+  if (!PDF_URL) return;
+  pdf = pdf || await pdfjsLib.getDocument(PDF_URL).promise;
+  page = Math.min(Math.max(1, page), pdf.numPages);
+  const pct = Math.round(page / pdf.numPages * 100);
+  document.getElementById('pg-now').textContent = page;
+  document.getElementById('pg-total').textContent = pdf.numPages;
+  document.getElementById('reading-pct').textContent = 'Reading ' + pct + '%';
+  const box = document.getElementById('pages');
+  if (flip) { box.classList.remove('flipping'); void box.offsetWidth; box.classList.add('flipping'); }
+  box.innerHTML = '';
+  const pages = layout === 'double' && page < pdf.numPages ? [page, page + 1] : [page];
+  for (const n of pages) {
+    const p = await pdf.getPage(n);
+    const vp = p.getViewport({ scale: (zoom / 100) * 1.35 });
+    const cv = document.createElement('canvas');
+    cv.className = 'rounded-lg shadow-2xl max-w-full h-auto bg-white';
+    cv.height = vp.height; cv.width = vp.width;
+    box.appendChild(cv);
+    await p.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+  }
+  buildGrid();
+  if (IS_AUTH) { clearTimeout(saveTimer); saveTimer = setTimeout(savePosition, 1200); }
+}
+function step(d) {
+  const s = layout === 'double' ? 2 : 1;
+  const max = pdf ? pdf.numPages : 9999;
+  page = Math.min(Math.max(1, page + d * s), max);
+  render(true);
+}
+function buildGrid() {
+  const g = document.getElementById('pg-grid');
+  if (!pdf || g.dataset.built) return;
+  g.dataset.built = '1';
+  const n = Math.min(pdf.numPages, 200);
+  for (let i = 1; i <= n; i++) {
+    const b = document.createElement('button');
+    b.textContent = i;
+    b.className = 'w-9 h-9 rounded-full text-xs font-bold border border-slate-300 hover:bg-[#002f80] hover:text-white';
+    b.setAttribute('aria-label', 'Ke halaman ' + i);
+    b.onclick = () => { page = i; render(true); };
+    g.appendChild(b);
+  }
+}
+async function searchBook(q) {
+  const meta = document.getElementById('search-meta'), hits = document.getElementById('search-hits');
+  hits.innerHTML = ''; meta.textContent = 'Mencari…';
+  pdf = pdf || await pdfjsLib.getDocument(PDF_URL).promise;
+  const needle = q.toLowerCase(), found = [];
+  const n = Math.min(pdf.numPages, 100);
+  for (let i = 1; i <= n; i++) {
+    if (!pageTexts[i]) {
+      const tc = await (await pdf.getPage(i)).getTextContent();
+      pageTexts[i] = tc.items.map((it) => it.str).join(' ');
+    }
+    if (pageTexts[i].toLowerCase().includes(needle)) found.push(i);
+  }
+  meta.textContent = found.length ? found.length + ' halaman cocok untuk “' + q + '”.' : 'Tidak ditemukan dalam 100 halaman pertama.';
+  for (const p of found.slice(0, 20)) {
+    const b = document.createElement('button');
+    b.className = 'block w-full text-left text-xs bg-white/10 hover:bg-white/20 rounded-xl px-3 py-2 text-white';
+    b.textContent = '→ Halaman ' + p;
+    b.onclick = () => { page = p; render(true); };
+    hits.appendChild(b);
+  }
+}
+function savePosition() {
+  fetch(SAVE_POS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+    body: JSON.stringify({ page, total_pages: pdf ? pdf.numPages : null, percent: pdf ? Math.round(page / pdf.numPages * 100) : 0 }) });
+}
+function savePrefs() {
+  if (!IS_AUTH) return;
+  fetch(SAVE_PREF_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+    body: JSON.stringify({ theme, zoom, layout }) });
+}
+const toc = document.getElementById('toc-drawer'), btnToc = document.getElementById('btn-toc');
+function setToc(open) { toc.classList.toggle('hidden', !open); btnToc.setAttribute('aria-expanded', String(open)); }
+btnToc.onclick = () => setToc(toc.classList.contains('hidden'));
+document.getElementById('btn-toc-close').onclick = () => setToc(false);
+const sp = document.getElementById('search-panel'), btnSearch = document.getElementById('btn-search');
+btnSearch.onclick = () => { const open = sp.classList.toggle('hidden'); btnSearch.setAttribute('aria-expanded', String(!open)); if (!open) document.getElementById('in-search').focus(); };
+const aa = document.getElementById('aa-panel'), btnAa = document.getElementById('btn-aa');
+btnAa.onclick = () => { const open = aa.classList.toggle('hidden'); btnAa.setAttribute('aria-expanded', String(!open)); };
+document.getElementById('form-search').onsubmit = (e) => { e.preventDefault(); const q = document.getElementById('in-search').value.trim(); if (q) searchBook(q); };
+document.getElementById('form-jump').onsubmit = (e) => { e.preventDefault(); const v = parseInt(document.getElementById('in-jump').value, 10); if (v >= 1) { page = v; render(true); } };
+document.getElementById('btn-prev').onclick = () => step(-1);
+document.getElementById('btn-next').onclick = () => step(1);
+document.getElementById('sel-zoom').onchange = (e) => { zoom = +e.target.value; savePrefs(); render(false); };
+document.getElementById('sel-layout').onchange = (e) => { layout = e.target.value; savePrefs(); render(false); };
+const menu = document.getElementById('menu-panel'), btnMenu = document.getElementById('btn-menu');
+btnMenu.onclick = (e) => { e.stopPropagation(); const open = menu.classList.toggle('hidden'); btnMenu.setAttribute('aria-expanded', String(!open)); };
+document.addEventListener('click', (e) => { if (!menu.classList.contains('hidden') && !menu.contains(e.target)) menu.classList.add('hidden'); });
+document.getElementById('btn-theme').onclick = () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  document.getElementById('reader-root').className = (theme === 'dark' ? 'bg-[#141920] text-stone-100' : 'bg-[#10182e] text-white') + ' min-h-screen flex flex-col';
+  savePrefs(); render(false);
+};
+document.getElementById('btn-full').onclick = () => {
+  const r = document.getElementById('reader-root');
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (r.requestFullscreen) r.requestFullscreen();
+};
+let touchX = null;
+document.getElementById('stage').addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+document.getElementById('stage').addEventListener('touchend', (e) => {
+  if (touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1);
+  touchX = null;
+}, { passive: true });
+document.addEventListener('keydown', (e) => {
+  if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if (e.key === 'ArrowRight') step(1);
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'Escape') { setToc(false); menu.classList.add('hidden'); }
+});
+render(false);
+</script>
+</body>
+</html>

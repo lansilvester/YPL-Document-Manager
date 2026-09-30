@@ -8,6 +8,9 @@
       <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ $document->category->name ?? 'Tanpa kategori' }}</span>
       <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ ucfirst($document->visibility) }}</span>
       <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ $document->source_type === 'editor' ? 'Editor' : 'PDF' }}</span>
+      <span class="bg-green-400/25 border border-green-300/40 px-3 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</span>
+      <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">v{{ $document->version }}</span>
+      @if($document->doc_type)<span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->doc_type)) }}</span>@endif
     </div>
     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-3">{{ $document->title }}</h1>
     @if($document->tags->isNotEmpty())
@@ -16,6 +19,7 @@
     <p class="text-slate-300 text-sm mt-2 inline-flex items-center gap-1.5">Oleh <strong class="text-white">{{ $document->user->name }}</strong> · <span class="inline-flex items-center gap-1">@include('components.icon', ['name' => 'eye', 'class' => 'w-3.5 h-3.5']) {{ number_format($document->views_count) }}</span> · <span class="inline-flex items-center gap-1">@include('components.icon', ['name' => 'download', 'class' => 'w-3.5 h-3.5']) {{ number_format($document->downloads_count) }}</span></p>
     @if($document->description)<p class="text-slate-200 text-sm mt-2 max-w-2xl">{{ $document->description }}</p>@endif
     <div class="flex flex-wrap gap-2 mt-4 text-[13px] font-bold">
+      <a href="{{ route('reader.show', $document) }}" class="bg-[#c90018] text-white rounded-full px-5 py-2 shadow hover:brightness-110 inline-flex items-center gap-2">📖 Baca Imersif</a>
       @if($document->file_path && \App\Models\Setting::feature('download'))
         @auth
           <a href="{{ route('documents.download', $document) }}" class="bg-white text-[#002f80] rounded-full px-5 py-2 shadow hover:brightness-95 inline-flex items-center gap-2">@include('components.icon', ['name' => 'download', 'class' => 'w-4 h-4']) Unduh PDF</a>
@@ -52,6 +56,66 @@
 
 @section('content')
 @include('components.back-bar', ['trail' => array_filter([['Beranda', route('home')], $document->category ? [$document->category->name, route('documents.index', ['kategori' => $document->category->slug])] : null, [$document->title]])])
+
+{{-- Phase 3 — Document Passport + Lifecycle + Connected Knowledge --}}
+<div class="grid lg:grid-cols-2 gap-4 mb-6">
+  <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+    <h2 class="font-extrabold tracking-tight text-[#002f80]">DOCUMENT PASSPORT</h2>
+    <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
+      <div><dt class="text-[11px] font-bold text-slate-400">DOC ID</dt><dd class="font-bold">{{ $document->doc_code ?? '—' }}</dd></div>
+      <div><dt class="text-[11px] font-bold text-slate-400">TYPE</dt><dd class="font-bold">{{ $document->doc_type ? strtoupper(str_replace('_', ' ', $document->doc_type)) : '—' }}</dd></div>
+      <div><dt class="text-[11px] font-bold text-slate-400">OWNER</dt><dd class="font-bold">{{ $document->user->name }}</dd></div>
+      <div><dt class="text-[11px] font-bold text-slate-400">APPROVER</dt><dd class="font-bold">{{ $document->approver->name ?? '—' }}</dd></div>
+      <div><dt class="text-[11px] font-bold text-slate-400">EFFECTIVE</dt><dd class="font-bold">{{ $document->effective_at?->format('d M Y') ?? '—' }}</dd></div>
+      <div><dt class="text-[11px] font-bold text-slate-400">REVIEW</dt><dd class="font-bold">{{ $document->review_at?->format('d M Y') ?? '—' }}</dd></div>
+      <div><dt class="text-[11px] font-bold text-slate-400">CLASS</dt><dd class="font-bold">{{ $document->classification ? strtoupper($document->classification) : '—' }}</dd></div>
+      <div><dt class="text-[11px] font-bold text-slate-400">STATUS</dt><dd class="font-bold">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</dd></div>
+    </dl>
+    @if(!empty($transitions))
+      <div class="flex flex-wrap gap-2 mt-4">
+        @foreach($transitions as $next)
+          <form method="post" action="{{ route('documents.transition', $document) }}" class="inline">@csrf
+            <input type="hidden" name="to" value="{{ $next }}">
+            <button class="text-xs font-bold rounded-full px-4 py-2 {{ $next === 'active' ? 'bg-[#002f80] text-white' : ($next === 'archived' ? 'bg-[#c90018] text-white' : 'border border-[#002f80]/30 text-[#002f80] hover:bg-[#002f80] hover:text-white') }} transition">→ {{ strtoupper(str_replace('_', ' ', $next)) }}</button>
+          </form>
+        @endforeach
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2">Alur: DRAFT → REVIEW → APPROVAL → ACTIVE → REVIEW DUE → ARCHIVED</p>
+    @endif
+  </div>
+
+  <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+    <h2 class="font-extrabold tracking-tight text-[#002f80]">RELATED KNOWLEDGE</h2>
+    <div class="mt-2 space-y-1.5">
+      @forelse($document->outgoingRelations as $rel)
+        <div class="flex items-center gap-2 text-sm">
+          <span class="text-[10px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full shrink-0">{{ strtoupper($rel->relation_type) }}</span>
+          <a href="{{ route('documents.show', $rel->related) }}" class="font-bold truncate hover:text-[#002f80] flex-1">{{ $rel->related->title }}</a>
+          @can('relate', $document)
+            <form method="post" action="{{ route('documents.relations.destroy', [$document, $rel]) }}" class="inline">@csrf @method('DELETE')<button class="text-[#c90018] text-xs font-bold" aria-label="Hapus relasi">✕</button></form>
+          @endcan
+        </div>
+      @empty
+        <p class="text-[13px] text-slate-400">Belum ada relasi eksplisit. Tambahkan Handbook → Policy → SOP → Form di bawah.</p>
+      @endforelse
+    </div>
+    @can('relate', $document)
+      <form method="post" action="{{ route('documents.relations.store', $document) }}" class="flex gap-2 mt-3">@csrf
+        <input name="related_slug" required placeholder="slug-dokumen-terkait" class="field !text-xs flex-1" aria-label="Slug dokumen terkait">
+        <select name="relation_type" class="field !text-xs !w-auto" aria-label="Tipe relasi">@foreach(\App\Models\DocumentRelation::TYPES as $t)<option value="{{ $t }}">{{ $t }}</option>@endforeach</select>
+        <button class="btn-primary !py-2 !text-xs shrink-0">Tambah</button>
+      </form>
+    @endcan
+    @if($document->versions->isNotEmpty())
+      <h3 class="text-xs font-extrabold tracking-widest text-slate-400 mt-4 mb-1">VIEW HISTORY</h3>
+      <ol class="text-xs space-y-1 max-h-36 overflow-y-auto">
+        @foreach($document->versions as $v)
+          <li class="flex gap-2"><span class="text-slate-400 shrink-0">{{ $v->created_at->format('d M Y') }}</span><span><strong>v{{ $v->version }}</strong> {{ $v->from_status }} → <strong>{{ $v->to_status }}</strong> · {{ $v->user->name ?? 'sistem' }}{{ $v->change_note ? ' · '.$v->change_note : '' }}</span></li>
+        @endforeach
+      </ol>
+    @endif
+  </div>
+</div>
 
 <div class="grid lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start">
   {{-- Kiri: pratinjau dokumen --}}

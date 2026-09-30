@@ -1,7 +1,7 @@
 @extends('layout')
 @section('title', 'Beranda')
 @section('hero')
-{{-- Hero full-bleed: 100% lebar layar --}}
+{{-- Hero Library Mode: Everything YPL. One digital home. --}}
 <section class="w-full overflow-hidden text-white relative shadow-xl shadow-[#002f80]/25" style="background:linear-gradient(115deg,#001233 5%,#002f80 55%,#0a4fc4 100%)">
   <div class="absolute inset-y-0 right-0 w-1/2 opacity-20 hidden md:block" aria-hidden="true">
     <svg class="h-full w-full" viewBox="0 0 400 300" fill="none" preserveAspectRatio="xMidYMid slice">
@@ -16,13 +16,14 @@
   <div class="absolute top-0 right-0 w-40 h-40 rounded-full opacity-25" style="background:radial-gradient(circle,#c90018 0%,transparent 70%)" aria-hidden="true"></div>
   <div class="relative max-w-6xl mx-auto px-4 py-10 sm:py-14">
    <div class="max-w-2xl">
-    <div class="inline-flex items-center gap-2 bg-white/10 border border-white/25 rounded-full px-3 py-1 text-xs font-semibold tracking-wide">@include('components.icon', ['name' => 'sparkles', 'class' => 'w-3.5 h-3.5']) PERPUSTAKAAN DIGITAL YPL</div>
-    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mt-3 leading-tight">Semua pengetahuan Lokon,<br class="hidden sm:block"> dalam satu tempat.</h1>
-    <p class="text-slate-200 mt-2 text-sm sm:text-base">Jelajahi {{ number_format($stats['dokumen']) }} dokumen · {{ $stats['kategori'] }} kategori · {{ number_format($stats['views']) }} kali dibaca komunitas.</p>
-    <form action="{{ route('home') }}" method="get" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg max-w-xl">
-      <input name="q" value="{{ $q }}" placeholder="Coba: “matematika”, “panduan”, “praktikum”…" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
-      <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110 inline-flex items-center gap-2" style="background:linear-gradient(135deg,#002f80,#0046c0)">@include('components.icon', ['name' => 'search', 'class' => 'w-4 h-4']) Cari Dokumen</button>
+    <div class="inline-flex items-center gap-2 bg-white/10 border border-white/25 rounded-full px-3 py-1 text-xs font-semibold tracking-wide">YPL SMART DIGITAL LIBRARY</div>
+    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mt-3 leading-tight">Everything YPL.<br class="hidden sm:block"> One digital home.</h1>
+    <p class="text-slate-200 mt-2 text-sm sm:text-base">Knowledge • Governance • Community</p>
+    <form action="{{ route('documents.index') }}" method="get" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg max-w-xl">
+      <input name="q" value="{{ $q }}" placeholder="Apa yang ingin Anda ketahui atau lakukan?" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
+      <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110 inline-flex items-center gap-2" style="background:linear-gradient(135deg,#a30014,#c90018)">Search</button>
     </form>
+    <p class="text-slate-200 mt-2 text-xs sm:text-sm">Jelajahi {{ number_format($stats['dokumen']) }} dokumen · {{ $stats['kategori'] }} kategori · {{ number_format($stats['views']) }} kali dibaca komunitas.</p>
     @guest
       @if(\App\Models\Setting::feature('reg'))<p class="mt-3 text-xs text-slate-300">Punya materi untuk dibagikan? <a href="{{ route('register') }}" class="underline font-bold text-white">Daftar dengan email YPL</a> — gratis.</p>@endif
     @endguest
@@ -32,66 +33,57 @@
 @endsection
 @section('content')
 
-<div class="grid lg:grid-cols-3 gap-6 mt-6">
-  <div class="lg:col-span-2 min-w-0">
-    <div class="flex items-center gap-2 mb-1">
-      <h2 class="text-xl font-extrabold tracking-tight text-[#002f80]">Galeri Dokumen Publik</h2>
-      @if($q)<span class="text-xs bg-[#002f80]/10 text-[#002f80] font-bold px-2.5 py-1 rounded-full">“{{ $q }}” · {{ $docs->total() }} hasil</span>@endif
-    </div>
-    <p class="text-sm text-slate-500 mb-4">Koleksi terbaru dari komunitas YPL.</p>
-    <div class="flex gap-2 mb-5 text-[13px] font-semibold overflow-x-auto pb-1">
-      <a href="{{ route('home', ['q' => $q]) }}" class="shrink-0 px-4 py-1.5 rounded-full border transition {{ !$activeCat ? 'bg-[#002f80] text-white border-[#002f80] shadow' : 'bg-white border-[#d6d6d6] hover:border-[#002f80]' }}">Semua</a>
-      @foreach($categories as $c)
-        <a href="{{ route('home', ['kategori' => $c->slug, 'q' => $q]) }}" class="shrink-0 px-4 py-1.5 rounded-full border transition {{ $activeCat === $c->slug ? 'bg-[#002f80] text-white border-[#002f80] shadow' : 'bg-white border-[#d6d6d6] hover:border-[#002f80]' }}">{{ $c->name }}</a>
-      @endforeach
-    </div>
-    <div class="grid sm:grid-cols-2 gap-4">
-      @forelse($docs as $d)
-        @include('components.doc-card', ['d' => $d])
+{{-- Saya ingin... (BAB 5: Handbook, Policy, SOP, Formulir, Calendar, Ask YPL) --}}
+<div class="mt-6">
+  <h2 class="text-sm font-extrabold tracking-widest text-[#002f80]">SAYA INGIN…</h2>
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-2">
+    <a href="{{ route('library.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Handbook</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
+    <a href="{{ route('governance.index', ['tipe' => 'policy']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Policy</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
+    <a href="{{ route('governance.index', ['tipe' => 'sop']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">SOP</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
+    <a href="{{ route('governance.index', ['tipe' => 'form']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Formulir</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
+    <a href="{{ route('calendar.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Calendar</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
+    <a href="{{ route('ask.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Ask YPL</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
+  </div>
+</div>
+
+{{-- Explore the Knowledge --}}
+<div class="mt-8">
+  <h2 class="text-xl font-extrabold tracking-tight text-[#002f80]">EXPLORE THE KNOWLEDGE</h2>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+    <a href="{{ route('library.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-5 block"><div class="font-extrabold text-slate-900">YPL Handbooks</div><div class="text-[13px] text-slate-500 mt-1">10 living digital books</div></a>
+    <a href="{{ route('governance.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-5 block"><div class="font-extrabold text-slate-900">Governance Library</div><div class="text-[13px] text-slate-500 mt-1">Policy • Regulation • SOP</div></a>
+    <a href="{{ route('library.index', ['koleksi' => 'academic']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-5 block"><div class="font-extrabold text-slate-900">Learning Library</div><div class="text-[13px] text-slate-500 mt-1">Academic resources</div></a>
+    <a href="{{ route('library.index', ['koleksi' => 'boarding']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-5 block"><div class="font-extrabold text-slate-900">Boarding Library</div><div class="text-[13px] text-slate-500 mt-1">Student life & residential knowledge</div></a>
+  </div>
+</div>
+
+{{-- What's New + YPL Today --}}
+<div class="grid lg:grid-cols-3 gap-4 mt-8">
+  <div class="lg:col-span-2 bg-white rounded-2xl border border-[#d6d6d6] p-5">
+    <h3 class="font-extrabold tracking-tight text-[#002f80]">WHAT'S NEW</h3>
+    <div class="mt-2 divide-y divide-slate-100">
+      @forelse($latestDocs ?? [] as $n)
+        <a href="{{ route('documents.show', $n) }}" class="flex items-center gap-3 py-2 group">
+          <span class="text-xs font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full shrink-0">v{{ $n->version }}</span>
+          <span class="min-w-0"><span class="block text-sm font-bold truncate group-hover:text-[#002f80]">{{ $n->title }}</span><span class="text-xs text-slate-400">{{ $n->created_at->format('d M Y') }} · {{ $n->category->name ?? 'Tanpa kategori' }}</span></span>
+        </a>
       @empty
-        <div class="sm:col-span-2 bg-white rounded-2xl border border-dashed border-[#d6d6d6] p-10 text-center text-slate-400">
-          <span class="inline-block">@include('components.icon', ['name' => 'inbox', 'class' => 'w-12 h-12'])</span>
-          <p class="font-bold mt-2 text-slate-700">Belum ada dokumen di sini</p>
-          <p class="text-sm text-slate-500">Coba kata kunci lain atau @auth<a class="text-[#002f80] underline font-semibold" href="{{ route('documents.create') }}">unggah yang pertama</a>@else<a class="text-[#002f80] underline font-semibold" href="{{ route('register') }}">daftar dan unggah</a>@endauth.</p>
-        </div>
+        <p class="text-sm text-slate-400 py-2">Belum ada pembaruan.</p>
       @endforelse
     </div>
-    <div class="mt-5">{{ $docs->links() }}</div>
   </div>
-
-  <aside class="space-y-4 min-w-0">
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
-      <h3 class="font-extrabold tracking-tight flex items-center gap-2 text-[#002f80]"><span class="text-[#c90018]">@include('components.icon', ['name' => 'flame', 'class' => 'w-5 h-5'])</span> Dokumen Paling Dibaca</h3>
-      <ol class="mt-3 space-y-1">
-        @forelse($popular as $i => $p)
-          <li>
-            <a href="{{ route('documents.show', $p) }}" class="flex items-center gap-3 p-2 rounded-xl hover:bg-[#002f80]/5 transition group">
-              <span class="text-2xl font-extrabold w-7 text-center {{ $i === 0 ? 'text-[#c90018]' : 'text-slate-300' }}">{{ $i + 1 }}</span>
-              <span class="min-w-0"><span class="block text-sm font-bold text-slate-800 truncate group-hover:text-[#002f80]">{{ $p->title }}</span>
-              <span class="text-xs text-slate-400">{{ number_format($p->views_count) }} dibaca</span></span>
-            </a>
-          </li>
-        @empty
-          <li class="text-sm text-slate-400">Belum ada data.</li>
-        @endforelse
-      </ol>
+  <div class="rounded-2xl p-5 text-white" style="background:linear-gradient(135deg,#001c55,#002f80)">
+    <h3 class="font-extrabold">YPL TODAY</h3>
+    <div class="mt-2 space-y-2">
+      @forelse($todayDocs ?? [] as $t)
+        <a href="{{ route('documents.show', $t) }}" class="block bg-white/10 hover:bg-white/15 rounded-xl px-3 py-2 transition">
+          <span class="block text-[11px] font-bold text-amber-300">REVIEW {{ $t->review_at->format('d M Y') }}</span>
+          <span class="block text-sm font-bold truncate">{{ $t->title }}</span>
+        </a>
+      @empty
+        <p class="text-xs text-slate-300">Tidak ada deadline review dekat. Lihat <a href="{{ route('calendar.index') }}" class="underline font-bold text-white">Calendar</a>.</p>
+      @endforelse
     </div>
-    @auth
-    <div class="rounded-2xl p-5 text-white shadow-lg shadow-[#002f80]/25" style="background:linear-gradient(135deg,#001c55,#002f80)">
-      <div class="font-extrabold flex items-center gap-2">Bagikan pengetahuanmu @include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4'])</div>
-      <p class="text-xs text-slate-300 mt-1 mb-3">Unggah PDF atau tulis langsung di platform.</p>
-      <div class="flex gap-2 text-xs font-bold">
-        @if(\App\Models\Setting::feature('upload'))<a href="{{ route('documents.create') }}" class="bg-white text-[#002f80] rounded-full px-4 py-2 inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'upload', 'class' => 'w-3.5 h-3.5']) Unggah</a>@endif
-        @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="bg-white/15 border border-white/30 rounded-full px-4 py-2 inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'pen', 'class' => 'w-3.5 h-3.5']) Tulis</a>@endif
-      </div>
-    </div>
-    @else
-    <div class="rounded-2xl p-5 text-white shadow-lg" style="background:linear-gradient(135deg,#001c55,#002f80)">
-      <div class="font-extrabold flex items-center gap-2">Warga YPL? Bergabunglah @include('components.icon', ['name' => 'cap', 'class' => 'w-4 h-4'])</div>
-      <p class="text-xs text-slate-300 mt-1 mb-3">Simpan favorit, lanjutkan bacaan, dan unggah dokumen.</p>
-      @if(\App\Models\Setting::feature('reg'))<a href="{{ route('register') }}" class="btn-accent !py-2 text-xs">Daftar Gratis @include('components.icon', ['name' => 'arrow-right', 'class' => 'w-3.5 h-3.5'])</a>@endif
-    </div>
-    @endauth
-  </aside>
+  </div>
 </div>
 @endsection

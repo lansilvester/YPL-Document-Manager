@@ -11,8 +11,9 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 @layer components {
-  :root { --ypl-navy: #002f80; --ypl-red: #c90018; --ypl-gray: #d6d6d6; }
+  :root { --ypl-navy: #002f80; --ypl-red: #c90018; --ypl-gray: #d6d6d6; --ypl-blue: #2f6BFF; --ypl-paper: #faf7f0; }
   body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
+  .font-reading { font-family: Georgia, 'Times New Roman', serif; }
   html, body { overflow-x: clip; }
   @supports not (overflow: clip) { html, body { overflow-x: hidden; } }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -38,15 +39,23 @@
 
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#d6d6d6] shadow-[0_2px_20px_-12px_rgba(0,30,80,.45)]">
   <div class="h-1" style="background:linear-gradient(90deg,#002f80 60%,#c90018 60%)"></div>
-  {{-- Baris 1: logo + pencarian + akun + toggle kanan --}}
-  <div class="max-w-6xl mx-auto px-4 pt-3 pb-2 flex items-center gap-2 sm:gap-3">
+  {{-- Satu baris: logo + nama situs + menu + akun sejajar, container lebar --}}
+  <div class="max-w-[1400px] mx-auto px-4 py-2.5 flex items-center gap-3">
     <a href="{{ route('home') }}" class="flex items-center gap-2.5 shrink-0 min-w-0">
-      <img src="{{ \App\Models\Setting::logoUrl() }}" alt="Logo {{ \App\Models\Setting::get('foundation_name') }}" class="h-10 sm:h-12 w-auto rounded-lg bg-white object-contain">
+      <img src="{{ \App\Models\Setting::logoUrl() }}" alt="Logo {{ \App\Models\Setting::get('foundation_name') }}" class="h-10 w-auto rounded-lg bg-white object-contain">
       <span class="leading-tight hidden min-[420px]:block">
-        <span class="block font-extrabold tracking-tight text-slate-900 text-[15px]">{{ \App\Models\Setting::get('site_name') }}</span>
-        <span class="block text-[11px] font-bold tracking-wide text-[#c90018]">{{ strtoupper(\App\Models\Setting::get('foundation_name')) }}</span>
+        <span class="block font-extrabold tracking-tight text-slate-900 text-[15px] whitespace-nowrap">{{ \App\Models\Setting::get('site_name') }}</span>
+        <span class="block text-[11px] font-bold tracking-wide text-[#c90018] whitespace-nowrap">{{ strtoupper(\App\Models\Setting::get('foundation_name')) }}</span>
       </span>
     </a>
+    <nav class="hidden lg:flex flex-1 items-center justify-center gap-0.5 text-sm font-semibold overflow-x-auto whitespace-nowrap min-w-0" aria-label="Navigasi utama" style="scrollbar-width:none">
+      <a href="{{ route('home') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5 shrink-0 {{ request()->routeIs('home') ? 'bg-[#002f80]/5 text-[#002f80]' : '' }}">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Home</a>
+      <a href="{{ route('library.index') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5 shrink-0 {{ request()->routeIs('library.*') ? 'bg-[#002f80]/5 text-[#002f80]' : '' }}">@include('components.icon', ['name' => 'compass', 'class' => 'w-4 h-4']) Library</a>
+      <a href="{{ route('governance.index') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition shrink-0 {{ request()->routeIs('governance.*') ? 'bg-[#002f80]/5 text-[#002f80]' : '' }}">Governance</a>
+      <a href="{{ route('services.index') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition shrink-0 {{ request()->routeIs('services.*') ? 'bg-[#002f80]/5 text-[#002f80]' : '' }}">Services</a>
+      <a href="{{ route('community.index') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition shrink-0 {{ request()->routeIs('community.*') ? 'bg-[#002f80]/5 text-[#002f80]' : '' }}">Community</a>
+      <a href="{{ route('calendar.index') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition shrink-0 {{ request()->routeIs('calendar.*') ? 'bg-[#002f80]/5 text-[#002f80]' : '' }}">Calendar</a>
+    </nav>
     <div class="flex items-center gap-2 ml-auto shrink-0">
       @auth
         <div class="relative" id="profile-menu">
@@ -64,10 +73,22 @@
             </div>
             <div class="p-1.5 text-sm font-semibold">
               <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'users', 'class' => 'w-4 h-4']) Profil Saya</a>
+              @if(\App\Models\Setting::feature('upload'))<a href="{{ route('documents.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'upload', 'class' => 'w-4 h-4']) Unggah PDF</a>@endif
+              @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Tulis Dokumen</a>@endif
               <a href="{{ route('documents.my') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'folder', 'class' => 'w-4 h-4']) Dokumen Saya</a>
-              <a href="{{ route('favorites.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Favorit</a>
+              <a href="{{ route('services.my') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'inbox', 'class' => 'w-4 h-4']) Permintaan Saya</a>
+              @if(\App\Models\Setting::feature('favorite'))<a href="{{ route('favorites.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Favorit</a>@endif
               @if(auth()->user()->isStaff())
-                <a href="{{ route('staff.documents') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'tool', 'class' => 'w-4 h-4']) Ruang Staff</a>
+                <div class="mt-1 pt-1 border-t border-slate-100">
+                  <div class="px-3 pt-1 text-[11px] font-bold tracking-widest text-slate-400">KELOLA</div>
+                  <a href="{{ route('staff.documents') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'tool', 'class' => 'w-4 h-4']) Ruang Staff</a>
+                  @if(auth()->user()->isAdmin())
+                    <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Dasbor Admin</a>
+                  @endif
+                  @if(auth()->user()->isSuperAdmin())
+                    <a href="{{ route('sa.dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#c90018]/5 text-[#c90018]">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Pusat Kendali SA</a>
+                  @endif
+                </div>
               @endif
             </div>
             <div class="border-t border-slate-100 p-1.5">
@@ -77,35 +98,19 @@
         </div>
       @else
         @unless(request()->routeIs('register', 'login'))
-        <a href="{{ route('login') }}" class="hidden md:inline-block px-4 py-1.5 rounded-full text-sm font-semibold hover:bg-[#002f80]/5 hover:text-[#002f80] transition">Masuk</a>
-        @if(\App\Models\Setting::feature('reg'))<a href="{{ route('register') }}" class="btn-primary !py-1.5 hidden md:inline-flex">Daftar Gratis</a>@endif
+        <a href="{{ route('login') }}" class="hidden lg:inline-block px-4 py-1.5 rounded-full text-sm font-semibold hover:bg-[#002f80]/5 hover:text-[#002f80] transition">Masuk</a>
+        @if(\App\Models\Setting::feature('reg'))<a href="{{ route('register') }}" class="btn-primary !py-1.5 hidden lg:inline-flex">Daftar Gratis</a>@endif
         @endunless
       @endauth
     </div>
     {{-- Toggle menu mobile di kanan --}}
-    <button type="button" id="nav-toggle" aria-label="Buka menu" aria-expanded="false" aria-controls="mobile-nav" class="md:hidden w-10 h-10 rounded-xl grid place-items-center border border-[#d6d6d6] text-[#002f80] shrink-0">
+    <button type="button" id="nav-toggle" aria-label="Buka menu" aria-expanded="false" aria-controls="mobile-nav" class="lg:hidden w-10 h-10 rounded-xl grid place-items-center border border-[#d6d6d6] text-[#002f80] shrink-0">
       <span id="nav-icon-open">@include('components.icon', ['name' => 'menu', 'class' => 'w-5 h-5'])</span>
       <span id="nav-icon-close" class="hidden">@include('components.icon', ['name' => 'x', 'class' => 'w-5 h-5'])</span>
     </button>
   </div>
-  {{-- Baris 2: menu navigasi desktop (geser horizontal, anti-tumpuk) --}}
-  <nav class="border-t border-slate-100 hidden md:block" aria-label="Navigasi utama">
-    <div class="max-w-6xl mx-auto px-4 flex items-center gap-1 text-sm font-semibold overflow-x-auto whitespace-nowrap py-1.5" style="scrollbar-width:none">
-      <a href="{{ route('home') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Beranda</a>
-      <a href="{{ route('documents.index') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'compass', 'class' => 'w-4 h-4']) Jelajahi</a>
-      @auth
-        @if(\App\Models\Setting::feature('upload'))<a href="{{ route('documents.create') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'upload', 'class' => 'w-4 h-4']) Unggah</a>@endif
-        @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Tulis</a>@endif
-        <a href="{{ route('documents.my') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'folder', 'class' => 'w-4 h-4']) Milik Saya</a>
-        @if(\App\Models\Setting::feature('favorite'))<a href="{{ route('favorites.index') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Favorit</a>@endif
-        @if(auth()->user()->isStaff())<a href="{{ route('staff.documents') }}" class="px-3 py-1.5 rounded-full hover:bg-[#002f80]/5 hover:text-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'tool', 'class' => 'w-4 h-4']) Staff</a>@endif
-        @if(auth()->user()->isAdmin())<a href="{{ route('admin.dashboard') }}" class="px-3 py-1.5 rounded-full bg-[#002f80] text-white hover:bg-[#001c55] transition">Admin</a>@endif
-        @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.dashboard') }}" class="px-3 py-1.5 rounded-full bg-[#c90018] text-white hover:bg-[#7a0010] transition">SA</a>@endif
-      @endauth
-    </div>
-  </nav>
   {{-- Panel menu mobile (hamburger) --}}
-  <nav id="mobile-nav" class="hidden md:hidden border-t border-slate-100 bg-white" aria-label="Menu mobile">
+  <nav id="mobile-nav" class="hidden lg:hidden border-t border-slate-100 bg-white" aria-label="Menu mobile">
     <div class="px-4 py-2 grid gap-1 text-sm font-semibold">
       @guest
         @unless(request()->routeIs('register', 'login'))
@@ -114,13 +119,21 @@
         <div class="border-t border-slate-100 my-1"></div>
         @endunless
       @endguest
-      <a href="{{ route('home') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Beranda</a>
-      <a href="{{ route('documents.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'compass', 'class' => 'w-4 h-4']) Jelajahi Dokumen</a>
+      <a href="{{ route('home') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Home</a>
+      <a href="{{ route('library.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'compass', 'class' => 'w-4 h-4']) Library</a>
+      <a href="{{ route('governance.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">Governance</a>
+      <a href="{{ route('services.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">Services</a>
+      <a href="{{ route('community.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">Community</a>
+      <a href="{{ route('calendar.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">Calendar</a>
+      <a href="{{ route('ask.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">Ask YPL</a>
+      <a href="{{ route('insight.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">Insight</a>
       @auth
         <div class="border-t border-slate-100 my-1"></div>
+        <div class="px-3 pt-1 text-[11px] font-bold tracking-widest text-slate-400">AKUN & KERJA</div>
         @if(\App\Models\Setting::feature('upload'))<a href="{{ route('documents.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'upload', 'class' => 'w-4 h-4']) Unggah PDF</a>@endif
         @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Tulis Dokumen</a>@endif
         <a href="{{ route('documents.my') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'folder', 'class' => 'w-4 h-4']) Dokumen Saya</a>
+        <a href="{{ route('services.my') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'inbox', 'class' => 'w-4 h-4']) Permintaan Saya</a>
         @if(\App\Models\Setting::feature('favorite'))<a href="{{ route('favorites.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Favorit Saya</a>@endif
         @if(auth()->user()->isStaff())<a href="{{ route('staff.documents') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'tool', 'class' => 'w-4 h-4']) Ruang Staff</a>@endif
         @if(auth()->user()->isAdmin())<a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#002f80] text-white">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Dasbor Admin</a>@endif
@@ -132,7 +145,7 @@
 
 @yield('hero')
 
-<main class="max-w-6xl mx-auto px-4 py-6 w-full flex-1">
+<main class="@yield('main_width', 'max-w-6xl') mx-auto px-4 py-6 w-full flex-1">
   @yield('content')
 </main>
 
@@ -144,14 +157,15 @@
         <img src="{{ \App\Models\Setting::logoUrl() }}" alt="Logo YPL" class="h-10 w-auto rounded-md bg-white object-contain">
         <span class="font-extrabold text-[#002f80]">{{ \App\Models\Setting::get('site_name') }}</span>
       </div>
-      <p class="text-slate-500 mt-1">Platform dokumen digital {{ \App\Models\Setting::get('foundation_name') }} — baca, unggah, tulis, dan bagikan pengetahuan.</p>
+      <p class="text-slate-500 mt-1">YPL Smart Digital Library — knowledge, governance, community dalam satu rumah digital.</p>
     </div>
     <div>
-      <div class="font-bold text-slate-900 mb-2">Jelajahi</div>
+      <div class="font-bold text-slate-900 mb-2">Library</div>
       <div class="flex flex-col gap-1 text-slate-500">
-        <a class="hover:text-[#002f80]" href="{{ route('documents.index') }}">Semua dokumen</a>
-        @if(\App\Models\Setting::feature('upload'))<a class="hover:text-[#002f80]" href="{{ route('documents.create') }}">Unggah PDF</a>@endif
-        @if(\App\Models\Setting::feature('editor'))<a class="hover:text-[#002f80]" href="{{ route('editor.create') }}">Tulis dokumen</a>@endif
+        <a class="hover:text-[#002f80]" href="{{ route('library.index') }}">Digital Bookshelf</a>
+        <a class="hover:text-[#002f80]" href="{{ route('governance.index') }}">Governance</a>
+        <a class="hover:text-[#002f80]" href="{{ route('services.index') }}">Services</a>
+        <a class="hover:text-[#002f80]" href="{{ route('insight.index') }}">Insight</a>
       </div>
     </div>
     <div>
@@ -191,7 +205,7 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setNav(false); });
     // Jika layar membesar saat panel terbuka, tutup otomatis
     window.addEventListener('resize', function () {
-      if (window.innerWidth >= 768) setNav(false);
+      if (window.innerWidth >= 1024) setNav(false);
     });
   }
 

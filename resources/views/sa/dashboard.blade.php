@@ -33,6 +33,7 @@ $storeLabel = $store >= 1073741824 ? round($store / 1073741824, 2).' GB' : round
   @php
   $modules = [
     ['Kelola Pengguna', 'Atur peran anggota, staff, admin. Akun SA terkunci.', 'users', route('sa.users'), null],
+    ['Definisi Peran', 'Role-aware: scope koleksi & prioritas homepage per peran.', 'shield', route('sa.roles'), null],
     ['Pengaturan Web', 'Logo, nama situs & yayasan, sakelar fitur.', 'sliders', route('sa.settings'), null],
     ['Persetujuan Peran', 'Tinjau pengajuan kenaikan peran anggota.', 'shield', route('admin.approvals'), $stats['pending'] ? $stats['pending'].' menunggu' : null],
     ['Kelola Kategori', 'Struktur kategori perpustakaan yayasan.', 'folder', route('admin.categories'), null],

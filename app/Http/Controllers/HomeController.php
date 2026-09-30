@@ -11,23 +11,19 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $q = trim((string) $request->query('q', ''));
-        $cat = $request->query('kategori');
 
-        $docs = Document::query()->with(['category', 'user', 'tags'])
-            ->where('visibility', 'public')
-            ->when($q, fn ($s) => $s->search($q))
-            ->when($cat, fn ($s) => $s->whereHas('category', fn ($c) => $c->where('slug', $cat)))
-            ->latest()->paginate(12)->withQueryString();
+        $latest = Document::with(['category'])->where('visibility', 'public')
+            ->latest()->limit(3)->get();
 
-        $popular = Document::where('visibility', 'public')
-            ->orderByDesc('views_count')->limit(5)->get();
+        // YPL Today: dokumen aktif dengan review terdekat (deadline nyata).
+        $todayDocs = Document::with(['category'])->where('visibility', 'public')
+            ->where('status', 'active')->whereNotNull('review_at')
+            ->orderBy('review_at')->limit(3)->get();
 
         return view('home', [
-            'docs' => $docs,
-            'popular' => $popular,
-            'categories' => Category::orderBy('name')->get(),
+            'latestDocs' => $latest,
+            'todayDocs' => $todayDocs,
             'q' => $q,
-            'activeCat' => $cat,
             'stats' => [
                 'dokumen' => Document::where('visibility', 'public')->count(),
                 'kategori' => Category::count(),
