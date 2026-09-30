@@ -13,7 +13,8 @@
   <a href="{{ route('admin.categories') }}" class="btn-primary">Kelola Kategori</a>
   <a href="{{ route('admin.logs') }}" class="btn-ghost">Riwayat Aktivitas</a>
   <a href="{{ route('admin.approvals') }}" class="btn-ghost">Persetujuan Peran @if($pendingApprovals)<span class="bg-[#c90018] text-white text-[11px] rounded-full px-2 py-0.5">{{ $pendingApprovals }}</span>@endif</a>
-  @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.users') }}" class="btn-ghost">Kelola Pengguna</a>@endif
+  <a href="{{ route('admin.users') }}" class="btn-ghost">Kelola Pengguna</a>
+  @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.users') }}" class="btn-ghost">Panel Super Admin</a>@endif
   @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.settings') }}" class="btn-ghost">Pengaturan Web</a>@endif
 </div>
 <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">

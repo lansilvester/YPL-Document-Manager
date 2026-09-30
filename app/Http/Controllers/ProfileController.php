@@ -6,7 +6,10 @@ use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\Favorite;
 use App\Models\RoleRequest;
+use App\Services\WaNumber;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -45,7 +48,7 @@ class ProfileController extends Controller
         // $request->hasFile() menjadi false sehingga validasi lolos tanpa foto. Deteksi manual.
         $attempted = $request->file('avatar');
         if ($attempted && ! $attempted->isValid()) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'avatar' => 'Foto gagal diunggah — ukurannya melebihi batas server (maks 2 MB). Kecilkan dulu fotonya lalu coba lagi.',
             ]);
         }
@@ -72,7 +75,7 @@ class ProfileController extends Controller
         if (! empty($data['wa_number'])) {
             $wa = $this->normalizeWa($data['wa_number']);
             if (! $wa) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'wa_number' => 'Nomor WA tidak dikenali. Tulis nomor HP Indonesia, contoh: 089612345678 atau +6289612345678.',
                 ]);
             }
@@ -98,16 +101,16 @@ class ProfileController extends Controller
     {
         $data = $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
         ], [
             'current_password.required' => 'Kata sandi saat ini wajib diisi.',
             'current_password.current_password' => 'Kata sandi saat ini salah.',
         ]);
 
         $request->user()->update(['password' => $data['password']]);
-        \App\Models\ActivityLog::record(auth()->id(), null, 'password_change');
+        ActivityLog::record(auth()->id(), null, 'password_change');
 
-        return back()->with('ok', 'Kata sandi berhasil diganti. Gunakan kata sandi baru saat masuk berikutnya.');
+        return back()->with('password_changed', 'Kata sandi berhasil diganti. Gunakan kata sandi baru saat masuk berikutnya.');
     }
 
     /**
@@ -117,6 +120,6 @@ class ProfileController extends Controller
      */
     private function normalizeWa(string $input): ?string
     {
-        return \App\Services\WaNumber::normalize($input);
+        return WaNumber::normalize($input);
     }
 }

@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Penyimpanan berkas aman untuk upload/ganti file concorrent:
@@ -22,12 +24,12 @@ class DocumentFiles
      * Pastikan file yang dicoba diunggah valid. File yang dibuang PHP secara diam-diam
      * (melebihi upload_max_filesize) terdeteksi di sini agar tidak lolos tanpa pesan.
      */
-    public static function ensureValidUpload(\Illuminate\Http\Request $request, string $key = 'file'): void
+    public static function ensureValidUpload(Request $request, string $key = 'file'): void
     {
         $file = $request->file($key);
         if ($file && ! $file->isValid()) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                $key => 'File gagal diunggah — ukurannya melebihi batas server (maks 55 MB). Kecilkan atau kompres dulu PDF-nya.',
+            throw ValidationException::withMessages([
+                $key => 'File gagal diunggah — ukurannya melebihi batas server (maks 9 MB). Kecilkan atau kompres dulu PDF-nya.',
             ]);
         }
     }
@@ -35,7 +37,7 @@ class DocumentFiles
     /**
      * Jalankan $callback dalam transaksi; bila gagal, hapus berkas baru yang sempat tersimpan.
      *
-     * @param callable(array &$gate): mixed $callback  isi $gate['paths'][] untuk berkas baru
+     * @param  callable(array &$gate): mixed  $callback  isi $gate['paths'][] untuk berkas baru
      */
     public static function transactional(callable $callback): mixed
     {

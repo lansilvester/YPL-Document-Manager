@@ -10,7 +10,47 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\SuperAdminController;
+use App\Models\ActivityLog;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+
+// Rute deploy sekali-pakai (tanpa SSH): /deploy/SECRET.
+// Wajib set DEPLOY_SECRET acak di .env, jalankan sekali, lalu HAPUS rute ini.
+Route::get('/deploy/{secret}', function (string $secret) {
+    $expected = (string) env('DEPLOY_SECRET', '');
+    abort_unless($expected !== '' && hash_equals($expected, $secret), 404);
+
+    Artisan::call('migrate', ['--force' => true]);
+    $out = [Artisan::output()];
+    Artisan::call('db:seed', ['--force' => true]);
+    $out[] = Artisan::output();
+
+    // Bersihkan log lama sekaligus (tanpa cron di shared hosting).
+    $pruned = ActivityLog::prune();
+    $out[] = "Activity logs pruned: {$pruned} rows deleted.";
+
+    // Promosikan SATU akun menjadi Super Admin bila diminta (sekali saja).
+    if ($email = env('DEPLOY_SA_EMAIL')) {
+        $user = User::where('email', $email)->first();
+        if (! User::where('role', 'superadmin')->exists()) {
+            $password = Str::random(16);
+            if (! $user) {
+                $user = User::create([
+                    'name' => 'Developer YPL', 'email' => $email,
+                    'password' => $password, 'role' => 'superadmin', 'ypl_verified' => true,
+                ]);
+            } else {
+                $user->update(['role' => 'superadmin', 'password' => $password]);
+            }
+            $out[] = "SUPERADMIN: {$email} / {$password} (SIMPAN & GANTI SEGERA)";
+        } else {
+            $out[] = 'Super Admin sudah ada — lewati.';
+        }
+    }
+
+    return response()->json(['ok' => true, 'log' => implode("\n", $out)]);
+})->middleware('throttle:deploy');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/dokumen', [DocumentController::class, 'index'])->name('documents.index');
@@ -18,7 +58,12 @@ Route::get('/dokumen', [DocumentController::class, 'index'])->name('documents.in
 Route::get('/masuk', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/masuk', [AuthController::class, 'login'])->middleware('throttle:login');
 Route::get('/daftar', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/daftar', [AuthController::class, 'register']);
+Route::post('/daftar', [AuthController::class, 'register'])->middleware('throttle:register');
+
+Route::get('/lupa-password', [AuthController::class, 'showForgot'])->name('password.request');
+Route::post('/lupa-password', [AuthController::class, 'sendResetToken'])->middleware('throttle:sensitive')->name('password.email');
+Route::get('/reset-password', [AuthController::class, 'showReset'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:sensitive')->name('password.update');
 
 Route::get('/dokumen/{document:slug}', [DocumentController::class, 'show'])->name('documents.show');
 Route::get('/dokumen/{document:slug}/lihat', [DocumentController::class, 'stream'])->name('documents.stream');
@@ -51,8 +96,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
-    Route::put('/profil/kata-sandi', [ProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::post('/profil/permintaan-peran', [PromotionController::class, 'store'])->name('profile.role-request');
+    Route::put('/profil/kata-sandi', [ProfileController::class, 'updatePassword'])->middleware('throttle:sensitive')->name('profile.password');
+    Route::post('/profil/permintaan-peran', [PromotionController::class, 'store'])->middleware('throttle:sensitive')->name('profile.role-request');
 
     Route::middleware('staff')->prefix('staff')->name('staff.')->group(function () {
         Route::get('/dokumen', [StaffController::class, 'index'])->name('documents');
@@ -68,6 +113,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/kategori', [AdminController::class, 'categories'])->name('categories');
         Route::post('/kategori', [AdminController::class, 'storeCategory'])->name('categories.store');
         Route::delete('/kategori/{category:slug}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
+        Route::get('/pengguna', [AdminController::class, 'users'])->name('users');
+        Route::put('/pengguna/{user}', [AdminController::class, 'updateUser'])->name('users.update');
+        Route::delete('/pengguna/{user}', [AdminController::class, 'destroy'])->name('users.destroy');
         Route::get('/riwayat', [AdminController::class, 'logs'])->name('logs');
         Route::get('/persetujuan', [PromotionController::class, 'index'])->name('approvals');
         Route::post('/persetujuan/{request}/setujui', [PromotionController::class, 'approve'])->name('approvals.approve');

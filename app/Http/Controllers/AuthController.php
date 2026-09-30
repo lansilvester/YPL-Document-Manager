@@ -3,34 +3,41 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Setting;
 use App\Models\User;
+use App\Services\WaNumber;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     public function showRegister()
     {
-        abort_unless(\App\Models\Setting::feature('reg'), 404, 'Pendaftaran ditutup sementara.');
+        abort_unless(Setting::feature('reg'), 404, 'Pendaftaran ditutup sementara.');
 
         return view('auth.register');
     }
 
     public function register(Request $request)
     {
-        abort_unless(\App\Models\Setting::feature('reg'), 404, 'Pendaftaran ditutup sementara.');
+        abort_unless(Setting::feature('reg'), 404, 'Pendaftaran ditutup sementara.');
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             // Domain email dapat dibatasi via Pengaturan Web (SA); kosong = bebas.
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
             'academic_info' => ['nullable', 'string', 'max:255'],
             'wa_number' => ['nullable', 'string', 'max:25'],
         ]);
 
-        $allowed = array_filter(array_map('trim', explode(',', (string) \App\Models\Setting::get('reg_domains', ''))));
+        $allowed = array_filter(array_map('trim', explode(',', (string) Setting::get('reg_domains', ''))));
         if ($allowed) {
             $domain = strtolower(substr(strrchr($data['email'], '@'), 1));
             $ok = false;
@@ -42,7 +49,7 @@ class AuthController extends Controller
                 }
             }
             if (! $ok) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'email' => 'Pendaftaran hanya menerima email: '.implode(', ', $allowed).'.',
                 ]);
             }
@@ -51,9 +58,9 @@ class AuthController extends Controller
         // Normalisasi nomor WA bila diisi (0896… → +62896…).
         $wa = null;
         if (! empty($data['wa_number'])) {
-            $wa = \App\Services\WaNumber::normalize($data['wa_number']);
+            $wa = WaNumber::normalize($data['wa_number']);
             if (! $wa) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'wa_number' => 'Nomor WA tidak dikenali. Tulis nomor HP Indonesia, contoh: 089612345678 atau +6289612345678.',
                 ]);
             }
@@ -103,5 +110,86 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('home');
+    }
+
+    public function showForgot()
+    {
+        return view('auth.forgot');
+    }
+
+    /**
+     * Tanpa layanan email, kode reset ditampilkan sekali pada layar.
+     * Hanya diterbitkan bila email DAN nama lengkap cocok dengan akun,
+     * untuk mempersempit tebakan orang lain.
+     */
+    public function sendResetToken(Request $request)
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+        $email = strtolower(trim($data['email']));
+
+        $user = User::where('email', $email)
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])
+            ->first();
+
+        $token = null;
+        if ($user) {
+            $token = strtoupper(Str::random(8));
+            DB::table('password_resets')->where('email', $email)->delete();
+            DB::table('password_resets')->insert([
+                'email' => $email,
+                'token_hash' => Hash::make($token),
+                'expires_at' => now()->addMinutes((int) env('PASSWORD_RESET_TTL', 15)),
+                'ip' => request()->ip(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            ActivityLog::record($user->id, null, 'password_reset_request');
+        }
+
+        return view('auth.forgot-result')->with([
+            'issued' => $token !== null,
+            'reset_token' => $token,
+            'reset_email' => $email,
+            'ttl' => (int) env('PASSWORD_RESET_TTL', 15),
+        ]);
+    }
+
+    public function showReset(Request $request)
+    {
+        abort_if($request->missing(['token', 'email']), 404);
+
+        return view('auth.reset', [
+            'token' => $request->query('token'),
+            'email' => $request->query('email'),
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $data = $request->validate([
+            'token' => ['required', 'string', 'size:8', 'regex:/^[A-Z0-9]+$/'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
+        ]);
+        $email = strtolower(trim($data['email']));
+
+        $row = DB::table('password_resets')->where('email', $email)->whereNull('used_at')->first();
+        abort_unless($row, 403, 'Tidak ada permintaan reset untuk email tersebut.');
+        abort_if(now()->greaterThan(Carbon::parse($row->expires_at)), 403, 'Kode reset sudah kedaluwarsa.');
+
+        if (! Hash::check($data['token'], $row->token_hash)) {
+            throw ValidationException::withMessages(['token' => 'Kode reset tidak sesuai.']);
+        }
+
+        $user = User::where('email', $email)->firstOrFail();
+        $user->update(['password' => $data['password']]);
+
+        DB::table('password_resets')->where('email', $email)->delete();
+        ActivityLog::record($user->id, null, 'password_reset');
+
+        return redirect()->route('login')->with('ok', 'Kata sandi berhasil diatur ulang. Silahkan masuk dengan kata sandi baru.');
     }
 }

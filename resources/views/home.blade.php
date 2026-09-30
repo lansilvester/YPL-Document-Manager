@@ -33,7 +33,7 @@
 @section('content')
 
 <div class="grid lg:grid-cols-3 gap-6 mt-6">
-  <div class="lg:col-span-2">
+  <div class="lg:col-span-2 min-w-0">
     <div class="flex items-center gap-2 mb-1">
       <h2 class="text-xl font-extrabold tracking-tight text-[#002f80]">Galeri Dokumen Publik</h2>
       @if($q)<span class="text-xs bg-[#002f80]/10 text-[#002f80] font-bold px-2.5 py-1 rounded-full">“{{ $q }}” · {{ $docs->total() }} hasil</span>@endif
@@ -59,7 +59,7 @@
     <div class="mt-5">{{ $docs->links() }}</div>
   </div>
 
-  <aside class="space-y-4">
+  <aside class="space-y-4 min-w-0">
     <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
       <h3 class="font-extrabold tracking-tight flex items-center gap-2 text-[#002f80]"><span class="text-[#c90018]">@include('components.icon', ['name' => 'flame', 'class' => 'w-5 h-5'])</span> Dokumen Paling Dibaca</h3>
       <ol class="mt-3 space-y-1">

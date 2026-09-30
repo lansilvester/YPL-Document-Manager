@@ -33,6 +33,7 @@ class PromotionController extends Controller
             'user_id' => $user->id,
             'requested_role' => $data['requested_role'],
             'reason' => $data['reason'] ?? null,
+            'status' => 'pending',
         ]);
 
         return back()->with('ok', 'Pengajuan peningkatan peran dikirim. Tunggu persetujuan Admin YPL.');

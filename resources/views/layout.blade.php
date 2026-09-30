@@ -13,6 +13,8 @@
 @layer components {
   :root { --ypl-navy: #002f80; --ypl-red: #c90018; --ypl-gray: #d6d6d6; }
   body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
+  html, body { overflow-x: clip; }
+  @supports not (overflow: clip) { html, body { overflow-x: hidden; } }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #9aa5b5; border-radius: 8px; border: 2px solid #eef1f4; }

@@ -78,7 +78,7 @@ class Setting extends Model
             return asset('storage/'.$path);
         }
 
-        return asset('images/logo-ypl.png');
+        return asset('images/logo-ypl.jpg');
     }
 
     public static function flush(): void

@@ -4,8 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Document;
+use App\Models\RoleRequest;
+use App\Models\Setting;
+use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -53,10 +57,10 @@ class LokonTest extends TestCase
         $this->assertNotContains('fts-b', $hasil);
 
         // karakter operator FTS dinetralkan, tidak error
-        $this->get('/?q=' . urlencode('"kalkulus" OR * integral^'))->assertStatus(200);
+        $this->get('/?q='.urlencode('"kalkulus" OR * integral^'))->assertStatus(200);
 
         // satu huruf: fallback aman, tidak error
-        $this->get('/?q=' . urlencode('a'))->assertStatus(200);
+        $this->get('/?q='.urlencode('a'))->assertStatus(200);
 
         // query kosong: semua dokumen publik
         $this->assertGreaterThanOrEqual(2, Document::search('')->where('visibility', 'public')->count());
@@ -150,8 +154,8 @@ class LokonTest extends TestCase
     {
         $this->seed();
         $staff = User::factory()->create(['role' => 'staff']);
-        $tag = \App\Models\Tag::create(['name' => 'Unggulan', 'slug' => 'unggulan', 'color' => 'amber']);
-        $pdf = \Illuminate\Http\UploadedFile::fake()->create('materi.pdf', 120, 'application/pdf');
+        $tag = Tag::create(['name' => 'Unggulan', 'slug' => 'unggulan', 'color' => 'amber']);
+        $pdf = UploadedFile::fake()->create('materi.pdf', 120, 'application/pdf');
 
         // tambah / upload + badge
         $this->actingAs($staff)->post('/staff/dokumen', [
@@ -163,8 +167,8 @@ class LokonTest extends TestCase
         $this->assertTrue($doc->tags->contains($tag->id));
 
         // ubah + ganti file + ubah badge
-        $tag2 = \App\Models\Tag::create(['name' => 'Baru', 'slug' => 'baru', 'color' => 'emerald']);
-        $pdf2 = \Illuminate\Http\UploadedFile::fake()->create('materi-v2.pdf', 200, 'application/pdf');
+        $tag2 = Tag::create(['name' => 'Baru', 'slug' => 'baru', 'color' => 'emerald']);
+        $pdf2 = UploadedFile::fake()->create('materi-v2.pdf', 200, 'application/pdf');
         $oldPath = $doc->file_path;
         $this->actingAs($staff)->put("/staff/dokumen/{$doc->id}", [
             'title' => 'Materi Staff Revisi', 'visibility' => 'restricted',
@@ -186,7 +190,7 @@ class LokonTest extends TestCase
         $staff = User::factory()->create(['role' => 'staff']);
         $this->actingAs($staff)->post('/staff/badge', ['name' => 'Klasik', 'color' => 'red'])->assertRedirect();
         $this->assertDatabaseHas('tags', ['slug' => 'klasik']);
-        $tag = \App\Models\Tag::where('slug', 'klasik')->first();
+        $tag = Tag::where('slug', 'klasik')->first();
         $this->actingAs($staff)->delete("/staff/badge/{$tag->id}")->assertRedirect();
         $this->assertDatabaseMissing('tags', ['slug' => 'klasik']);
     }
@@ -194,7 +198,7 @@ class LokonTest extends TestCase
     public function test_tamu_baca_tanpa_unduh(): void
     {
         $staff = User::factory()->create(['role' => 'staff']);
-        $pdf = \Illuminate\Http\UploadedFile::fake()->create('baca.pdf', 100, 'application/pdf');
+        $pdf = UploadedFile::fake()->create('baca.pdf', 100, 'application/pdf');
         $this->actingAs($staff)->post('/staff/dokumen', [
             'title' => 'Bacaan Publik', 'visibility' => 'public', 'file' => $pdf,
         ])->assertRedirect();
@@ -267,14 +271,14 @@ class LokonTest extends TestCase
             ->assertSessionHasErrors('requested_role');
 
         // admin menyetujui staff
-        $req = \App\Models\RoleRequest::pending()->first();
+        $req = RoleRequest::pending()->first();
         $this->actingAs($admin)->post("/admin/persetujuan/{$req->id}/setujui")->assertRedirect();
         $this->assertEquals('staff', $anggota->fresh()->role);
 
         // anggota lain meminta admin; admin biasa tidak boleh menyetujui
         $anggota2 = User::factory()->create(['role' => 'anggota']);
         $this->actingAs($anggota2)->post('/profil/permintaan-peran', ['requested_role' => 'admin'])->assertRedirect();
-        $req2 = \App\Models\RoleRequest::pending()->first();
+        $req2 = RoleRequest::pending()->first();
         $this->actingAs($admin)->post("/admin/persetujuan/{$req2->id}/setujui")->assertForbidden();
         // super admin boleh
         $this->actingAs($sa)->post("/admin/persetujuan/{$req2->id}/setujui")->assertRedirect();
@@ -309,7 +313,7 @@ class LokonTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'anggota']);
         $staff = User::factory()->create(['role' => 'staff']);
-        $pdf = \Illuminate\Http\UploadedFile::fake()->create('profil.pdf', 100, 'application/pdf');
+        $pdf = UploadedFile::fake()->create('profil.pdf', 100, 'application/pdf');
         $this->actingAs($staff)->post('/staff/dokumen', [
             'title' => 'Untuk Riwayat', 'visibility' => 'public', 'file' => $pdf,
         ]);
@@ -348,17 +352,17 @@ class LokonTest extends TestCase
         $user = User::factory()->create(['role' => 'anggota']);
 
         // wajib file gambar: pdf ditolak
-        $pdf = \Illuminate\Http\UploadedFile::fake()->create('dok.pdf', 100, 'application/pdf');
+        $pdf = UploadedFile::fake()->create('dok.pdf', 100, 'application/pdf');
         $this->actingAs($user)->put('/profil', ['name' => $user->name, 'avatar' => $pdf])
             ->assertSessionHasErrors('avatar');
 
         // maksimal 2 MB: file 3 MB ditolak
-        $besar = \Illuminate\Http\UploadedFile::fake()->image('besar.jpg')->size(3072);
+        $besar = UploadedFile::fake()->image('besar.jpg')->size(3072);
         $this->actingAs($user)->put('/profil', ['name' => $user->name, 'avatar' => $besar])
             ->assertSessionHasErrors('avatar');
 
         // gambar valid 500 KB diterima
-        $foto = \Illuminate\Http\UploadedFile::fake()->image('foto.jpg', 400, 400)->size(500);
+        $foto = UploadedFile::fake()->image('foto.jpg', 400, 400)->size(500);
         $this->actingAs($user)->put('/profil', ['name' => $user->name, 'avatar' => $foto])
             ->assertRedirect();
         $this->assertNotNull($user->fresh()->avatar_path);
@@ -371,7 +375,7 @@ class LokonTest extends TestCase
         // simulasi file yang dibuang PHP karena melebihi batas server (UPLOAD_ERR_INI_SIZE)
         $tmp = tempnam(sys_get_temp_dir(), 'up').'.jpg';
         copy(__DIR__.'/../../public/images/logo-ypl.png', $tmp);
-        $rusak = new \Illuminate\Http\UploadedFile($tmp, 'foto.jpg', 'image/jpeg', UPLOAD_ERR_INI_SIZE, true);
+        $rusak = new UploadedFile($tmp, 'foto.jpg', 'image/jpeg', UPLOAD_ERR_INI_SIZE, true);
         $this->actingAs($user)->put('/profil', ['name' => $user->name, 'avatar' => $rusak])
             ->assertSessionHasErrors(['avatar' => 'Foto gagal diunggah — ukurannya melebihi batas server (maks 2 MB). Kecilkan dulu fotonya lalu coba lagi.']);
         $this->assertNull($user->fresh()->avatar_path);
@@ -432,7 +436,7 @@ class LokonTest extends TestCase
     public function test_fitur_preview_suka_unduhhtml_semat(): void
     {
         $staff = User::factory()->create(['role' => 'staff']);
-        $pdf = \Illuminate\Http\UploadedFile::fake()->create('fitur.pdf', 100, 'application/pdf');
+        $pdf = UploadedFile::fake()->create('fitur.pdf', 100, 'application/pdf');
         $this->actingAs($staff)->post('/staff/dokumen', [
             'title' => 'Dokumen Fitur', 'visibility' => 'public', 'file' => $pdf,
         ]);
@@ -473,16 +477,16 @@ class LokonTest extends TestCase
         $this->actingAs($sa)->get('/sa/pengaturan')->assertOk()->assertSee('Pengaturan Web');
 
         // ubah identitas + matikan registrasi & suka
-        $logo = \Illuminate\Http\UploadedFile::fake()->image('logo.png', 200, 200)->size(100);
+        $logo = UploadedFile::fake()->image('logo.png', 200, 200)->size(100);
         $this->actingAs($sa)->put('/sa/pengaturan', [
             'site_name' => 'Perpus YPL', 'foundation_name' => 'Yayasan Contoh', 'logo' => $logo,
             'feat_reg' => '0', 'feat_upload' => '1', 'feat_editor' => '1', 'feat_download' => '1',
             'feat_like' => '0', 'feat_favorite' => '1', 'feat_share' => '1', 'feat_embed' => '1',
         ])->assertRedirect();
-        $this->assertEquals('Perpus YPL', \App\Models\Setting::get('site_name'));
-        $this->assertFalse(\App\Models\Setting::feature('reg'));
-        $this->assertFalse(\App\Models\Setting::feature('like'));
-        $this->assertNotNull(\App\Models\Setting::get('logo_path'));
+        $this->assertEquals('Perpus YPL', Setting::get('site_name'));
+        $this->assertFalse(Setting::feature('reg'));
+        $this->assertFalse(Setting::feature('like'));
+        $this->assertNotNull(Setting::get('logo_path'));
         $this->actingAs($sa)->get('/')->assertSee('Perpus YPL');
 
         // fitur mati: URL diblokir
@@ -496,40 +500,40 @@ class LokonTest extends TestCase
             'feat_reg' => '1', 'feat_upload' => '1', 'feat_editor' => '1', 'feat_download' => '1',
             'feat_like' => '1', 'feat_favorite' => '1', 'feat_share' => '1', 'feat_embed' => '1',
         ])->assertRedirect();
-        $this->assertNull(\App\Models\Setting::get('logo_path'));
-        $this->assertTrue(\App\Models\Setting::feature('reg'));
+        $this->assertNull(Setting::get('logo_path'));
+        $this->assertTrue(Setting::feature('reg'));
     }
 
     public function test_ganti_file_gagal_tidak_kehilangan_berkas(): void
     {
         $staff = User::factory()->create(['role' => 'staff']);
-        $pdf = \Illuminate\Http\UploadedFile::fake()->create('aman.pdf', 100, 'application/pdf');
+        $pdf = UploadedFile::fake()->create('aman.pdf', 100, 'application/pdf');
         $this->actingAs($staff)->post('/staff/dokumen', [
             'title' => 'Dokumen Aman', 'visibility' => 'public', 'file' => $pdf,
         ]);
         $doc = Document::where('title', 'Dokumen Aman')->first();
         $oldPath = $doc->file_path;
-        $this->assertTrue(\Illuminate\Support\Facades\Storage::disk('private')->exists($oldPath));
+        $this->assertTrue(Storage::disk('private')->exists($oldPath));
 
         // ganti dengan file bukan PDF: ditolak, berkas lama utuh
-        $txt = \Illuminate\Http\UploadedFile::fake()->create('jahat.txt', 50, 'text/plain');
+        $txt = UploadedFile::fake()->create('jahat.txt', 50, 'text/plain');
         $this->actingAs($staff)->put("/staff/dokumen/{$doc->id}", [
             'title' => 'Dokumen Aman', 'visibility' => 'public', 'file' => $txt,
         ])->assertSessionHasErrors('file');
         $this->assertEquals($oldPath, $doc->fresh()->file_path);
-        $this->assertTrue(\Illuminate\Support\Facades\Storage::disk('private')->exists($oldPath));
+        $this->assertTrue(Storage::disk('private')->exists($oldPath));
     }
 
     public function test_upload_dibatasi_rate_limit(): void
     {
         $staff = User::factory()->create(['role' => 'staff']);
         for ($i = 1; $i <= 12; $i++) {
-            $pdf = \Illuminate\Http\UploadedFile::fake()->create("spam-$i.pdf", 50, 'application/pdf');
+            $pdf = UploadedFile::fake()->create("spam-$i.pdf", 50, 'application/pdf');
             $this->actingAs($staff)->post('/staff/dokumen', [
                 'title' => "Spam $i", 'visibility' => 'private', 'file' => $pdf,
             ])->assertRedirect();
         }
-        $pdf = \Illuminate\Http\UploadedFile::fake()->create('spam-13.pdf', 50, 'application/pdf');
+        $pdf = UploadedFile::fake()->create('spam-13.pdf', 50, 'application/pdf');
         $this->actingAs($staff)->post('/staff/dokumen', [
             'title' => 'Spam 13', 'visibility' => 'private', 'file' => $pdf,
         ])->assertStatus(429);
@@ -538,7 +542,7 @@ class LokonTest extends TestCase
     public function test_file_private_hanya_bisa_di_stream_pemilik(): void
     {
         $owner = User::factory()->create(['role' => 'staff']);
-        $pdf = \Illuminate\Http\UploadedFile::fake()->create('rahasia.pdf', 100, 'application/pdf');
+        $pdf = UploadedFile::fake()->create('rahasia.pdf', 100, 'application/pdf');
         $this->actingAs($owner)->post('/staff/dokumen', [
             'title' => 'Dokumen Privat', 'visibility' => 'private', 'file' => $pdf,
         ])->assertRedirect();
@@ -608,5 +612,11 @@ class LokonTest extends TestCase
         $this->assertStringContainsString('enctype="multipart/form-data"', $html);
         $this->assertStringContainsString('upload-progress-handler', $html);
         $this->assertStringContainsString('XMLHttpRequest', $html);
+    }
+
+    public function test_rute_deploy_terproteksi_secret(): void
+    {
+        // tanpa secret yang cocok → 404
+        $this->get('/deploy/salah')->assertNotFound();
     }
 }

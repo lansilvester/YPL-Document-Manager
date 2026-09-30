@@ -1,9 +1,9 @@
 @extends('layout')
 @section('title', $document->title)
-@section('content')
-@include('components.back-bar', ['trail' => array_filter([['Beranda', route('home')], $document->category ? [$document->category->name, route('documents.index', ['kategori' => $document->category->slug])] : null, [$document->title]])])
-<div class="rounded-3xl overflow-hidden text-white shadow-xl shadow-[#002f80]/25 mb-5" style="background:linear-gradient(120deg,#000f2e,#002f80 60%,#0a4fc4)">
-  <div class="p-6 sm:p-8">
+
+@section('hero')
+<div class="text-white shadow-xl shadow-[#002f80]/25" style="background:linear-gradient(120deg,#000f2e,#002f80 60%,#0a4fc4)">
+  <div class="max-w-6xl mx-auto px-4 py-6 sm:py-8 w-full">
     <div class="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
       <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ $document->category->name ?? 'Tanpa kategori' }}</span>
       <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ ucfirst($document->visibility) }}</span>
@@ -48,35 +48,88 @@
     </div>
   </div>
 </div>
+@endsection
 
-{{-- Fase 1: penampil + atur tampilan + lanjut baca --}}
-<div id="reader" data-theme="{{ $pref->theme }}" class="rounded-3xl shadow-xl overflow-hidden border {{ $pref->theme === 'dark' ? 'bg-[#141920] border-white/10' : 'bg-white border-[#d6d6d6]' }}">
-  <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 border-b text-sm sticky top-0 z-10 {{ $pref->theme === 'dark' ? 'bg-[#1c2431] text-stone-100 border-white/10' : 'bg-slate-50/90 backdrop-blur text-slate-700' }}">
-    <div class="flex items-center gap-1.5">
-      <button id="btn-prev" aria-label="Halaman sebelumnya" class="w-8 h-8 rounded-full border border-current/20 grid place-items-center hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition">@include('components.icon', ['name' => 'chev-left', 'class' => 'w-4 h-4'])</button>
-      <span class="text-xs font-bold tabular-nums px-1"><span id="pg-now">1</span> <span class="opacity-50">/</span> <span id="pg-total">…</span></span>
-      <button id="btn-next" aria-label="Halaman berikutnya" class="w-8 h-8 rounded-full border border-current/20 grid place-items-center hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition">@include('components.icon', ['name' => 'chev-right', 'class' => 'w-4 h-4'])</button>
+@section('content')
+@include('components.back-bar', ['trail' => array_filter([['Beranda', route('home')], $document->category ? [$document->category->name, route('documents.index', ['kategori' => $document->category->slug])] : null, [$document->title]])])
+
+<div class="grid lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start">
+  {{-- Kiri: pratinjau dokumen --}}
+  <div class="min-w-0">
+    {{-- Fase 1: penampil + atur tampilan + lanjut baca --}}
+    <div id="reader" data-theme="{{ $pref->theme }}" class="rounded-3xl shadow-xl overflow-hidden border {{ $pref->theme === 'dark' ? 'bg-[#141920] border-white/10' : 'bg-white border-[#d6d6d6]' }}">
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 border-b text-sm sticky top-0 z-10 {{ $pref->theme === 'dark' ? 'bg-[#1c2431] text-stone-100 border-white/10' : 'bg-slate-50/90 backdrop-blur text-slate-700' }}">
+        <div class="flex items-center gap-1.5">
+          <button id="btn-prev" aria-label="Halaman sebelumnya" class="w-8 h-8 rounded-full border border-current/20 grid place-items-center hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition">@include('components.icon', ['name' => 'chev-left', 'class' => 'w-4 h-4'])</button>
+          <span class="text-xs font-bold tabular-nums px-1"><span id="pg-now">1</span> <span class="opacity-50">/</span> <span id="pg-total">…</span></span>
+          <button id="btn-next" aria-label="Halaman berikutnya" class="w-8 h-8 rounded-full border border-current/20 grid place-items-center hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition">@include('components.icon', ['name' => 'chev-right', 'class' => 'w-4 h-4'])</button>
+        </div>
+        <label class="text-xs font-semibold flex items-center gap-1.5">Zoom
+          <select id="sel-zoom" class="rounded-full text-xs font-bold px-2 py-1 bg-transparent border border-current/20 outline-none cursor-pointer">
+            @foreach([50,75,100,125,150,200] as $z)<option value="{{ $z }}" {{ (int)$pref->zoom === $z ? 'selected' : '' }}>{{ $z }}%</option>@endforeach
+          </select>
+        </label>
+        <label class="text-xs font-semibold flex items-center gap-1.5">Tampilan
+          <select id="sel-layout" class="rounded-full text-xs font-bold px-2 py-1 bg-transparent border border-current/20 outline-none cursor-pointer">
+            <option value="single" {{ $pref->layout === 'single' ? 'selected' : '' }}>Single page</option>
+            <option value="double" {{ $pref->layout === 'double' ? 'selected' : '' }}>Double page</option>
+          </select>
+        </label>
+        <button id="btn-theme" class="text-xs font-bold rounded-full px-3 py-1.5 border border-current/20 hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => $pref->theme === 'dark' ? 'sun' : 'moon', 'class' => 'w-3.5 h-3.5']) {{ $pref->theme === 'dark' ? 'Mode Terang' : 'Mode Gelap' }}</button>
+        <button id="btn-full" class="text-xs font-bold rounded-full px-3 py-1.5 border border-current/20 hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'maximize', 'class' => 'w-3.5 h-3.5']) Layar Penuh</button>
+        @auth @if($position)<span id="resume-hint" class="ml-auto text-[11px] font-semibold px-3 py-1.5 rounded-full bg-[#002f80]/10 text-[#002f80] inline-flex items-center gap-1">@include('components.icon', ['name' => 'bookmark', 'class' => 'w-3 h-3']) Terakhir: hal. {{ $position->page }}</span>@endif @endauth
+      </div>
+      <div id="pages" class="flex flex-wrap justify-center items-start gap-5 p-5 max-h-[78vh] overflow-auto {{ $pref->theme === 'dark' ? 'bg-[#141920]' : 'bg-[#dde2e8]' }}"></div>
     </div>
-    <label class="text-xs font-semibold flex items-center gap-1.5">Zoom
-      <select id="sel-zoom" class="rounded-full text-xs font-bold px-2 py-1 bg-transparent border border-current/20 outline-none cursor-pointer">
-        @foreach([50,75,100,125,150,200] as $z)<option value="{{ $z }}" {{ (int)$pref->zoom === $z ? 'selected' : '' }}>{{ $z }}%</option>@endforeach
-      </select>
-    </label>
-    <label class="text-xs font-semibold flex items-center gap-1.5">Tampilan
-      <select id="sel-layout" class="rounded-full text-xs font-bold px-2 py-1 bg-transparent border border-current/20 outline-none cursor-pointer">
-        <option value="single" {{ $pref->layout === 'single' ? 'selected' : '' }}>Single page</option>
-        <option value="double" {{ $pref->layout === 'double' ? 'selected' : '' }}>Double page</option>
-      </select>
-    </label>
-    <button id="btn-theme" class="text-xs font-bold rounded-full px-3 py-1.5 border border-current/20 hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => $pref->theme === 'dark' ? 'sun' : 'moon', 'class' => 'w-3.5 h-3.5']) {{ $pref->theme === 'dark' ? 'Mode Terang' : 'Mode Gelap' }}</button>
-    <button id="btn-full" class="text-xs font-bold rounded-full px-3 py-1.5 border border-current/20 hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'maximize', 'class' => 'w-3.5 h-3.5']) Layar Penuh</button>
-    @auth @if($position)<span id="resume-hint" class="ml-auto text-[11px] font-semibold px-3 py-1.5 rounded-full bg-[#002f80]/10 text-[#002f80] inline-flex items-center gap-1">@include('components.icon', ['name' => 'bookmark', 'class' => 'w-3 h-3']) Terakhir: hal. {{ $position->page }}</span>@endif @endauth
+    <p class="text-xs text-slate-400 mt-2">Tips: gunakan tombol panah pada keyboard untuk pindah halaman. Posisi bacamu tersimpan otomatis.</p>
+    @if($safeContent)
+      <details class="mt-4 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 text-sm"><summary class="cursor-pointer font-bold text-[#002f80]">Lihat teks sumber (editor)</summary><div class="prose max-w-none mt-2 text-slate-700">{!! $safeContent !!}</div></details>
+    @endif
   </div>
-  <div id="pages" class="flex flex-wrap justify-center items-start gap-5 p-5 max-h-[78vh] overflow-auto {{ $pref->theme === 'dark' ? 'bg-[#141920]' : 'bg-[#dde2e8]' }}"></div>
+
+  {{-- Kanan: dokumen dengan jenis tag/flag yang sama --}}
+  <aside class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-4">
+    <div class="flex items-center gap-2 text-[#002f80] font-extrabold">
+      @include('components.icon', ['name' => 'tag', 'class' => 'w-4.5 h-4.5'])
+      <h2 class="text-sm">Dokumen Sejenis</h2>
+    </div>
+    @if($document->tags->isNotEmpty())
+      <div class="flex flex-wrap gap-1 mt-2 mb-1">@include('components.tag-badges', ['tags' => $document->tags->take(4)])</div>
+    @else
+      <p class="text-[11px] text-slate-400 mt-1">Kategori: <span class="font-bold text-slate-600">{{ $document->category->name ?? 'Tanpa kategori' }}</span></p>
+    @endif
+    <div class="mt-2 divide-y divide-slate-100">
+      @forelse($related as $r)
+        <a href="{{ route('documents.show', $r) }}" class="flex items-start gap-3 py-2.5 group">
+          <span class="w-9 h-9 rounded-xl grid place-items-center text-white text-sm font-extrabold shrink-0" style="background:{{ ['linear-gradient(135deg,#001c55,#002f80)','linear-gradient(135deg,#002f80,#3b6fd4)','linear-gradient(135deg,#7a0010,#c90018)','linear-gradient(135deg,#334155,#64748b)'][$r->id % 4] }}">{{ strtoupper(mb_substr($r->title, 0, 1)) }}</span>
+          <span class="min-w-0">
+            <span class="block font-bold text-slate-800 text-sm leading-snug line-clamp-2 group-hover:text-[#002f80] transition">{{ $r->title }}</span>
+            <span class="block text-[11px] text-slate-400 mt-0.5 inline-flex items-center gap-1">@include('components.icon', ['name' => 'eye', 'class' => 'w-3 h-3']) {{ number_format($r->views_count) }} kali dibaca</span>
+          </span>
+        </a>
+      @empty
+        <p class="text-sm text-slate-400 py-2">Belum ada dokumen sejenis.</p>
+      @endforelse
+    </div>
+  </aside>
 </div>
-<p class="text-xs text-slate-400 mt-2">Tips: gunakan tombol panah pada keyboard untuk pindah halaman. Posisi bacamu tersimpan otomatis.</p>
-@if($safeContent)
-  <details class="mt-4 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 text-sm"><summary class="cursor-pointer font-bold text-[#002f80]">Lihat teks sumber (editor)</summary><div class="prose max-w-none mt-2 text-slate-700">{!! $safeContent !!}</div></details>
+
+{{-- Bawah: dokumen populer (paling sering dibaca) --}}
+@if($popular->isNotEmpty())
+<section class="mt-10">
+  <div class="flex items-center gap-2 mb-4">
+    <span class="w-10 h-10 rounded-2xl grid place-items-center text-white" style="background:linear-gradient(135deg,#7a0010,#c90018)">@include('components.icon', ['name' => 'flame', 'class' => 'w-5 h-5'])</span>
+    <div>
+      <h2 class="text-xl font-extrabold tracking-tight text-[#002f80]">Dokumen Populer</h2>
+      <p class="text-xs text-slate-500">Dokumen yang paling sering dibaca komunitas.</p>
+    </div>
+  </div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    @foreach($popular as $p)
+      @include('components.doc-card', ['d' => $p])
+    @endforeach
+  </div>
+</section>
 @endif
 
 <style>#reader:fullscreen #pages { max-height: 100vh; }</style>

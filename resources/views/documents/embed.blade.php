@@ -9,7 +9,7 @@
 </head>
 <body class="bg-[#dde2e8] min-h-screen flex flex-col">
 <div class="flex items-center gap-2 px-3 py-2 bg-[#002f80] text-white text-sm sticky top-0 z-10">
-  <img src="{{ asset('images/logo-ypl.png') }}" alt="YPL" class="h-6 w-auto rounded bg-white object-contain">
+  <img src="{{ asset('images/logo-ypl.jpg') }}" alt="YPL" class="h-6 w-auto rounded bg-white object-contain">
   <span class="font-bold truncate flex-1">{{ $document->title }}</span>
   <button id="prev" class="w-7 h-7 rounded-full bg-white/15 grid place-items-center hover:bg-white/30">←</button>
   <span class="text-xs font-bold tabular-nums"><span id="now">1</span>/<span id="total">…</span></span>

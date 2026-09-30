@@ -9,8 +9,11 @@ use App\Models\Favorite;
 use App\Models\Like;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
+use App\Models\Setting;
+use App\Services\DocumentFiles;
 use App\Services\HtmlSanitizer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -70,7 +73,34 @@ class DocumentController extends Controller
             ? HtmlSanitizer::clean($document->content)
             : null;
 
-        return view('documents.show', compact('document', 'pref', 'position', 'isFav', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent'));
+        // Dokumen sejenis: tag/flag sama; fallback kategori; terakhir semua dokumen lain.
+        $tagIds = $document->tags->pluck('id');
+        $related = Document::query()->with(['category', 'user', 'tags'])
+            ->where('visibility', 'public')
+            ->where('id', '!=', $document->id)
+            ->when($tagIds->isNotEmpty(), fn ($q) => $q->whereHas('tags', fn ($t) => $t->whereIn('tags.id', $tagIds)))
+            ->when($tagIds->isEmpty(), fn ($q) => $q->where('category_id', $document->category_id))
+            ->latest()
+            ->limit(6)
+            ->get();
+        if ($related->isEmpty()) {
+            $related = Document::query()->with(['category', 'user', 'tags'])
+                ->where('visibility', 'public')
+                ->where('id', '!=', $document->id)
+                ->latest()
+                ->limit(6)
+                ->get();
+        }
+
+        // Dokumen populer: paling sering dibaca.
+        $popular = Document::query()->with(['category', 'user', 'tags'])
+            ->where('visibility', 'public')
+            ->where('id', '!=', $document->id)
+            ->orderByDesc('views_count')
+            ->limit(6)
+            ->get();
+
+        return view('documents.show', compact('document', 'pref', 'position', 'isFav', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'related', 'popular'));
     }
 
     public function stream(Document $document)
@@ -89,7 +119,7 @@ class DocumentController extends Controller
 
     public function download(Document $document)
     {
-        abort_unless(\App\Models\Setting::feature('download'), 404, 'Fitur unduh dinonaktifkan.');
+        abort_unless(Setting::feature('download'), 404, 'Fitur unduh dinonaktifkan.');
         if (! $document->isVisibleTo(auth()->user()) || ! $document->file_path || ! Storage::disk('private')->exists($document->file_path)) {
             abort(404);
         }
@@ -102,7 +132,7 @@ class DocumentController extends Controller
     // Unduh sebagai HTML: hanya anggota terdaftar (route di balik auth)
     public function downloadHtml(Document $document)
     {
-        abort_unless(\App\Models\Setting::feature('download'), 404, 'Fitur unduh dinonaktifkan.');
+        abort_unless(Setting::feature('download'), 404, 'Fitur unduh dinonaktifkan.');
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403);
         }
@@ -129,7 +159,7 @@ class DocumentController extends Controller
     // Sematan (embed) minimal untuk iframe. Tamu: hanya dokumen publik.
     public function embed(Document $document)
     {
-        abort_unless(\App\Models\Setting::feature('embed'), 404, 'Fitur semat dinonaktifkan.');
+        abort_unless(Setting::feature('embed'), 404, 'Fitur semat dinonaktifkan.');
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403, 'Dokumen tidak dapat disematkan.');
         }
@@ -140,26 +170,26 @@ class DocumentController extends Controller
     // Fase 2: unggah PDF + judul & kategori
     public function create()
     {
-        abort_unless(\App\Models\Setting::feature('upload'), 404, 'Fitur unggah dinonaktifkan.');
+        abort_unless(Setting::feature('upload'), 404, 'Fitur unggah dinonaktifkan.');
 
         return view('documents.create', ['categories' => Category::orderBy('name')->get()]);
     }
 
     public function store(Request $request)
     {
-        \App\Services\DocumentFiles::ensureValidUpload($request);
-        abort_unless(\App\Models\Setting::feature('upload'), 404, 'Fitur unggah dinonaktifkan.');
+        DocumentFiles::ensureValidUpload($request);
+        abort_unless(Setting::feature('upload'), 404, 'Fitur unggah dinonaktifkan.');
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'visibility' => ['required', 'in:public,private,restricted'],
-            'file' => ['required', 'file', 'mimes:pdf', 'max:51200'],
+            'file' => ['required', 'file', 'mimes:pdf', 'max:9216'],
         ]);
 
-        $doc = \App\Services\DocumentFiles::transactional(function (array &$gate) use ($request, $data) {
-            [$path, $size] = \App\Services\DocumentFiles::storeUpload($request->file('file'), $gate);
+        $doc = DocumentFiles::transactional(function (array &$gate) use ($request, $data) {
+            [$path, $size] = DocumentFiles::storeUpload($request->file('file'), $gate);
 
             return Document::create([
                 'user_id' => auth()->id(),
@@ -197,7 +227,7 @@ class DocumentController extends Controller
 
     public function update(Request $request, Document $document)
     {
-        \App\Services\DocumentFiles::ensureValidUpload($request);
+        DocumentFiles::ensureValidUpload($request);
         $this->authorize('update', $document);
 
         $data = $request->validate([
@@ -205,12 +235,12 @@ class DocumentController extends Controller
             'description' => ['nullable', 'string'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'visibility' => ['required', 'in:public,private,restricted'],
-            'file' => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
+            'file' => ['nullable', 'file', 'mimes:pdf', 'max:9216'],
         ]);
 
-        \App\Services\DocumentFiles::transactional(function (array &$gate) use ($request, $data, $document) {
+        DocumentFiles::transactional(function (array &$gate) use ($request, $data, $document) {
             if ($request->hasFile('file')) {
-                [$document->file_path, $document->file_size] = \App\Services\DocumentFiles::replace($document->file_path, $request->file('file'), $gate);
+                [$document->file_path, $document->file_size] = DocumentFiles::replace($document->file_path, $request->file('file'), $gate);
                 $document->mime = 'application/pdf';
             }
 
@@ -232,7 +262,7 @@ class DocumentController extends Controller
         $this->authorize('delete', $document);
         $path = $document->file_path;
         $title = $document->title;
-        \Illuminate\Support\Facades\DB::transaction(function () use ($document) {
+        DB::transaction(function () use ($document) {
             $document->delete();
         });
         // Berkas dihapus setelah record ter-commit: tidak ada risiko record tanpa berkas.
@@ -243,5 +273,4 @@ class DocumentController extends Controller
 
         return redirect()->route('documents.my')->with('ok', 'Dokumen dihapus.');
     }
-
 }

@@ -6,7 +6,9 @@ use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\Tag;
+use App\Services\DocumentFiles;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -35,7 +37,7 @@ class StaffController extends Controller
 
     public function store(Request $request)
     {
-        \App\Services\DocumentFiles::ensureValidUpload($request);
+        DocumentFiles::ensureValidUpload($request);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -43,11 +45,11 @@ class StaffController extends Controller
             'visibility' => ['required', 'in:public,private,restricted'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:tags,id'],
-            'file' => ['required', 'file', 'mimes:pdf', 'max:51200'],
+            'file' => ['required', 'file', 'mimes:pdf', 'max:9216'],
         ]);
 
-        $doc = \App\Services\DocumentFiles::transactional(function (array &$gate) use ($request, $data) {
-            [$path, $size] = \App\Services\DocumentFiles::storeUpload($request->file('file'), $gate);
+        $doc = DocumentFiles::transactional(function (array &$gate) use ($request, $data) {
+            [$path, $size] = DocumentFiles::storeUpload($request->file('file'), $gate);
 
             $doc = Document::create([
                 'user_id' => auth()->id(),
@@ -73,7 +75,7 @@ class StaffController extends Controller
 
     public function update(Request $request, Document $document)
     {
-        \App\Services\DocumentFiles::ensureValidUpload($request);
+        DocumentFiles::ensureValidUpload($request);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -81,12 +83,12 @@ class StaffController extends Controller
             'visibility' => ['required', 'in:public,private,restricted'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:tags,id'],
-            'file' => ['nullable', 'file', 'mimes:pdf', 'max:51200'],
+            'file' => ['nullable', 'file', 'mimes:pdf', 'max:9216'],
         ]);
 
-        \App\Services\DocumentFiles::transactional(function (array &$gate) use ($request, $data, $document) {
+        DocumentFiles::transactional(function (array &$gate) use ($request, $data, $document) {
             if ($request->hasFile('file')) {
-                [$document->file_path, $document->file_size] = \App\Services\DocumentFiles::replace($document->file_path, $request->file('file'), $gate);
+                [$document->file_path, $document->file_size] = DocumentFiles::replace($document->file_path, $request->file('file'), $gate);
                 $document->mime = 'application/pdf';
             }
 
@@ -108,7 +110,7 @@ class StaffController extends Controller
     {
         $path = $document->file_path;
         $title = $document->title;
-        \Illuminate\Support\Facades\DB::transaction(function () use ($document) {
+        DB::transaction(function () use ($document) {
             $document->tags()->detach();
             $document->delete();
         });

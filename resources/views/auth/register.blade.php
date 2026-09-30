@@ -4,7 +4,7 @@
 <div class="max-w-md mx-auto">
   <div class="rounded-3xl overflow-hidden shadow-xl border border-[#d6d6d6]">
     <div class="p-6 text-white text-center" style="background:linear-gradient(135deg,#000f2e,#002f80)">
-      <img src="{{ asset('images/logo-ypl.png') }}" alt="Logo YPL" class="h-14 w-auto mx-auto rounded-xl bg-white object-contain px-2 py-1">
+      <img src="{{ asset('images/logo-ypl.jpg') }}" alt="Logo YPL" class="h-14 w-auto mx-auto rounded-xl bg-white object-contain px-2 py-1">
       <h1 class="text-xl font-extrabold tracking-tight mt-2">Bergabung dengan YPL</h1>
       <p class="text-xs text-slate-300">Daftar dengan email aktif untuk mulai membaca.</p>
     </div>

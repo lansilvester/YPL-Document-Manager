@@ -116,20 +116,6 @@ $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STA
   </div>
 
   <aside class="space-y-5">
-    {{-- Ganti kata sandi --}}
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
-      <h2 class="font-extrabold text-[#002f80] flex items-center gap-2">@include('components.icon', ['name' => 'lock', 'class' => 'w-4 h-4']) Ganti Kata Sandi</h2>
-      <form method="post" action="{{ route('profile.password') }}" class="space-y-3 mt-3">@csrf @method('PUT')
-        <div><label class="text-[13px] font-bold">Kata sandi saat ini</label><input type="password" name="current_password" required autocomplete="current-password" class="field mt-1 !py-2 !text-[13px]">
-          @error('current_password')<p class="text-xs font-semibold text-[#c90018] mt-1">{{ $message }}</p>@enderror</div>
-        <div><label class="text-[13px] font-bold">Kata sandi baru</label><input type="password" name="password" required autocomplete="new-password" class="field mt-1 !py-2 !text-[13px]">
-          @error('password')<p class="text-xs font-semibold text-[#c90018] mt-1">{{ $message }}</p>@enderror</div>
-        <div><label class="text-[13px] font-bold">Konfirmasi kata sandi baru</label><input type="password" name="password_confirmation" required autocomplete="new-password" class="field mt-1 !py-2 !text-[13px]"></div>
-        <p class="text-[11px] text-slate-400">Min. 8 karakter: huruf besar, huruf kecil, angka, dan karakter khusus.</p>
-        <button class="btn-primary w-full !py-2.5">Ganti Kata Sandi</button>
-      </form>
-    </div>
-
     {{-- Peningkatan peran --}}
     @if($user->role === 'anggota')
     <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
@@ -187,6 +173,24 @@ $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STA
         <button class="btn-primary flex-1 !py-2.5">Simpan Perubahan</button>
       </div>
     </form>
+    <div class="border-t border-slate-100 px-5 py-4">
+      <button type="button" id="btn-toggle-password" onclick="togglePasswordForm()" aria-expanded="false" class="w-full flex items-center justify-between gap-2 rounded-xl border border-[#d6d6d6] px-4 py-2.5 text-[13px] font-bold text-[#002f80] hover:bg-[#002f80]/5 hover:border-[#002f80]/40 transition">
+        <span class="inline-flex items-center gap-2">@include('components.icon', ['name' => 'lock', 'class' => 'w-4 h-4']) Ganti kata sandi</span>
+        <span id="pw-caret" class="inline-flex items-center transition-transform duration-200">@include('components.icon', ['name' => 'chev-down', 'class' => 'w-4 h-4'])</span>
+      </button>
+      <div id="password-form-wrap" class="hidden mt-3">
+        <form method="post" action="{{ route('profile.password') }}" class="space-y-3">@csrf @method('PUT')
+          @if(session('password_changed'))<p class="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">Kata sandi berhasil diperbarui.</p>@endif
+          <div><label class="text-[13px] font-bold">Kata sandi saat ini</label><input type="password" name="current_password" required autocomplete="current-password" class="field mt-1 !py-2 !text-[13px]">
+            @error('current_password')<p class="text-xs font-semibold text-[#c90018] mt-1">{{ $message }}</p>@enderror</div>
+          <div><label class="text-[13px] font-bold">Kata sandi baru</label><input type="password" name="password" required autocomplete="new-password" class="field mt-1 !py-2 !text-[13px]">
+            @error('password')<p class="text-xs font-semibold text-[#c90018] mt-1">{{ $message }}</p>@enderror</div>
+          <div><label class="text-[13px] font-bold">Konfirmasi kata sandi baru</label><input type="password" name="password_confirmation" required autocomplete="new-password" class="field mt-1 !py-2 !text-[13px]"></div>
+          <p class="text-[11px] text-slate-400">Min. 8 karakter: huruf besar, huruf kecil, angka, dan karakter khusus.</p>
+          <button class="btn-primary w-full !py-2.5">Ganti Kata Sandi</button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -194,6 +198,14 @@ $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STA
 <script>
 function openProfileModal(e) { if (e) e.preventDefault(); document.getElementById('profile-modal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); document.body.style.overflow = ''; }
+function togglePasswordForm() {
+  var wrap = document.getElementById('password-form-wrap');
+  var caret = document.getElementById('pw-caret');
+  var btn = document.getElementById('btn-toggle-password');
+  var open = wrap.classList.toggle('hidden');
+  caret.style.transform = open ? '' : 'rotate(180deg)';
+  btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+}
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeProfileModal(); });
 // Pratinjau normalisasi nomor WA secara langsung (logika sama dengan server)
 (function () {
@@ -232,6 +244,13 @@ document.getElementById('avatar-input').addEventListener('change', function (e) 
   }
 });
 @if($errors->any()) document.addEventListener('DOMContentLoaded', openProfileModal); @endif
+@if($errors->has('current_password') || $errors->has('password'))
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('password-form-wrap').classList.remove('hidden');
+  document.getElementById('pw-caret').style.transform = 'rotate(180deg)';
+  document.getElementById('btn-toggle-password').setAttribute('aria-expanded', 'true');
+});
+@endif
 </script>
 @endpush
 @endsection
