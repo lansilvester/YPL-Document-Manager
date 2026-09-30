@@ -37,9 +37,9 @@
 <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm overflow-hidden mb-6">
   <div class="overflow-x-auto">
     <table class="w-full text-sm min-w-[880px]">
-      <thead>
-        <tr class="text-left text-[11px] tracking-widest text-slate-400 border-b border-slate-100">
-          <th class="font-bold px-4 py-3 w-20">PRIORITAS</th>
+      <thead class="sticky top-0">
+        <tr class="text-left text-[11px] tracking-widest text-slate-400 border-b border-slate-100 bg-white">
+          <th class="font-bold px-4 py-3 w-24">PRIORITAS</th>
           <th class="font-bold px-4 py-3">PERAN</th>
           <th class="font-bold px-4 py-3">SCOPE KOLEKSI</th>
           <th class="font-bold px-4 py-3">HOMEPAGE</th>
@@ -47,10 +47,13 @@
           <th class="font-bold px-4 py-3 w-36 text-right">AKSI</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-slate-100">
+      <tbody id="role-rows" class="divide-y divide-slate-100">
         @foreach($roles as $r)
-          <tr class="hover:bg-slate-50/70 align-top">
-            <td class="px-4 py-3"><span class="inline-block text-xs font-extrabold bg-[#002f80] text-white px-2.5 py-1 rounded-full">#{{ $r->priority }}</span></td>
+          @php
+            $prioStyle = $r->priority <= 10 ? 'background:#002f80' : ($r->priority <= 30 ? 'background:#0a4fc4' : ($r->priority <= 60 ? 'background:#64748b' : 'background:#cbd5e1;color:#475569'));
+          @endphp
+          <tr class="role-row hover:bg-slate-50/70 align-top" data-name="{{ strtolower($r->name.' '.$r->slug) }}" data-kind="{{ $r->is_system ? 'sistem' : 'audiens' }}">
+            <td class="px-4 py-3"><span class="inline-block text-xs font-extrabold text-white px-2.5 py-1 rounded-full" style="{{ $prioStyle }}">#{{ $r->priority }}</span></td>
             <td class="px-4 py-3">
               <span class="font-bold text-slate-900">{{ $r->name }} @if($r->is_system)<span title="Peran sistem">🔒</span>@endif</span>
               <span class="block text-xs text-slate-400 font-mono">{{ $r->slug }}</span>
@@ -96,14 +99,49 @@
   </div>
 </div>
 <script>
-document.querySelectorAll('[data-role-toggle]').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    var row = document.getElementById('role-form-' + btn.dataset.roleToggle);
-    var open = row.classList.toggle('hidden');
-    btn.setAttribute('aria-expanded', String(!open));
-    btn.textContent = open ? 'Ubah' : 'Tutup';
+(function () {
+  // Buka/tutup baris form.
+  document.querySelectorAll('[data-role-toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var row = document.getElementById('role-form-' + btn.dataset.roleToggle);
+      var open = row.classList.toggle('hidden');
+      btn.setAttribute('aria-expanded', String(!open));
+      btn.textContent = open ? 'Ubah' : 'Tutup';
+    });
   });
-});
+
+  // Cari + filter jenis.
+  var q = document.getElementById('role-search');
+  var count = document.getElementById('role-count');
+  var kind = 'semua';
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.role-row'));
+  function apply() {
+    var needle = q.value.trim().toLowerCase(), shown = 0;
+    rows.forEach(function (tr) {
+      var ok = (kind === 'semua' || tr.dataset.kind === kind) && (!needle || tr.dataset.name.indexOf(needle) !== -1);
+      tr.style.display = ok ? '' : 'none';
+      var form = document.getElementById('role-form-' + tr.querySelector('[data-role-toggle]').dataset.roleToggle);
+      if (!ok) { form.classList.add('hidden'); }
+      else shown++;
+    });
+    count.textContent = shown + ' / ' + rows.length + ' peran';
+  }
+  q.addEventListener('input', apply);
+  document.querySelectorAll('.role-filter').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      kind = btn.dataset.roleFilter;
+      document.querySelectorAll('.role-filter').forEach(function (b) {
+        var on = b === btn;
+        b.classList.toggle('bg-[#002f80]', on);
+        b.classList.toggle('text-white', on);
+        b.classList.toggle('bg-slate-100', !on);
+        b.classList.toggle('text-slate-600', !on);
+      });
+      apply();
+    });
+  });
+  apply();
+})();
 </script>
 
 <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 mt-6">
