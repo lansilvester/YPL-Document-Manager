@@ -13,6 +13,7 @@
       @if($document->doc_type)<span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->doc_type)) }}</span>@endif
     </div>
     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-3">{{ $document->title }}</h1>
+    @if($document->subtitle)<p class="text-slate-200 text-sm mt-1 font-reading italic">{{ $document->subtitle }}</p>@endif
     @if($document->tags->isNotEmpty())
       <div class="flex flex-wrap gap-1.5 mt-2">@include('components.tag-badges', ['tags' => $document->tags])</div>
     @endif
@@ -39,7 +40,18 @@
         <button type="button" onclick="openEmbedModal(event)" class="rounded-full px-5 py-2 border border-white/40 bg-white/10 backdrop-blur hover:bg-white/20 inline-flex items-center gap-2">@include('components.icon', ['name' => 'code', 'class' => 'w-4 h-4']) Sematkan</button>
       @endif
       @auth
-        @if(\App\Models\Setting::feature('favorite'))<form method="post" action="{{ route('documents.favorite', $document) }}" class="inline">@csrf<button class="rounded-full px-5 py-2 border border-white/40 bg-white/10 backdrop-blur hover:bg-white/20 inline-flex items-center gap-2">@include('components.icon', ['name' => $isFav ? 'star' : 'bookmark', 'class' => 'w-4 h-4']) {{ $isFav ? 'Tersimpan di Favorit' : 'Simpan ke Favorit' }}</button></form>@endif
+        @if(\App\Models\Setting::feature('bookmark'))
+          @include('components.bookmark-button', [
+            'document' => $document,
+            'marked' => $isMarked,
+            'labelOn' => 'Tersimpan di Bookmark',
+            'labelOff' => 'Simpan ke Bookmark',
+            'btnClass' => 'rounded-full px-5 py-2 border inline-flex items-center gap-2 backdrop-blur cursor-pointer shadow-sm',
+            'iconClass' => 'w-4 h-4',
+            'activeClass' => 'bg-amber-400/25 border-amber-300 text-amber-200 hover:bg-amber-400/35',
+            'inactiveClass' => 'border-white/40 bg-white/10 hover:bg-white/20 text-white',
+          ])
+        @endif
         @if(\App\Models\Setting::feature('share'))<a href="{{ route('documents.share', $document) }}" class="rounded-full px-5 py-2 border border-white/40 bg-white/10 backdrop-blur hover:bg-white/20 inline-flex items-center gap-2">@include('components.icon', ['name' => 'share', 'class' => 'w-4 h-4']) Bagikan</a>@endif
         @if(auth()->user()->isAdmin() || $document->user_id === auth()->id())
           @if($document->source_type === 'editor')
@@ -70,6 +82,11 @@
       <div><dt class="text-[11px] font-bold text-slate-400">REVIEW</dt><dd class="font-bold">{{ $document->review_at?->format('d M Y') ?? '—' }}</dd></div>
       <div><dt class="text-[11px] font-bold text-slate-400">CLASS</dt><dd class="font-bold">{{ $document->classification ? strtoupper($document->classification) : '—' }}</dd></div>
       <div><dt class="text-[11px] font-bold text-slate-400">STATUS</dt><dd class="font-bold">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</dd></div>
+      <div><dt class="text-[11px] font-bold text-slate-400">PIC</dt><dd class="font-bold">{{ $document->pic->name ?? $document->pic_name ?? '—' }}</dd></div>
+      <div><dt class="text-[11px] font-bold text-slate-400">UNIT</dt><dd class="font-bold">{{ $document->unit ?? '—' }}</dd></div>
+      @if(!empty($document->audience))
+        <div class="col-span-2"><dt class="text-[11px] font-bold text-slate-400">AUDIENCE</dt><dd class="flex flex-wrap gap-1 mt-1">@foreach($document->audience as $a)<span class="text-[11px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $a)) }}</span>@endforeach</dd></div>
+      @endif
     </dl>
     @if(!empty($transitions))
       <div class="flex flex-wrap gap-2 mt-4">
@@ -88,22 +105,36 @@
     <h2 class="font-extrabold tracking-tight text-[#002f80]">RELATED KNOWLEDGE</h2>
     <div class="mt-2 space-y-1.5">
       @forelse($document->outgoingRelations as $rel)
-        <div class="flex items-center gap-2 text-sm">
-          <span class="text-[10px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full shrink-0">{{ strtoupper($rel->relation_type) }}</span>
-          <a href="{{ route('documents.show', $rel->related) }}" class="font-bold truncate hover:text-[#002f80] flex-1">{{ $rel->related->title }}</a>
-          @can('relate', $document)
-            <form method="post" action="{{ route('documents.relations.destroy', [$document, $rel]) }}" class="inline">@csrf @method('DELETE')<button class="text-[#c90018] text-xs font-bold" aria-label="Hapus relasi">✕</button></form>
-          @endcan
-        </div>
+        @if($rel->system)
+          <div class="flex items-center gap-2 text-sm">
+            <span class="text-[10px] font-bold bg-green-700/10 text-green-700 px-2 py-1 rounded-full shrink-0">SYSTEM</span>
+            <a href="{{ route('systems.show', $rel->system) }}" class="font-bold truncate hover:text-[#002f80] flex-1">{{ $rel->system->name }}</a>
+            @can('relate', $document)
+              <form method="post" action="{{ route('documents.relations.destroy', [$document, $rel]) }}" class="inline">@csrf @method('DELETE')<button class="text-[#c90018] text-xs font-bold" aria-label="Hapus relasi">✕</button></form>
+            @endcan
+          </div>
+        @elseif($rel->related)
+          <div class="flex items-center gap-2 text-sm">
+            <span class="text-[10px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full shrink-0">{{ strtoupper($rel->relation_type) }}</span>
+            <a href="{{ route('documents.show', $rel->related) }}" class="font-bold truncate hover:text-[#002f80] flex-1">{{ $rel->related->title }}</a>
+            @can('relate', $document)
+              <form method="post" action="{{ route('documents.relations.destroy', [$document, $rel]) }}" class="inline">@csrf @method('DELETE')<button class="text-[#c90018] text-xs font-bold" aria-label="Hapus relasi">✕</button></form>
+            @endcan
+          </div>
+        @endif
       @empty
         <p class="text-[13px] text-slate-400">Belum ada relasi eksplisit. Tambahkan Handbook → Policy → SOP → Form di bawah.</p>
       @endforelse
     </div>
     @can('relate', $document)
       <form method="post" action="{{ route('documents.relations.store', $document) }}" class="flex gap-2 mt-3">@csrf
-        <input name="related_slug" required placeholder="slug-dokumen-terkait" class="field !text-xs flex-1" aria-label="Slug dokumen terkait">
+        <input name="related_slug" placeholder="slug-dokumen-terkait" class="field !text-xs flex-1" aria-label="Slug dokumen terkait">
         <select name="relation_type" class="field !text-xs !w-auto" aria-label="Tipe relasi">@foreach(\App\Models\DocumentRelation::TYPES as $t)<option value="{{ $t }}">{{ $t }}</option>@endforeach</select>
         <button class="btn-primary !py-2 !text-xs shrink-0">Tambah</button>
+      </form>
+      <form method="post" action="{{ route('documents.relations.store', $document) }}" class="flex gap-2 mt-2">@csrf
+        <select name="system_slug" class="field !text-xs flex-1" aria-label="Sistem terkait"><option value="">— Pilih sistem —</option>@foreach(\App\Models\System::orderBy('name')->get() as $s)<option value="{{ $s->slug }}">{{ $s->name }}</option>@endforeach</select>
+        <button class="btn-ghost !py-2 !text-xs shrink-0">Tautkan Sistem</button>
       </form>
     @endcan
     @if($document->versions->isNotEmpty())

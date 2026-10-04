@@ -3,15 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Bookmark;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\DocumentRelation;
 use App\Models\DocumentVersion;
-use App\Models\Favorite;
 use App\Models\Like;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
 use App\Models\Setting;
+use App\Models\System;
+use App\Models\User;
 use App\Services\DocumentFiles;
 use App\Services\HtmlSanitizer;
 use Illuminate\Http\Request;
@@ -42,7 +44,7 @@ class DocumentController extends Controller
     // Fase 1: buka dokumen + lanjut baca + atur tampilan
     public function show(Document $document)
     {
-        $document->load(['tags', 'approver', 'versions.user', 'outgoingRelations.related']);
+        $document->load(['tags', 'approver', 'pic', 'versions.user', 'outgoingRelations.related', 'outgoingRelations.system']);
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403, 'Dokumen bersifat privat.');
         }
@@ -64,7 +66,7 @@ class DocumentController extends Controller
                 ['user_id' => $user->id, 'document_id' => $document->id],
                 ['page' => 1, 'percent' => 0]
             ) : null;
-        $isFav = $user ? Favorite::where('user_id', $user->id)->where('document_id', $document->id)->exists() : false;
+        $isMarked = $user ? Bookmark::where('user_id', $user->id)->where('document_id', $document->id)->exists() : false;
         $liked = $user ? Like::where('user_id', $user->id)->where('document_id', $document->id)->exists() : false;
         $likesCount = $document->likes()->count();
         // Kode semat hanya ditawarkan untuk dokumen publik, atau kepada staf/pemilik/admin
@@ -112,7 +114,7 @@ class DocumentController extends Controller
             }
         }
 
-        return view('documents.show', compact('document', 'pref', 'position', 'isFav', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'related', 'popular', 'transitions'));
+        return view('documents.show', compact('document', 'pref', 'position', 'isMarked', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'related', 'popular', 'transitions'));
     }
 
     /**
@@ -148,24 +150,35 @@ class DocumentController extends Controller
     }
 
     /**
-     * Phase 3 — sambungkan dokumen terkait (connected knowledge).
+     * Phase 3–4 — sambungkan dokumen/sistem terkait (connected knowledge).
      */
     public function attachRelation(Request $request, Document $document)
     {
         $this->authorize('relate', $document);
 
         $data = $request->validate([
-            'related_slug' => ['required', 'string', 'max:255'],
-            'relation_type' => ['required', 'string', 'in:'.implode(',', DocumentRelation::TYPES)],
+            'related_slug' => ['nullable', 'string', 'max:255', 'required_without:system_slug'],
+            'system_slug' => ['nullable', 'string', 'max:60', 'required_without:related_slug', 'exists:systems,slug'],
+            'relation_type' => ['nullable', 'string', 'in:'.implode(',', DocumentRelation::TYPES)],
         ]);
+        $data['relation_type'] ??= 'related';
 
-        $related = Document::where('slug', $data['related_slug'])->firstOrFail();
-        abort_if($related->id === $document->id, 422, 'Dokumen tidak dapat direlasikan ke dirinya sendiri.');
+        if (! empty($data['related_slug'])) {
+            $related = Document::where('slug', $data['related_slug'])->firstOrFail();
+            abort_if($related->id === $document->id, 422, 'Dokumen tidak dapat direlasikan ke dirinya sendiri.');
 
-        DocumentRelation::firstOrCreate(
-            ['document_id' => $document->id, 'related_id' => $related->id],
-            ['relation_type' => $data['relation_type']]
-        );
+            DocumentRelation::firstOrCreate(
+                ['document_id' => $document->id, 'related_id' => $related->id, 'system_id' => null],
+                ['relation_type' => $data['relation_type']]
+            );
+        } else {
+            $system = System::where('slug', $data['system_slug'])->firstOrFail();
+
+            DocumentRelation::firstOrCreate(
+                ['document_id' => $document->id, 'related_id' => null, 'system_id' => $system->id],
+                ['relation_type' => 'system']
+            );
+        }
 
         return back()->with('ok', 'Relasi pengetahuan ditambahkan.');
     }
@@ -248,7 +261,10 @@ class DocumentController extends Controller
     {
         abort_unless(Setting::feature('upload'), 404, 'Fitur unggah dinonaktifkan.');
 
-        return view('documents.create', ['categories' => Category::orderBy('name')->get()]);
+        return view('documents.create', [
+            'categories' => Category::orderBy('name')->get(),
+            'pics' => User::whereIn('role', ['staff', 'admin', 'superadmin'])->orderBy('name')->limit(100)->get(),
+        ]);
     }
 
     public function store(Request $request)
@@ -267,6 +283,12 @@ class DocumentController extends Controller
             'version' => ['nullable', 'string', 'max:20'],
             'effective_at' => ['nullable', 'date'],
             'review_at' => ['nullable', 'date', 'after_or_equal:effective_at'],
+            'subtitle' => ['nullable', 'string', 'max:255'],
+            'audience' => ['nullable', 'array'],
+            'audience.*' => ['string', 'in:'.implode(',', Document::AUDIENCES)],
+            'unit' => ['nullable', 'string', 'max:60'],
+            'pic_id' => ['nullable', 'exists:users,id'],
+            'pic_name' => ['nullable', 'string', 'max:100'],
         ]);
 
         $doc = DocumentFiles::transactional(function (array &$gate) use ($request, $data) {
@@ -277,6 +299,7 @@ class DocumentController extends Controller
                 'category_id' => $data['category_id'] ?? null,
                 'title' => $data['title'],
                 'slug' => Str::slug($data['title']).'-'.Str::lower(Str::random(6)),
+                'subtitle' => $data['subtitle'] ?? null,
                 'description' => $data['description'] ?? null,
                 'file_path' => $path,
                 'file_size' => $size,
@@ -288,6 +311,10 @@ class DocumentController extends Controller
                 'version' => $data['version'] ?? '1.0',
                 'effective_at' => $data['effective_at'] ?? null,
                 'review_at' => $data['review_at'] ?? null,
+                'audience' => $data['audience'] ?? null,
+                'unit' => $data['unit'] ?? null,
+                'pic_id' => $data['pic_id'] ?? null,
+                'pic_name' => $data['pic_name'] ?? null,
             ]);
             $doc->update(['doc_code' => 'YPL-'.strtoupper($doc->doc_type ?? 'DOC').'-'.$doc->id]);
 
@@ -311,7 +338,11 @@ class DocumentController extends Controller
     {
         $this->authorize('update', $document);
 
-        return view('documents.edit', ['document' => $document, 'categories' => Category::orderBy('name')->get()]);
+        return view('documents.edit', [
+            'document' => $document,
+            'categories' => Category::orderBy('name')->get(),
+            'pics' => User::whereIn('role', ['staff', 'admin', 'superadmin'])->orderBy('name')->limit(100)->get(),
+        ]);
     }
 
     public function update(Request $request, Document $document)
@@ -330,6 +361,12 @@ class DocumentController extends Controller
             'version' => ['nullable', 'string', 'max:20'],
             'effective_at' => ['nullable', 'date'],
             'review_at' => ['nullable', 'date', 'after_or_equal:effective_at'],
+            'subtitle' => ['nullable', 'string', 'max:255'],
+            'audience' => ['nullable', 'array'],
+            'audience.*' => ['string', 'in:'.implode(',', Document::AUDIENCES)],
+            'unit' => ['nullable', 'string', 'max:60'],
+            'pic_id' => ['nullable', 'exists:users,id'],
+            'pic_name' => ['nullable', 'string', 'max:100'],
         ]);
 
         DocumentFiles::transactional(function (array &$gate) use ($request, $data, $document) {
@@ -340,6 +377,7 @@ class DocumentController extends Controller
 
             $document->fill([
                 'title' => $data['title'],
+                'subtitle' => $data['subtitle'] ?? $document->subtitle,
                 'description' => $data['description'] ?? null,
                 'category_id' => $data['category_id'] ?? null,
                 'visibility' => $data['visibility'],
@@ -348,6 +386,10 @@ class DocumentController extends Controller
                 'version' => $data['version'] ?? $document->version,
                 'effective_at' => $data['effective_at'] ?? $document->effective_at,
                 'review_at' => $data['review_at'] ?? $document->review_at,
+                'audience' => array_key_exists('audience', $data) ? $data['audience'] : $document->audience,
+                'unit' => $data['unit'] ?? $document->unit,
+                'pic_id' => array_key_exists('pic_id', $data) ? $data['pic_id'] : $document->pic_id,
+                'pic_name' => $data['pic_name'] ?? $document->pic_name,
             ])->save();
         });
 

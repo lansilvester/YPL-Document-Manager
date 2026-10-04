@@ -12,11 +12,15 @@ class PortalController extends Controller
     {
         $type = $request->query('tipe');
         $status = $request->query('status');
+        $audience = $request->query('audiens');
+        $unit = trim((string) $request->query('unit', ''));
 
         $docs = Document::query()->with(['category', 'user'])
             ->where('visibility', 'public')
             ->when($type, fn ($q) => $q->where('doc_type', $type))
             ->when($status, fn ($q) => $q->where('status', $status))
+            ->when($audience, fn ($q) => $q->whereJsonContains('audience', $audience))
+            ->when($unit !== '', fn ($q) => $q->where('unit', 'like', '%'.$unit.'%'))
             ->latest()->paginate(12)->withQueryString();
 
         $typeCounts = Document::query()->where('visibility', 'public')
@@ -28,6 +32,8 @@ class PortalController extends Controller
             'docs' => $docs,
             'activeType' => $type,
             'activeStatus' => $status,
+            'activeAudience' => $audience,
+            'activeUnit' => $unit,
             'typeCounts' => $typeCounts,
             'statusCounts' => $statusCounts,
         ]);

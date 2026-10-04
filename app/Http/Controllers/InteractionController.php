@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Bookmark;
 use App\Models\Document;
-use App\Models\Favorite;
 use App\Models\Like;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
@@ -14,40 +14,52 @@ use Illuminate\Support\Facades\DB;
 
 class InteractionController extends Controller
 {
-    // Fase 3: simpan ke favorit (toggle bookmark)
-    public function toggleFavorite(Document $document)
+    // Simpan ke bookmark (toggle)
+    public function toggleBookmark(Request $request, Document $document)
     {
-        abort_unless(Setting::feature('favorite'), 404, 'Fitur favorit dinonaktifkan.');
+        abort_unless(Setting::feature('bookmark'), 404, 'Fitur bookmark dinonaktifkan.');
+        if (! $document->isVisibleTo(auth()->user())) {
+            abort(403);
+        }
+
         $added = DB::transaction(function () use ($document) {
-            $favorite = Favorite::where('user_id', auth()->id())
+            $bookmark = Bookmark::where('user_id', auth()->id())
                 ->where('document_id', $document->id)
                 ->lockForUpdate()
                 ->first();
-            if ($favorite) {
-                $favorite->delete();
+            if ($bookmark) {
+                $bookmark->delete();
 
                 return false;
             }
 
-            Favorite::create(['user_id' => auth()->id(), 'document_id' => $document->id]);
+            Bookmark::create(['user_id' => auth()->id(), 'document_id' => $document->id]);
 
             return true;
         });
 
         if ($added) {
-            ActivityLog::record(auth()->id(), $document->id, 'favorite');
+            ActivityLog::record(auth()->id(), $document->id, 'bookmark');
         }
 
-        return back()->with('ok', $added ? 'Ditambahkan ke favorit.' : 'Dihapus dari favorit.');
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'ok' => true,
+                'marked' => $added,
+                'message' => $added ? 'Ditambahkan ke bookmark.' : 'Dihapus dari bookmark.',
+            ]);
+        }
+
+        return back()->with('ok', $added ? 'Ditambahkan ke bookmark.' : 'Dihapus dari bookmark.');
     }
 
-    public function favorites()
+    public function bookmarks()
     {
-        abort_unless(Setting::feature('favorite'), 404, 'Fitur favorit dinonaktifkan.');
-        $docs = Document::whereIn('id', Favorite::where('user_id', auth()->id())->pluck('document_id'))
+        abort_unless(Setting::feature('bookmark'), 404, 'Fitur bookmark dinonaktifkan.');
+        $docs = Document::whereIn('id', Bookmark::where('user_id', auth()->id())->pluck('document_id'))
             ->with(['category', 'user', 'tags'])->latest()->paginate(12);
 
-        return view('documents.favorites', compact('docs'));
+        return view('documents.bookmarks', compact('docs'));
     }
 
     // Fitur like: hanya anggota terdaftar (tamu dialihkan ke login oleh middleware auth)

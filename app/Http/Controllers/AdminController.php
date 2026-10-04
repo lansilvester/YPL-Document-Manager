@@ -114,7 +114,7 @@ class AdminController extends Controller
         // Indeks FULLTEXT (name,email) dibuat lewat migrasi; pakai bila sudah ada, kalau belum fallback LIKE.
         $fulltextReady = collect(Schema::getIndexes('users'))->contains(fn ($i) => ($i['name'] ?? null) === 'users_name_email_ft_idx');
 
-        $users = User::withCount(['documents', 'favorites'])
+        $users = User::withCount(['documents', 'bookmarks'])
             ->when(! $isSuperAdmin, fn ($s) => $s->where('role', '!=', 'superadmin'))
             ->when(in_array($role, ['anggota', 'staff', 'admin'], true), fn ($s) => $s->where('role', $role))
             ->when($q !== '', function ($s) use ($q, $fulltextReady) {

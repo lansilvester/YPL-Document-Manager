@@ -9,15 +9,15 @@
   $first = $docs->first();
 @endphp
 
-<div class="grid md:grid-cols-[280px_minmax(0,1fr)] gap-6 mt-3 items-start">
+<div class="grid md:grid-cols-[340px_minmax(0,1fr)] lg:grid-cols-[400px_minmax(0,1fr)] gap-6 lg:gap-10 mt-3 items-start">
   {{-- Cover + metadata --}}
-  <div class="relative rounded-r-2xl rounded-l-md text-white p-6 pl-9 min-h-80 flex flex-col shadow-2xl" style="background:{{ $bg }}">
-    <span class="absolute inset-y-0 left-0 w-5 rounded-l-md" style="background:linear-gradient(90deg, rgba(0,0,0,.45), rgba(255,255,255,.25) 55%, rgba(0,0,0,.25))" aria-hidden="true"></span>
-    <span class="absolute top-2 bottom-2 right-0 w-2 rounded-r-2xl" style="background:repeating-linear-gradient(90deg, #f5f1e8 0 1.5px, #d9d2c2 1.5px 2.5px)" aria-hidden="true"></span>
-    <span class="text-xs font-bold opacity-80">{{ $category->code ?? 'YPL' }} · LIVING BOOK</span>
-    <span class="font-extrabold text-xl leading-tight mt-2 flex-1">{{ str_replace(($category->code ?? '').' — ', '', $category->name) }}</span>
-    <span class="text-[10px] font-bold tracking-wider opacity-70 mt-4">YAYASAN PENDIDIKAN LOKON</span>
-    <span class="text-[10px] tracking-wider opacity-70 mt-1">{{ date('Y') }} · VERSION 1.0</span>
+  <div class="relative rounded-r-2xl rounded-l-md text-white p-7 pl-11 min-h-[460px] lg:min-h-[540px] flex flex-col shadow-2xl" style="background:{{ $bg }}">
+    <span class="absolute inset-y-0 left-0 w-6 rounded-l-md" style="background:linear-gradient(90deg, rgba(0,0,0,.45), rgba(255,255,255,.25) 55%, rgba(0,0,0,.25))" aria-hidden="true"></span>
+    <span class="absolute top-2 bottom-2 right-0 w-2.5 rounded-r-2xl" style="background:repeating-linear-gradient(90deg, #f5f1e8 0 1.5px, #d9d2c2 1.5px 2.5px)" aria-hidden="true"></span>
+    <span class="text-sm font-bold opacity-80 tracking-widest">{{ $category->code ?? 'YPL' }} · LIVING BOOK</span>
+    <span class="font-extrabold text-2xl lg:text-3xl leading-tight mt-3 flex-1">{{ str_replace(($category->code ?? '').' — ', '', $category->name) }}</span>
+    <span class="text-[11px] font-bold tracking-wider opacity-70 mt-4">YAYASAN PENDIDIKAN LOKON</span>
+    <span class="text-[11px] tracking-wider opacity-70 mt-1">{{ date('Y') }} · VERSION 1.0</span>
   </div>
 
   <div class="min-w-0">
@@ -28,21 +28,39 @@
     </div>
     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80] mt-2">{{ $category->name }}</h1>
     <p class="text-sm text-slate-500 mt-1 max-w-2xl">{{ $category->description }}</p>
-    <div class="flex flex-wrap gap-2 mt-4">
+    <div class="flex flex-wrap items-center gap-3 mt-4">
       @if($first)
-        <a href="{{ route('reader.show', $first) }}" class="btn-primary">OPEN BOOK →</a>
+        <a href="{{ route('reader.show', $first) }}" class="btn-primary h-10 px-5 rounded-full inline-flex items-center justify-center gap-2 text-sm font-bold shadow-sm">
+          @include('components.icon', ['name' => 'book', 'class' => 'w-4 h-4'])
+          <span>Open Book</span>
+          <span class="opacity-70">→</span>
+        </a>
         @auth
-          @if(\App\Models\Setting::feature('favorite'))
-            @php $bookFav = \App\Models\Favorite::where('user_id', auth()->id())->where('document_id', $first->id)->exists(); @endphp
-            <form method="post" action="{{ route('documents.favorite', $first) }}" class="inline">@csrf<button class="btn-ghost">Bookmark</button></form>
+          @if(\App\Models\Setting::feature('bookmark'))
+            @php $bookMarked = \App\Models\Bookmark::where('user_id', auth()->id())->where('document_id', $first->id)->exists(); @endphp
+            @include('components.bookmark-button', [
+              'document' => $first,
+              'marked' => $bookMarked,
+              'labelOn' => 'Tersimpan',
+              'labelOff' => 'Bookmark',
+              'btnClass' => 'btn-ghost h-10 px-4 rounded-full inline-flex items-center justify-center gap-2 text-sm font-bold cursor-pointer transition shadow-sm',
+              'iconClass' => 'w-4 h-4',
+              'activeClass' => '!border-amber-400 !bg-amber-50 !text-amber-800',
+              'inactiveClass' => 'border-[#d6d6d6] bg-white text-slate-700 hover:border-[#002f80] hover:text-[#002f80]',
+            ])
           @endif
         @else
-          <a href="{{ route('login') }}" class="btn-ghost">Bookmark</a>
+          <a href="{{ route('login') }}" class="btn-ghost h-10 px-4 rounded-full inline-flex items-center justify-center gap-2 text-sm font-bold text-slate-700 hover:border-[#002f80] hover:text-[#002f80] transition shadow-sm">
+            @include('components.icon', ['name' => 'bookmark', 'class' => 'w-4 h-4'])
+            <span>Bookmark</span>
+          </a>
         @endauth
       @else
-        <span class="btn-ghost opacity-50">Belum ada isi</span>
+        <span class="btn-ghost h-10 px-4 rounded-full inline-flex items-center justify-center gap-2 text-sm font-medium opacity-50 cursor-not-allowed">Belum ada isi</span>
       @endif
-      <a href="{{ route('library.index') }}" class="btn-ghost">← Bookshelf</a>
+      <a href="{{ route('library.index') }}" class="btn-ghost h-10 px-4 rounded-full inline-flex items-center justify-center gap-2 text-sm font-bold text-slate-700 hover:border-[#002f80] hover:text-[#002f80] transition shadow-sm">
+        <span>← Bookshelf</span>
+      </a>
     </div>
 
     {{-- TOC --}}

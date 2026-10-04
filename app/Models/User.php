@@ -22,9 +22,9 @@ class User extends Authenticatable
         return $this->hasMany(Document::class);
     }
 
-    public function favorites()
+    public function bookmarks()
     {
-        return $this->hasMany(Favorite::class);
+        return $this->hasMany(Bookmark::class);
     }
 
     public function readingPref()

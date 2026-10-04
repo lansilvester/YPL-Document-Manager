@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(YplHandbooksSeeder::class);
+        $this->call(SystemsSeeder::class);
         $this->call(YplGovernanceSeeder::class);
         $this->call(RoleSeeder::class);
 

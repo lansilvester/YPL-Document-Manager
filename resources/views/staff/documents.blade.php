@@ -1,4 +1,5 @@
 @extends('layout')
+@section('main_width', 'max-w-[1400px]')
 @section('title', 'Ruang Kerja Staff')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Ruang Kerja Staff']]])
@@ -23,9 +24,17 @@
       <form method="post" action="{{ route('staff.documents.store') }}" enctype="multipart/form-data" class="p-5 pt-0 space-y-3 border-t border-slate-100">@csrf
         <div class="grid sm:grid-cols-2 gap-3 pt-4">
           <div class="sm:col-span-2"><label class="text-[13px] font-bold">Judul *</label><input name="title" required value="{{ old('title') }}" class="field mt-1"></div>
+          <div class="sm:col-span-2"><label class="text-[13px] font-bold">Subjudul</label><input name="subtitle" value="{{ old('subtitle') }}" class="field mt-1"></div>
           <div class="sm:col-span-2"><label class="text-[13px] font-bold">Deskripsi</label><textarea name="description" rows="2" class="field mt-1">{{ old('description') }}</textarea></div>
           <div><label class="text-[13px] font-bold">Kategori</label><select name="category_id" class="field mt-1"><option value="">— Tanpa kategori —</option>@foreach($categories as $c)<option value="{{ $c->id }}">{{ $c->name }}</option>@endforeach</select></div>
           <div><label class="text-[13px] font-bold">Visibilitas *</label><select name="visibility" class="field mt-1"><option value="public">Publik</option><option value="restricted">Terbatas</option><option value="private">Privat</option></select></div>
+          <div><label class="text-[13px] font-bold">Tipe</label><select name="doc_type" class="field mt-1"><option value="">— Pilih —</option>@foreach(\App\Models\Document::TYPES as $t)<option value="{{ $t }}">{{ ucfirst(str_replace('_', ' ', $t)) }}</option>@endforeach</select></div>
+          <div><label class="text-[13px] font-bold">Unit</label><input name="unit" value="{{ old('unit') }}" class="field mt-1"></div>
+          <div><label class="text-[13px] font-bold">PIC</label><select name="pic_id" class="field mt-1"><option value="">— Pilih PIC —</option>@foreach($pics as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach</select></div>
+          <div>
+            <label class="text-[13px] font-bold">Audience</label>
+            <div class="flex flex-wrap gap-1.5 mt-1.5">@foreach(\App\Models\Document::AUDIENCES as $a)<label class="text-xs font-semibold border border-[#d6d6d6] rounded-full px-2.5 py-1 cursor-pointer inline-flex items-center gap-1"><input type="checkbox" name="audience[]" value="{{ $a }}" class="sr-only"> {{ str_replace('_', ' ', $a) }}</label>@endforeach</div>
+          </div>
           <div class="sm:col-span-2">
             <label class="text-[13px] font-bold">Badge / Tag</label>
             <div class="flex flex-wrap gap-2 mt-1.5">@foreach($tags as $t)<label class="text-xs font-bold border border-[#d6d6d6] rounded-full px-3 py-1.5 cursor-pointer has-checked:bg-[#002f80] has-checked:text-white has-checked:border-[#002f80] inline-flex items-center gap-1.5"><input type="checkbox" name="tags[]" value="{{ $t->id }}" class="sr-only">@include('components.icon', ['name' => 'tag', 'class' => 'w-3 h-3']) {{ $t->name }}</label>@endforeach</div>

@@ -1,4 +1,5 @@
 @extends('layout')
+@section('main_width', 'max-w-[1400px]')
 @section('title', 'Kelola Pengguna')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dasbor Admin', route('admin.dashboard')], ['Kelola Pengguna']]])
@@ -73,7 +74,7 @@ $allCount = $roleCounts->sum();
             'birth' => $u->birth_place || $u->birth_date ? trim(($u->birth_place ?? '—').', '.($u->birth_date ? $u->birth_date->format('d M Y') : '—'), ', ') : 'Belum diisi',
             'verified' => (bool) $u->ypl_verified,
             'docs' => (int) $u->documents_count,
-            'favs' => (int) $u->favorites_count,
+            'marks' => (int) $u->bookmarks_count,
             'url' => route('admin.users.update', $u),
           ];
           @endphp
@@ -141,7 +142,7 @@ $allCount = $roleCounts->sum();
         <div><dt class="text-[11px] text-slate-400 font-semibold">Tempat, tanggal lahir</dt><dd id="dt-birth" class="font-bold"></dd></div>
         <div class="col-span-2"><dt class="text-[11px] text-slate-400 font-semibold">Info akademik</dt><dd id="dt-academic" class="font-bold"></dd></div>
         <div><dt class="text-[11px] text-slate-400 font-semibold">Verifikasi YPL</dt><dd id="dt-verified" class="font-bold"></dd></div>
-        <div class="grid grid-cols-2 gap-3"><div><dt class="text-[11px] text-slate-400 font-semibold">Dokumen</dt><dd id="dt-docs" class="font-bold"></dd></div><div><dt class="text-[11px] text-slate-400 font-semibold">Favorit</dt><dd id="dt-favs" class="font-bold"></dd></div></div>
+        <div class="grid grid-cols-2 gap-3"><div><dt class="text-[11px] text-slate-400 font-semibold">Dokumen</dt><dd id="dt-docs" class="font-bold"></dd></div><div><dt class="text-[11px] text-slate-400 font-semibold">Bookmark</dt><dd id="dt-marks" class="font-bold"></dd></div></div>
       </dl>
     </div>
   </div>
@@ -202,7 +203,7 @@ function openUserDetail(btn){
   document.getElementById('dt-birth').textContent = e.birth;
   document.getElementById('dt-academic').textContent = e.academic;
   document.getElementById('dt-docs').textContent = e.docs;
-  document.getElementById('dt-favs').textContent = e.favs;
+  document.getElementById('dt-marks').textContent = e.marks;
   const ver = document.getElementById('dt-verified');
   ver.textContent = e.verified ? 'Terverifikasi YPL' : 'Belum verifikasi';
   ver.style.color = e.verified ? '#0f7a3d' : '#c90018';

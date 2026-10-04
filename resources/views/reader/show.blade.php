@@ -109,9 +109,21 @@
     <button id="btn-toc" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="toc-drawer">☰ <span class="hidden sm:inline">Contents</span></button>
     <button id="btn-search" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="search-panel">⌕ <span class="hidden sm:inline">Search</span></button>
     @auth
-      <form method="post" action="{{ route('documents.favorite', $document) }}" class="inline">@csrf<button class="px-3 py-2 rounded-full hover:bg-white/10" aria-label="Bookmark">{{ $isFav ? '★' : '☆' }} <span class="hidden sm:inline">Bookmark</span></button></form>
+      @include('components.bookmark-button', [
+        'document' => $document,
+        'marked' => $isMarked,
+        'labelOn' => 'Tersimpan',
+        'labelOff' => 'Bookmark',
+        'btnClass' => 'px-3 py-1.5 rounded-full hover:bg-white/10 inline-flex items-center gap-1.5 cursor-pointer transition text-sm font-bold',
+        'iconClass' => 'w-4 h-4',
+        'activeClass' => '!text-amber-300 bg-white/15 shadow-sm',
+        'inactiveClass' => 'text-white/80',
+      ])
     @else
-      <a href="{{ route('login') }}" class="px-3 py-2 rounded-full hover:bg-white/10">☆ <span class="hidden sm:inline">Bookmark</span></a>
+      <a href="{{ route('login') }}" class="px-3 py-1.5 rounded-full hover:bg-white/10 inline-flex items-center gap-1.5 text-white/80 text-sm font-bold">
+        @include('components.icon', ['name' => 'bookmark', 'class' => 'w-4 h-4'])
+        <span class="hidden sm:inline">Bookmark</span>
+      </a>
     @endauth
     <button id="btn-aa" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="aa-panel">Aa</button>
     <a href="{{ route('ask.index') }}" class="px-3 py-2 rounded-full hover:bg-white/10">✦ <span class="hidden sm:inline">Ask YPL</span></a>
@@ -251,6 +263,69 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') step(1);
   if (e.key === 'ArrowLeft') step(-1);
   if (e.key === 'Escape') { setToc(false); menu.classList.add('hidden'); }
+});
+document.addEventListener('submit', (e) => {
+  const form = e.target.closest('form[data-bookmark-form]');
+  if (!form) return;
+  e.preventDefault();
+  const btn = form.querySelector('[data-bookmark-btn], button[type="submit"]');
+  if (!btn || btn.dataset.busy === '1') return;
+  btn.dataset.busy = '1';
+  btn.classList.add('opacity-70', 'scale-95');
+
+  const tokenInput = form.querySelector('input[name="_token"]');
+  fetch(form.action, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRF-TOKEN': tokenInput ? tokenInput.value : ''
+    }
+  })
+  .then(res => {
+    if (res.status === 401 || res.redirected) {
+      window.location.href = '{{ route('login') }}';
+      return null;
+    }
+    return res.json();
+  })
+  .then(data => {
+    if (!data || typeof data.marked === 'undefined') return;
+    const isMarked = Boolean(data.marked);
+    btn.setAttribute('data-marked', isMarked ? '1' : '0');
+    btn.setAttribute('aria-pressed', isMarked ? 'true' : 'false');
+    const iconMarked = form.querySelector('[data-icon-marked]');
+    const iconUnmarked = form.querySelector('[data-icon-unmarked]');
+    if (iconMarked && iconUnmarked) {
+      iconMarked.classList.toggle('hidden', !isMarked);
+      iconMarked.classList.toggle('inline-flex', isMarked);
+      iconUnmarked.classList.toggle('hidden', isMarked);
+      iconUnmarked.classList.toggle('inline-flex', !isMarked);
+    }
+    const label = form.querySelector('[data-label]');
+    if (label) {
+      label.textContent = isMarked ? (btn.getAttribute('data-label-on') || 'Tersimpan') : (btn.getAttribute('data-label-off') || 'Bookmark');
+    }
+    const activeClasses = (btn.getAttribute('data-active-class') || '').split(' ').filter(Boolean);
+    const inactiveClasses = (btn.getAttribute('data-inactive-class') || '').split(' ').filter(Boolean);
+    if (isMarked) {
+      inactiveClasses.forEach(c => btn.classList.remove(c));
+      activeClasses.forEach(c => btn.classList.add(c));
+    } else {
+      activeClasses.forEach(c => btn.classList.remove(c));
+      inactiveClasses.forEach(c => btn.classList.add(c));
+    }
+    btn.classList.add('scale-105');
+    setTimeout(() => btn.classList.remove('scale-105'), 180);
+  })
+  .catch(err => {
+    console.error('Bookmark error:', err);
+    form.submit();
+  })
+  .finally(() => {
+    btn.dataset.busy = '0';
+    btn.classList.remove('opacity-70', 'scale-95');
+  });
 });
 render(false);
 </script>

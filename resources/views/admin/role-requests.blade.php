@@ -1,4 +1,5 @@
 @extends('layout')
+@section('main_width', 'max-w-[1400px]')
 @section('title', 'Persetujuan Peran')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dasbor Admin', route('admin.dashboard')], ['Persetujuan Peran']]])

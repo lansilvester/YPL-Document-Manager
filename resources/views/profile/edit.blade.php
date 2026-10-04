@@ -31,7 +31,7 @@ $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STA
     <a href="#" onclick="openProfileModal(event)" class="bg-white text-[#002f80] rounded-full px-5 py-2 text-[13px] font-bold inline-flex items-center gap-2 hover:brightness-95">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Edit profile</a>
   </div>
   <div class="grid grid-cols-2 lg:grid-cols-4 border-t border-white/15 divide-x divide-white/15 text-center">
-    @foreach([['Unggahan', $stats['unggahan'], 'file'], ['Dibaca orang', $stats['dilihat'], 'eye'], ['Favoritku', $stats['favorit'], 'star'], ['Dokumen kubaca', $stats['dibaca'], 'book']] as [$l, $v, $i])
+    @foreach([['Unggahan', $stats['unggahan'], 'file'], ['Dibaca orang', $stats['dilihat'], 'eye'], ['Bookmarkku', $stats['bookmark'], 'star'], ['Dokumen kubaca', $stats['dibaca'], 'book']] as [$l, $v, $i])
       <div class="p-4"><div class="flex justify-center opacity-70">@include('components.icon', ['name' => $i, 'class' => 'w-4 h-4'])</div><div class="text-xl font-extrabold tabular-nums">{{ number_format($v) }}</div><div class="text-[11px] text-slate-300 font-semibold">{{ $l }}</div></div>
     @endforeach
   </div>
@@ -93,14 +93,14 @@ $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STA
       </div>
     </div>
 
-    {{-- Favorit saya --}}
+    {{-- Bookmark saya --}}
     <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm overflow-hidden">
       <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-        <h2 class="font-extrabold text-[#002f80] flex items-center gap-2">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Favorit Saya ({{ $stats['favorit'] }})</h2>
-        <a href="{{ route('favorites.index') }}" class="text-xs font-bold text-[#002f80] hover:underline">Lihat semua favorit</a>
+        <h2 class="font-extrabold text-[#002f80] flex items-center gap-2">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Bookmark Saya ({{ $stats['bookmark'] }})</h2>
+        <a href="{{ route('bookmarks.index') }}" class="text-xs font-bold text-[#002f80] hover:underline">Lihat semua bookmark</a>
       </div>
       <div class="divide-y divide-slate-100">
-        @forelse($favDocs as $d)
+        @forelse($markDocs as $d)
           <div class="p-3.5 flex items-center gap-3">
             <span class="text-[#c90018]">@include('components.icon', ['name' => 'heart', 'class' => 'w-4 h-4'])</span>
             <div class="flex-1 min-w-0">
@@ -109,7 +109,7 @@ $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STA
             </div>
           </div>
         @empty
-          <p class="p-6 text-center text-sm text-slate-400">Belum ada favorit. Buka dokumen lalu tekan <strong>Simpan ke Favorit</strong>, atau <a href="{{ route('favorites.index') }}" class="text-[#002f80] font-bold underline">lihat daftar favorit</a>.</p>
+          <p class="p-6 text-center text-sm text-slate-400">Belum ada bookmark. Buka dokumen lalu tekan <strong>Simpan ke Bookmark</strong>, atau <a href="{{ route('bookmarks.index') }}" class="text-[#002f80] font-bold underline">lihat daftar bookmark</a>.</p>
         @endforelse
       </div>
     </div>

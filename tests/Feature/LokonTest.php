@@ -103,18 +103,32 @@ class LokonTest extends TestCase
         $this->assertNotNull($doc->file_path);
     }
 
-    public function test_favorit_dan_posisi_baca(): void
+    public function test_bookmark_dan_posisi_baca(): void
     {
         $this->seed();
         $user = User::factory()->create();
         $doc = Document::first();
-        $this->actingAs($user)->post(route('documents.favorite', $doc))->assertRedirect();
+        $this->actingAs($user)->post(route('documents.bookmark', $doc))->assertRedirect();
+        $this->assertDatabaseHas('bookmarks', ['user_id' => $user->id, 'document_id' => $doc->id]);
+
+        // AJAX toggle (unmark)
+        $this->actingAs($user)->postJson(route('documents.bookmark', $doc))
+            ->assertOk()
+            ->assertJson(['ok' => true, 'marked' => false]);
+        $this->assertDatabaseMissing('bookmarks', ['user_id' => $user->id, 'document_id' => $doc->id]);
+
+        // AJAX toggle (mark kembali)
+        $this->actingAs($user)->postJson(route('documents.bookmark', $doc))
+            ->assertOk()
+            ->assertJson(['ok' => true, 'marked' => true]);
+        $this->assertDatabaseHas('bookmarks', ['user_id' => $user->id, 'document_id' => $doc->id]);
+
         $this->actingAs($user)->postJson(route('api.position', $doc), ['page' => 3])
             ->assertOk()->assertJson(['ok' => true]);
         $this->actingAs($user)->postJson(route('api.prefs'), [
             'theme' => 'dark', 'zoom' => 125, 'layout' => 'double',
         ])->assertOk();
-        $this->assertDatabaseHas('favorites', ['user_id' => $user->id, 'document_id' => $doc->id]);
+        $this->assertDatabaseHas('bookmarks', ['user_id' => $user->id, 'document_id' => $doc->id]);
         $this->assertDatabaseHas('reading_positions', ['user_id' => $user->id, 'page' => 3]);
     }
 
@@ -326,8 +340,8 @@ class LokonTest extends TestCase
             ->assertSee('Terdaftar sejak')
             ->assertSee('Riwayat Dibaca')
             ->assertSee('Untuk Riwayat')
-            ->assertSee('Favorit Saya')
-            ->assertSee('Lihat semua favorit')
+            ->assertSee('Bookmark Saya')
+            ->assertSee('Lihat semua bookmark')
             ->assertSee('Profil Saya') // item dropdown profil
             ->assertSee('Keluar'); // tombol logout dalam dropdown
 
@@ -481,7 +495,7 @@ class LokonTest extends TestCase
         $this->actingAs($sa)->put('/sa/pengaturan', [
             'site_name' => 'Perpus YPL', 'foundation_name' => 'Yayasan Contoh', 'logo' => $logo,
             'feat_reg' => '0', 'feat_upload' => '1', 'feat_editor' => '1', 'feat_download' => '1',
-            'feat_like' => '0', 'feat_favorite' => '1', 'feat_share' => '1', 'feat_embed' => '1',
+            'feat_like' => '0', 'feat_bookmark' => '1', 'feat_share' => '1', 'feat_embed' => '1',
         ])->assertRedirect();
         $this->assertEquals('Perpus YPL', Setting::get('site_name'));
         $this->assertFalse(Setting::feature('reg'));
@@ -498,7 +512,7 @@ class LokonTest extends TestCase
         $this->actingAs($sa)->put('/sa/pengaturan', [
             'site_name' => 'Perpus YPL', 'foundation_name' => 'Yayasan Contoh', 'logo_reset' => '1',
             'feat_reg' => '1', 'feat_upload' => '1', 'feat_editor' => '1', 'feat_download' => '1',
-            'feat_like' => '1', 'feat_favorite' => '1', 'feat_share' => '1', 'feat_embed' => '1',
+            'feat_like' => '1', 'feat_bookmark' => '1', 'feat_share' => '1', 'feat_embed' => '1',
         ])->assertRedirect();
         $this->assertNull(Setting::get('logo_path'));
         $this->assertTrue(Setting::feature('reg'));
@@ -596,7 +610,7 @@ class LokonTest extends TestCase
             'site_name' => 'X', 'foundation_name' => 'Y',
             'reg_domains' => 'lokon.or.id, ypl.ac.id',
             'feat_reg' => '1', 'feat_upload' => '1', 'feat_editor' => '1', 'feat_download' => '1',
-            'feat_like' => '1', 'feat_favorite' => '1', 'feat_share' => '1', 'feat_embed' => '1',
+            'feat_like' => '1', 'feat_bookmark' => '1', 'feat_share' => '1', 'feat_embed' => '1',
         ])->assertRedirect();
 
         $this->post('/daftar', ['name' => 'Tolak', 'email' => 'tolak@gmail.com'] + $pw)

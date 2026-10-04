@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Document;
 use App\Models\DocumentRelation;
 use App\Models\DocumentVersion;
+use App\Models\System;
 use App\Models\User;
 use App\Services\HtmlSanitizer;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -39,33 +40,41 @@ class YplGovernanceSeeder extends Seeder
             [
                 'slug' => 'kebijakan-pengadaan-ypl', 'code' => 'YPL-POL-001',
                 'title' => 'Kebijakan Pengadaan Barang dan Jasa',
+                'subtitle' => 'Landasan prinsip pengadaan YPL',
                 'desc' => 'Prinsip dan kewenangan pengadaan barang dan jasa di lingkungan YPL.',
                 'type' => 'policy', 'version' => '1.0', 'class' => 'internal',
                 'effective' => '2026-01-05', 'review' => '2027-01-05', 'views' => 45,
+                'unit' => 'Direktorat Keuangan', 'audience' => ['karyawan', 'pimpinan'],
                 'body' => '<p>Pengadaan barang dan jasa wajib efisien, transparan, dan akuntabel.</p><p>Kebijakan ini menjadi acuan seluruh unit dalam merencanakan dan melaksanakan pengadaan.</p>',
             ],
             [
                 'slug' => 'sop-pengadaan-barang-dan-jasa', 'code' => 'YPL-SOP-001',
                 'title' => 'SOP Pengadaan Barang dan Jasa',
+                'subtitle' => 'Alur operasional purchase request hingga serah terima',
                 'desc' => 'Mengatur proses pengadaan barang dan jasa di lingkungan YPL.',
                 'type' => 'sop', 'version' => '3.0', 'class' => 'internal',
                 'effective' => '2026-09-01', 'review' => '2027-09-01', 'views' => 120,
+                'unit' => 'Direktorat Keuangan', 'audience' => ['karyawan', 'guru', 'pimpinan'],
                 'body' => '<p>Langkah: ajukan purchase request → verifikasi keuangan → persetujuan → pembelian → serah terima.</p><p>Setiap tahap tercatat dan dapat diaudit.</p>',
             ],
             [
                 'slug' => 'wi-purchase-request', 'code' => 'YPL-WI-001',
                 'title' => 'WI Purchase Request',
+                'subtitle' => 'Cara mengisi formulir purchase request dengan benar',
                 'desc' => 'Instruksi kerja pengisian dan pengajuan purchase request.',
                 'type' => 'work_instruction', 'version' => '1.2', 'class' => 'internal',
                 'effective' => '2026-09-01', 'review' => '2027-03-01', 'views' => 60,
+                'unit' => 'Direktorat Keuangan', 'audience' => ['karyawan', 'guru'],
                 'body' => '<p>Isi formulir dengan spesifikasi, estimasi biaya, dan justifikasi kebutuhan.</p><p>Lampirkan minimal satu pembanding harga untuk nilai di atas ambang batas.</p>',
             ],
             [
                 'slug' => 'formulir-purchase-request', 'code' => 'YPL-FRM-001',
                 'title' => 'Formulir Purchase Request',
+                'subtitle' => 'Formulir resmi pengajuan pembelian',
                 'desc' => 'Formulir resmi pengajuan pembelian barang dan jasa.',
                 'type' => 'form', 'version' => '2.0', 'class' => 'internal',
                 'effective' => '2026-09-01', 'review' => '2027-09-01', 'views' => 88,
+                'unit' => 'Direktorat Keuangan', 'audience' => ['karyawan', 'guru'],
                 'body' => '<p>Kolom: pemohon, unit, tanggal dibutuhkan, rincian barang/jasa, estimasi biaya, tanda tangan.</p><p>Serahkan ke Direktorat Keuangan setelah ditandatangani atasan langsung.</p>',
             ],
         ];
@@ -76,8 +85,10 @@ class YplGovernanceSeeder extends Seeder
             $doc = Document::firstOrCreate(['slug' => $it['slug']], [
                 'user_id' => $admin->id,
                 'approver_id' => $admin->id,
+                'pic_id' => $admin->id,
                 'category_id' => $cat->id,
                 'title' => $it['title'],
+                'subtitle' => $it['subtitle'],
                 'description' => $it['desc'],
                 'visibility' => 'public',
                 'source_type' => 'editor',
@@ -90,6 +101,8 @@ class YplGovernanceSeeder extends Seeder
                 'classification' => $it['class'],
                 'effective_at' => $it['effective'],
                 'review_at' => $it['review'],
+                'audience' => $it['audience'],
+                'unit' => $it['unit'],
             ]);
             if (! $doc->file_path) {
                 $path = 'documents/gov-seed-'.Str::lower(Str::random(12)).'.pdf';
@@ -104,7 +117,7 @@ class YplGovernanceSeeder extends Seeder
             $docs[$it['slug']] = $doc;
         }
 
-        // Rantai relasi: SOP → policy + wi + form; WI → form.
+        // Rantai relasi: SOP → policy + wi + form + sistem; WI → form.
         $links = [
             ['sop-pengadaan-barang-dan-jasa', 'kebijakan-pengadaan-ypl', 'policy'],
             ['sop-pengadaan-barang-dan-jasa', 'wi-purchase-request', 'wi'],
@@ -113,8 +126,26 @@ class YplGovernanceSeeder extends Seeder
         ];
         foreach ($links as [$from, $to, $type]) {
             DocumentRelation::firstOrCreate(
-                ['document_id' => $docs[$from]->id, 'related_id' => $docs[$to]->id],
+                ['document_id' => $docs[$from]->id, 'related_id' => $docs[$to]->id, 'system_id' => null],
                 ['relation_type' => $type]
+            );
+        }
+
+        // Kanonisasi field knowledge untuk 4 slug seed (aman di-seed ulang).
+        foreach ($items as $it) {
+            $docs[$it['slug']]->update([
+                'subtitle' => $it['subtitle'],
+                'audience' => $it['audience'],
+                'unit' => $it['unit'],
+                'pic_id' => $admin->id,
+            ]);
+        }
+
+        // SOP Pengadaan berjalan di atas Odoo ERP.
+        if ($odoo = System::where('slug', 'odoo-erp')->first()) {
+            DocumentRelation::firstOrCreate(
+                ['document_id' => $docs['sop-pengadaan-barang-dan-jasa']->id, 'related_id' => null, 'system_id' => $odoo->id],
+                ['relation_type' => 'system']
             );
         }
 

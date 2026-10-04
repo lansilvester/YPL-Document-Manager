@@ -1,4 +1,5 @@
 @extends('layout')
+@section('main_width', 'max-w-[1400px]')
 @section('title', 'Riwayat Aktivitas')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dasbor Admin', route('admin.dashboard')], ['Riwayat Aktivitas']]])
@@ -10,7 +11,7 @@
   <form method="get" class="text-sm">
     <select name="aksi" class="field !w-auto !rounded-full !py-2 text-[13px] font-bold" onchange="this.form.submit()">
       <option value="">Semua aksi</option>
-      @foreach(['view','upload','update','delete','download','favorite','register','login'] as $a)
+      @foreach(['view','upload','update','delete','download','bookmark','register','login'] as $a)
         <option value="{{ $a }}" {{ request('aksi') === $a ? 'selected' : '' }}>{{ $a }}</option>
       @endforeach
     </select>

@@ -31,7 +31,7 @@ class Setting extends Model
         'editor_enabled' => '1',
         'download_enabled' => '1',
         'like_enabled' => '1',
-        'favorite_enabled' => '1',
+        'bookmark_enabled' => '1',
         'share_enabled' => '1',
         'embed_enabled' => '1',
         'reg_domains' => '',
@@ -43,7 +43,7 @@ class Setting extends Model
         'editor' => 'Tulis via editor',
         'download' => 'Unduh PDF & HTML',
         'like' => 'Tombol suka',
-        'favorite' => 'Simpan favorit',
+        'bookmark' => 'Simpan bookmark',
         'share' => 'Bagikan dokumen',
         'embed' => 'Sematkan (embed)',
     ];

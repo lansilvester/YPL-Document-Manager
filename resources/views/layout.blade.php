@@ -77,7 +77,7 @@
               @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Tulis Dokumen</a>@endif
               <a href="{{ route('documents.my') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'folder', 'class' => 'w-4 h-4']) Dokumen Saya</a>
               <a href="{{ route('services.my') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'inbox', 'class' => 'w-4 h-4']) Permintaan Saya</a>
-              @if(\App\Models\Setting::feature('favorite'))<a href="{{ route('favorites.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Favorit</a>@endif
+              @if(\App\Models\Setting::feature('bookmark'))<a href="{{ route('bookmarks.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Bookmark</a>@endif
               @if(auth()->user()->isStaff())
                 <div class="mt-1 pt-1 border-t border-slate-100">
                   <div class="px-3 pt-1 text-[11px] font-bold tracking-widest text-slate-400">KELOLA</div>
@@ -134,7 +134,7 @@
         @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Tulis Dokumen</a>@endif
         <a href="{{ route('documents.my') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'folder', 'class' => 'w-4 h-4']) Dokumen Saya</a>
         <a href="{{ route('services.my') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'inbox', 'class' => 'w-4 h-4']) Permintaan Saya</a>
-        @if(\App\Models\Setting::feature('favorite'))<a href="{{ route('favorites.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Favorit Saya</a>@endif
+        @if(\App\Models\Setting::feature('bookmark'))<a href="{{ route('bookmarks.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Bookmark Saya</a>@endif
         @if(auth()->user()->isStaff())<a href="{{ route('staff.documents') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'tool', 'class' => 'w-4 h-4']) Ruang Staff</a>@endif
         @if(auth()->user()->isAdmin())<a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#002f80] text-white">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Dasbor Admin</a>@endif
         @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#c90018] text-white">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Pusat Kendali SA</a>@endif
@@ -347,6 +347,106 @@ document.addEventListener('DOMContentLoaded', function () {
       xhr.send(new FormData(form));
     });
   });
+
+  // Bookmark interaktif & toggled dengan AJAX (instan, animasi micro-interaction & toast feedback)
+  document.addEventListener('submit', function (e) {
+    var form = e.target.closest('form[data-bookmark-form]');
+    if (!form) return;
+    e.preventDefault();
+
+    var btn = form.querySelector('[data-bookmark-btn], button[type="submit"]');
+    if (!btn || btn.dataset.busy === '1') return;
+    btn.dataset.busy = '1';
+    btn.classList.add('opacity-75', 'scale-95');
+
+    var tokenInput = form.querySelector('input[name="_token"]');
+    var token = tokenInput ? tokenInput.value : '';
+
+    fetch(form.action, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': token
+      }
+    })
+    .then(function (res) {
+      if (res.status === 401 || res.redirected) {
+        window.location.href = '{{ route('login') }}';
+        return null;
+      }
+      return res.json();
+    })
+    .then(function (data) {
+      if (!data || typeof data.marked === 'undefined') return;
+      var isMarked = Boolean(data.marked);
+      updateBookmarkBtn(form, isMarked);
+
+      // Sinkronisasi tombol bookmark untuk dokumen yang sama bila ada lebih dari satu di layar
+      var docId = form.getAttribute('data-doc');
+      if (docId) {
+        document.querySelectorAll('form[data-bookmark-form][data-doc="' + docId + '"]').forEach(function (otherForm) {
+          if (otherForm !== form) updateBookmarkBtn(otherForm, isMarked);
+        });
+      }
+
+      if (window.Swal) {
+        var Toast = Swal.mixin({
+          toast: true, position: 'top-end', showConfirmButton: false, timer: 2000,
+          customClass: { popup: 'rounded-2xl', title: '!text-xs font-bold' }
+        });
+        Toast.fire({
+          icon: isMarked ? 'success' : 'info',
+          title: data.message || (isMarked ? 'Ditambahkan ke bookmark' : 'Dihapus dari bookmark')
+        });
+      }
+    })
+    .catch(function (err) {
+      console.error('Bookmark toggle failed, falling back:', err);
+      form.submit();
+    })
+    .finally(function () {
+      btn.dataset.busy = '0';
+      btn.classList.remove('opacity-75', 'scale-95');
+    });
+  });
+
+  function updateBookmarkBtn(form, isMarked) {
+    var btn = form.querySelector('[data-bookmark-btn], button[type="submit"]');
+    if (!btn) return;
+    btn.setAttribute('data-marked', isMarked ? '1' : '0');
+    btn.setAttribute('aria-pressed', isMarked ? 'true' : 'false');
+    var labelOn = btn.getAttribute('data-label-on') || 'Tersimpan';
+    var labelOff = btn.getAttribute('data-label-off') || 'Bookmark';
+    btn.setAttribute('aria-label', isMarked ? labelOn : labelOff);
+
+    var iconMarked = form.querySelector('[data-icon-marked]');
+    var iconUnmarked = form.querySelector('[data-icon-unmarked]');
+    if (iconMarked && iconUnmarked) {
+      iconMarked.classList.toggle('hidden', !isMarked);
+      iconMarked.classList.toggle('inline-flex', isMarked);
+      iconUnmarked.classList.toggle('hidden', isMarked);
+      iconUnmarked.classList.toggle('inline-flex', !isMarked);
+    }
+
+    var label = form.querySelector('[data-label]');
+    if (label) {
+      label.textContent = isMarked ? labelOn : labelOff;
+    }
+
+    var activeClasses = (btn.getAttribute('data-active-class') || '').split(' ').filter(Boolean);
+    var inactiveClasses = (btn.getAttribute('data-inactive-class') || '').split(' ').filter(Boolean);
+    if (isMarked) {
+      inactiveClasses.forEach(function (c) { btn.classList.remove(c); });
+      activeClasses.forEach(function (c) { btn.classList.add(c); });
+    } else {
+      activeClasses.forEach(function (c) { btn.classList.remove(c); });
+      inactiveClasses.forEach(function (c) { btn.classList.add(c); });
+    }
+
+    btn.classList.add('scale-105');
+    setTimeout(function () { btn.classList.remove('scale-105'); }, 180);
+  }
 });
 </script>
 @stack('scripts')

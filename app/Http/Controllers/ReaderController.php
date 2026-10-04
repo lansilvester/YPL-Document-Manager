@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bookmark;
 use App\Models\Document;
-use App\Models\Favorite;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
 
@@ -29,7 +29,7 @@ class ReaderController extends Controller
                 ['user_id' => $user->id, 'document_id' => $document->id],
                 ['page' => 1, 'percent' => 0]
             ) : null;
-        $isFav = $user ? Favorite::where('user_id', $user->id)->where('document_id', $document->id)->exists() : false;
+        $isMarked = $user ? Bookmark::where('user_id', $user->id)->where('document_id', $document->id)->exists() : false;
 
         // TOC: bab = dokumen lain dalam handbook/koleksi yang sama.
         $chapters = Document::query()->select(['id', 'title', 'slug', 'views_count'])
@@ -38,6 +38,6 @@ class ReaderController extends Controller
             ->where('id', '!=', $document->id)
             ->latest()->limit(20)->get();
 
-        return view('reader.show', compact('document', 'pref', 'position', 'isFav', 'chapters'));
+        return view('reader.show', compact('document', 'pref', 'position', 'isMarked', 'chapters'));
     }
 }

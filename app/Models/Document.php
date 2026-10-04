@@ -14,16 +14,19 @@ class Document extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'approver_id', 'category_id', 'title', 'slug', 'description',
+        'user_id', 'approver_id', 'pic_id', 'category_id', 'title', 'slug', 'subtitle', 'description',
         'file_path', 'file_size', 'mime', 'visibility', 'source_type',
         'content', 'views_count', 'downloads_count',
         'doc_code', 'doc_type', 'version', 'status',
         'effective_at', 'review_at', 'classification',
+        'audience', 'unit', 'pic_name',
     ];
 
     public const STATUSES = ['draft', 'review', 'approval', 'active', 'review_due', 'archived'];
 
     public const TYPES = ['policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision', 'form', 'evidence', 'handbook', 'other'];
+
+    public const AUDIENCES = ['siswa', 'orang_tua', 'guru', 'karyawan', 'pimpinan', 'mitra', 'publik'];
 
     /**
      * Mesin transisi lifecycle: DRAFT → REVIEW → APPROVAL → ACTIVE → REVIEW_DUE → ARCHIVED.
@@ -44,12 +47,18 @@ class Document extends Model
         return [
             'views_count' => 'integer', 'downloads_count' => 'integer',
             'effective_at' => 'date', 'review_at' => 'date',
+            'audience' => 'array',
         ];
     }
 
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approver_id');
+    }
+
+    public function pic(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pic_id');
     }
 
     public function versions(): HasMany
@@ -83,9 +92,9 @@ class Document extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function favorites(): HasMany
+    public function bookmarks(): HasMany
     {
-        return $this->hasMany(Favorite::class);
+        return $this->hasMany(Bookmark::class);
     }
 
     public function likes(): HasMany

@@ -17,6 +17,21 @@
     <a href="{{ route('governance.index', ['tipe' => $activeType, 'status' => $s]) }}" class="shrink-0 px-3 py-1 rounded-full border transition {{ $activeStatus === $s ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-[#d6d6d6]' }}">{{ strtoupper(str_replace('_', ' ', $s)) }}{{ isset($statusCounts[$s]) ? ' · '.$statusCounts[$s] : '' }}</a>
   @endforeach
 </div>
+<form action="{{ route('governance.index') }}" method="get" class="flex flex-wrap items-center gap-2 mt-3">
+  <input type="hidden" name="tipe" value="{{ $activeType }}">
+  <input type="hidden" name="status" value="{{ $activeStatus }}">
+  <select name="audiens" class="field !text-xs !w-auto !rounded-full" aria-label="Filter audience" onchange="this.form.submit()">
+    <option value="">Semua audience</option>
+    @foreach(\App\Models\Document::AUDIENCES as $a)
+      <option value="{{ $a }}" {{ $activeAudience === $a ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $a)) }}</option>
+    @endforeach
+  </select>
+  <span class="flex gap-1 bg-white border border-[#d6d6d6] rounded-full p-1">
+    <input name="unit" value="{{ $activeUnit }}" placeholder="Cari unit…" class="bg-transparent text-xs px-3 outline-none w-32" aria-label="Cari unit">
+    <button class="rounded-full bg-[#002f80] text-white text-xs font-bold px-4 py-1.5">Cari</button>
+  </span>
+  @if($activeAudience || $activeUnit)<a href="{{ route('governance.index') }}" class="text-xs font-bold text-[#c90018]">Reset ✕</a>@endif
+</form>
 
 <div class="grid sm:grid-cols-2 gap-4 mt-5">
   @forelse($docs as $d)

@@ -1,4 +1,5 @@
 @extends('layout')
+@section('main_width', 'max-w-[1400px]')
 @section('title', 'Kelola Pengguna')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Pusat Kendali SA', route('sa.dashboard')], ['Kelola Pengguna']]])

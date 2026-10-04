@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Bookmark;
 use App\Models\Document;
-use App\Models\Favorite;
 use App\Models\RoleRequest;
 use App\Services\WaNumber;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ class ProfileController extends Controller
             ->latest()->limit(40)->get()
             ->unique('document_id')->take(8);
 
-        $favDocs = Document::whereIn('id', Favorite::where('user_id', $user->id)->pluck('document_id'))
+        $markDocs = Document::whereIn('id', Bookmark::where('user_id', $user->id)->pluck('document_id'))
             ->with('category')->latest()->limit(4)->get();
 
         return view('profile.edit', [
@@ -33,12 +33,12 @@ class ProfileController extends Controller
             'stats' => [
                 'unggahan' => Document::where('user_id', $user->id)->count(),
                 'dilihat' => Document::where('user_id', $user->id)->sum('views_count'),
-                'favorit' => Favorite::where('user_id', $user->id)->count(),
+                'bookmark' => Bookmark::where('user_id', $user->id)->count(),
                 'dibaca' => ActivityLog::where('user_id', $user->id)->where('action', 'view')->distinct('document_id')->count('document_id'),
             ],
             'myDocs' => $myDocs,
             'viewed' => $viewed,
-            'favDocs' => $favDocs,
+            'markDocs' => $markDocs,
         ]);
     }
 

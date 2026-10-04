@@ -14,6 +14,7 @@ use App\Http\Controllers\ReaderController;
 use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\SystemController;
 use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -68,6 +69,8 @@ Route::get('/komunitas', [PortalController::class, 'community'])->name('communit
 Route::get('/kalender', [PortalController::class, 'calendar'])->name('calendar.index');
 Route::get('/tanya', [PortalController::class, 'ask'])->name('ask.index');
 Route::get('/wawasan', [PortalController::class, 'insight'])->name('insight.index');
+Route::get('/sistem', [SystemController::class, 'index'])->name('systems.index');
+Route::get('/sistem/{system:slug}', [SystemController::class, 'show'])->name('systems.show');
 
 Route::get('/masuk', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/masuk', [AuthController::class, 'login'])->middleware('throttle:login');
@@ -103,8 +106,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/tulis/{document:slug}/ubah', [EditorController::class, 'edit'])->name('editor.edit');
     Route::put('/tulis/{document:slug}', [EditorController::class, 'update'])->name('editor.update');
 
-    Route::post('/dokumen/{document:slug}/favorit', [InteractionController::class, 'toggleFavorite'])->middleware('throttle:interactions')->name('documents.favorite');
-    Route::get('/favorit', [InteractionController::class, 'favorites'])->name('favorites.index');
+    Route::post('/dokumen/{document:slug}/bookmark', [InteractionController::class, 'toggleBookmark'])->middleware('throttle:interactions')->name('documents.bookmark');
+    Route::get('/bookmark', [InteractionController::class, 'bookmarks'])->name('bookmarks.index');
 
     // Phase 4 — Services: pengajuan layanan + permintaan saya.
     Route::get('/layanan/minta/{type}', [ServiceRequestController::class, 'create'])->name('services.request');
