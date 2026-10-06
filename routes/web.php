@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AskController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EditorController;
@@ -67,7 +68,8 @@ Route::get('/tata-kelola', [PortalController::class, 'governance'])->name('gover
 Route::get('/layanan', [PortalController::class, 'services'])->name('services.index');
 Route::get('/komunitas', [PortalController::class, 'community'])->name('community.index');
 Route::get('/kalender', [PortalController::class, 'calendar'])->name('calendar.index');
-Route::get('/tanya', [PortalController::class, 'ask'])->name('ask.index');
+Route::get('/tanya', [AskController::class, 'index'])->name('ask.index');
+Route::post('/tanya', [AskController::class, 'ask'])->middleware('throttle:sensitive')->name('ask.query');
 Route::get('/wawasan', [PortalController::class, 'insight'])->name('insight.index');
 Route::get('/sistem', [SystemController::class, 'index'])->name('systems.index');
 Route::get('/sistem/{system:slug}', [SystemController::class, 'show'])->name('systems.show');

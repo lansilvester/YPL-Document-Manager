@@ -132,6 +132,45 @@ class Document extends Model
         return $this->applyLike($query, $term);
     }
 
+    /**
+     * Varian OR dari scopeSearch untuk retrieval Ask YPL:
+     * cocok bila SALAH SATU kata kunci ada, peringkat oleh bm25.
+     * Relevansi akhir tetap ditentukan skor overlap di AskYpl.
+     */
+    public function scopeSearchAny($query, string $term)
+    {
+        $term = trim($term);
+        if ($term === '') {
+            return $query;
+        }
+
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            $match = static::ftsMatchAny($term);
+            if ($match === null) {
+                return $this->applyLike($query, $term);
+            }
+
+            return $query->select('documents.*')
+                ->join('documents_fts', 'documents_fts.rowid', '=', 'documents.id')
+                ->whereRaw('documents_fts MATCH ?', [$match])
+                ->orderByRaw('bm25(documents_fts)');
+        }
+        if ($driver === 'mysql') {
+            $bool = static::booleanMatchAny($term);
+            $like = static::likePattern($term);
+
+            return $query
+                ->where(fn ($w) => $w
+                    ->whereRaw('MATCH(title, description) AGAINST(? IN BOOLEAN MODE)', [$bool])
+                    ->orWhere('title', 'like', $like)
+                    ->orWhere('description', 'like', $like))
+                ->orderByRaw('MATCH(title, description) AGAINST(? IN NATURAL LANGUAGE MODE) DESC', [$term]);
+        }
+
+        return $this->applyLike($query, $term);
+    }
+
     private function applyFts($query, string $term)
     {
         $match = static::ftsMatch($term);
@@ -182,6 +221,21 @@ class Document extends Model
         return $quoted ? implode(' ', $quoted) : null;
     }
 
+    /** "kata1 kata2" → '"kata1" OR "kata2"' (cocok salah satu, untuk retrieval Ask). */
+    public static function ftsMatchAny(string $term): ?string
+    {
+        $terms = preg_split('/\s+/u', $term, 20, PREG_SPLIT_NO_EMPTY) ?: [];
+        $quoted = [];
+        foreach ($terms as $t) {
+            $t = trim(str_replace('"', '', $t), '*^:.()');
+            if (mb_strlen($t) >= 2) {
+                $quoted[] = '"'.$t.'"';
+            }
+        }
+
+        return $quoted ? implode(' OR ', $quoted) : null;
+    }
+
     /** "kata1 kata2" → '+kata1* +kata2*' untuk boolean mode MySQL. */
     public static function booleanMatch(string $term): string
     {
@@ -195,6 +249,21 @@ class Document extends Model
         }
 
         return $out ? implode(' ', $out) : '+'.preg_replace('/\W/u', '', $term);
+    }
+
+    /** Varian opsional (OR) dari booleanMatch untuk retrieval Ask. */
+    public static function booleanMatchAny(string $term): string
+    {
+        $terms = preg_split('/\s+/u', $term, 20, PREG_SPLIT_NO_EMPTY) ?: [];
+        $out = [];
+        foreach ($terms as $t) {
+            $t = preg_replace('/[^0-9A-Za-z\x{80}-\x{10FFFF}]/u', '', $t) ?? '';
+            if (mb_strlen($t) >= 2) {
+                $out[] = $t.'*';
+            }
+        }
+
+        return $out ? implode(' ', $out) : preg_replace('/\W/u', '', $term);
     }
 
     /** Pola LIKE aman (% dan _ milik user di-escape). */
@@ -217,6 +286,25 @@ class Document extends Model
 
         // restricted = hanya pengguna login (komunitas YPL)
         return $this->visibility === 'restricted';
+    }
+
+    /**
+     * Paritas level-query dari isVisibleTo(): batasi knowledge Ask YPL
+     * (dan pencarian lain) sesuai otoritas user yang login.
+     */
+    public function scopeVisibleTo($query, ?User $user)
+    {
+        if (! $user) {
+            return $query->where('visibility', 'public');
+        }
+        if ($user->role === 'admin') {
+            return $query;
+        }
+
+        return $query->where(fn ($w) => $w
+            ->where('visibility', 'public')
+            ->orWhere('visibility', 'restricted')
+            ->orWhere('user_id', $user->id));
     }
 
     public function fileUrl(): ?string
