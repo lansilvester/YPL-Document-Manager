@@ -19,7 +19,7 @@
     <div class="inline-flex items-center gap-2 bg-white/10 border border-white/25 rounded-full px-3 py-1 text-xs font-semibold tracking-wide">YPL SMART DIGITAL LIBRARY</div>
     <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mt-3 leading-tight">Everything YPL.<br class="hidden sm:block"> One digital home.</h1>
     <p class="text-slate-200 mt-2 text-sm sm:text-base">Knowledge • Governance • Community</p>
-    <form action="{{ route('documents.index') }}" method="get" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg max-w-xl">
+    <form action="{{ route('search.index') }}" method="get" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg max-w-xl">
       <input name="q" value="{{ $q }}" placeholder="Apa yang ingin Anda ketahui atau lakukan?" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
       <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110 inline-flex items-center gap-2" style="background:linear-gradient(135deg,#a30014,#c90018)">Search</button>
     </form>

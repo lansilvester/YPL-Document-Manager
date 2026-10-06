@@ -12,12 +12,14 @@ use App\Http\Controllers\PortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\ReaderController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SystemController;
 use App\Models\ActivityLog;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
@@ -60,6 +62,7 @@ Route::get('/deploy/{secret}', function (string $secret) {
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/dokumen', [DocumentController::class, 'index'])->name('documents.index');
+Route::get('/cari', [SearchController::class, 'index'])->name('search.index');
 
 // YPL SDL Phase 1 — Information Architecture.
 Route::get('/perpustakaan', [LibraryController::class, 'index'])->name('library.index');
