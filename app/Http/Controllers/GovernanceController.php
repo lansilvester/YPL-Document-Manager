@@ -156,7 +156,6 @@ class GovernanceController extends Controller
             'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code',
             'outgoingRelations.system:id,name,slug',
             'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code',
-            'versions.user:id,name',
         ]);
 
         // Transitions allowed for current user
@@ -173,32 +172,14 @@ class GovernanceController extends Controller
         // Lewati relasi yatim (target terhapus) agar route() tak error.
         $impactMap = ImpactMap::for($document);
 
-        // Version timeline
-        $versions = $document->versions()
-            ->with('user:id,name')
-            ->latest()
-            ->get();
-
         // Upcoming review
         $isOverdue = $document->review_at && $document->review_at < now() && $document->status === 'active';
-
-        // Dokumen sejenis (kategori sama, aktif, publik)
-        $relatedSameCat = $document->category_id
-            ? Document::query()->with(['category:id,name'])
-                ->visibleTo(auth()->user())
-                ->where('status', 'active')
-                ->where('category_id', $document->category_id)
-                ->where('id', '!=', $document->id)
-                ->latest()->limit(6)->get()
-            : collect();
 
         return view('governance.show', [
             'document' => $document,
             'transitions' => $transitions,
             'impactMap' => $impactMap,
-            'versions' => $versions,
             'isOverdue' => $isOverdue,
-            'relatedSameCat' => $relatedSameCat,
         ]);
     }
 
