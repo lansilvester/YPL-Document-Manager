@@ -118,6 +118,12 @@ class GovernanceController extends Controller
             ->sort()
             ->values();
 
+        $overdueCount = Document::where('visibility', 'public')
+            ->where('status', 'active')
+            ->whereNotNull('review_at')
+            ->whereDate('review_at', '<', now()->toDateString())
+            ->count();
+
         // Ensure all filter keys exist for the view
         $filters += ['q' => '', 'tipe' => '', 'status' => '', 'audiens' => '', 'unit' => '', 'sort' => ''];
 
@@ -128,6 +134,7 @@ class GovernanceController extends Controller
             'statusCounts' => $statusCounts,
             'audienceOptions' => $audienceOptions,
             'unitOptions' => $unitOptions,
+            'overdueCount' => $overdueCount,
         ]);
     }
 

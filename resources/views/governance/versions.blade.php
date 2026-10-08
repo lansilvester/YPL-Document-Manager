@@ -25,7 +25,7 @@
             <div class="flex items-center justify-between">
                 <h2 class="font-extrabold tracking-tight text-[#002f80]">Version History ({{ $versions->total() }} versi)</h2>
                 <div class="flex items-center gap-2 text-xs text-slate-400">
-                    <span>{{ $document->versions->count() }} total versi</span>
+                    <span>{{ $versions->total() }} total versi</span>
                     <span class="px-2 py-0.5 rounded-full bg-[#002f80]/10 text-[#002f80]">v{{ $document->version }}</span>
                 </div>
             </div>

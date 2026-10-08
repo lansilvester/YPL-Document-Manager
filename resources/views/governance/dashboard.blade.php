@@ -10,40 +10,40 @@
     <a href="{{ route('governance.index') }}" class="btn-primary">Kelola Dokumen</a>
 </div>
 
-{{-- Statistik Ringkasan --}}
+{{-- Statistik Ringkasan (klik → filter) --}}
 <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+    <a href="{{ route('governance.index') }}" class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 hover:border-[#002f80] hover:shadow-md transition block">
         <div class="text-3xl font-extrabold text-[#002f80]">{{ $stats->total }}</div>
         <div class="text-xs text-slate-500 font-semibold mt-1">Total Dokumen</div>
-    </div>
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+    </a>
+    <a href="{{ route('governance.index', ['status' => 'active']) }}" class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 hover:border-[#002f80] hover:shadow-md transition block">
         <div class="text-3xl font-extrabold text-green-700">{{ $stats->active }}</div>
         <div class="text-xs text-slate-500 font-semibold mt-1">Active</div>
-    </div>
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+    </a>
+    <a href="{{ route('governance.index', ['status' => 'draft']) }}" class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 hover:border-[#002f80] hover:shadow-md transition block">
         <div class="text-3xl font-extrabold text-blue-700">{{ $stats->draft }}</div>
         <div class="text-xs text-slate-500 font-semibold mt-1">Draft</div>
-    </div>
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+    </a>
+    <a href="{{ route('governance.index', ['status' => 'review']) }}" class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 hover:border-[#002f80] hover:shadow-md transition block">
         <div class="text-3xl font-extrabold text-amber-700">{{ $stats->review }}</div>
         <div class="text-xs text-slate-500 font-semibold mt-1">Review</div>
-    </div>
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+    </a>
+    <a href="{{ route('governance.index', ['status' => 'approval']) }}" class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 hover:border-[#002f80] hover:shadow-md transition block">
         <div class="text-3xl font-extrabold text-purple-700">{{ $stats->approval }}</div>
         <div class="text-xs text-slate-500 font-semibold mt-1">Approval</div>
-    </div>
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+    </a>
+    <a href="{{ route('governance.index', ['status' => 'review_due']) }}" class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 hover:border-[#002f80] hover:shadow-md transition block">
         <div class="text-3xl font-extrabold text-orange-700">{{ $stats->review_due }}</div>
         <div class="text-xs text-slate-500 font-semibold mt-1">Review Due</div>
-    </div>
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+    </a>
+    <a href="{{ route('governance.index', ['status' => 'archived']) }}" class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 hover:border-[#002f80] hover:shadow-md transition block">
         <div class="text-3xl font-extrabold text-slate-500">{{ $stats->archived }}</div>
         <div class="text-xs text-slate-500 font-semibold mt-1">Archived</div>
-    </div>
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+    </a>
+    <a href="{{ route('governance.index', ['status' => 'active', 'sort' => 'review_date']) }}" class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 hover:border-[#c90018] hover:shadow-md transition block">
         <div class="text-3xl font-extrabold {{ $stats->overdue_review > 0 ? 'text-[#c90018]' : 'text-green-700' }}">{{ $stats->overdue_review }}</div>
         <div class="text-xs text-slate-500 font-semibold mt-1">Overdue Review</div>
-    </div>
+    </a>
 </div>
 
 <div class="grid lg:grid-cols-3 gap-6 mb-8">
@@ -64,7 +64,7 @@
                 <tbody class="divide-y divide-slate-100">
                     @foreach($typeStats->sortKeys() as $type => $counts)
                         <tr class="hover:bg-slate-50/70">
-                            <td class="px-3 py-2 font-bold text-slate-900">{{ strtoupper(str_replace('_', ' ', $type)) }}</td>
+                            <td class="px-3 py-2 font-bold text-slate-900"><a href="{{ route('governance.index', ['tipe' => $type]) }}" class="hover:text-[#002f80] hover:underline">{{ strtoupper(str_replace('_', ' ', $type)) }}</a></td>
                             @foreach(['active','draft','review','approval','review_due','archived'] as $s)
                                 <td class="px-3 py-2 text-center text-slate-600">{{ $counts[$s] ?? 0 }}</td>
                             @endforeach
@@ -132,7 +132,7 @@
                                 <div class="text-[11px] text-slate-500 mt-0.5">{{ $v->change_note }}</div>
                             @endif
                         </div>
-                        <span class="text-[10px] font-bold bg-green-50 text-green-700 px-2 py-0.5 rounded-full shrink-0">{{ strtoupper(str_replace('_', ' ', $v->to_status)) }}</span>
+                        <span class="text-[10px] font-bold {{ \App\Models\Document::statusBadgeFor($v->to_status) }} px-2 py-0.5 rounded-full shrink-0">{{ strtoupper(str_replace('_', ' ', $v->to_status)) }}</span>
                     </div>
                 @endforeach
             </div>
@@ -143,10 +143,10 @@
     <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
         <h2 class="font-extrabold text-[#002f80] mb-3">Aksi Cepat</h2>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <a href="{{ route('governance.index', ['status' => 'draft']) }}" class="bg-white border border-[#d6d6d6] rounded-2xl p-4 hover:border-[#002f80] hover:shadow-md transition">
+            <a href="{{ route('documents.create') }}" class="bg-white border border-[#d6d6d6] rounded-2xl p-4 hover:border-[#002f80] hover:shadow-md transition">
                 <div class="w-10 h-10 rounded-xl grid place-items-center text-white mb-2" style="background:linear-gradient(135deg,#002f80,#0046c0)">✎</div>
-                <div class="font-bold text-sm text-slate-900">Draf Baru</div>
-                <div class="text-xs text-slate-500">Buat dokumen draf</div>
+                <div class="font-bold text-sm text-slate-900">Dokumen Baru</div>
+                <div class="text-xs text-slate-500">Unggah dokumen baru</div>
             </a>
             <a href="{{ route('governance.index', ['status' => 'review']) }}" class="bg-white border border-[#d6d6d6] rounded-2xl p-4 hover:border-[#002f80] hover:shadow-md transition">
                 <div class="w-10 h-10 rounded-xl grid place-items-center text-white mb-2" style="background:linear-gradient(135deg,#0a4fc4,#002f80)">👁</div>

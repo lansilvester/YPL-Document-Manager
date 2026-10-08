@@ -98,19 +98,27 @@
     <h2 class="font-extrabold text-[#002f80] mb-3">Ringkasan</h2>
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-sm">
         @foreach([
-            ['Total', $docs->total(), 'users'],
-            ['Active', $docs->where('status','active')->count(), 'check'],
-            ['Draft', $docs->where('status','draft')->count(), 'file'],
-            ['Review', $docs->where('status','review')->count(), 'eye'],
-            ['Approval', $docs->where('status','approval')->count(), 'shield'],
-            ['Review Due', $docs->where('status','review_due')->count(), 'clock'],
-            ['Archived', $docs->where('status','archived')->count(), 'archive'],
-            ['Overdue', $docs->filter(fn($d)=>$d->review_at && $d->review_at < now() && $d->status==='active')->count(), 'alert-triangle'],
-        ] as [$label, $count, $icon])
-            <div class="bg-slate-50/70 rounded-xl p-3">
+            ['Total', $docs->total(), 'users', null],
+            ['Active', $statusCounts['active'] ?? 0, 'check', 'active'],
+            ['Draft', $statusCounts['draft'] ?? 0, 'file', 'draft'],
+            ['Review', $statusCounts['review'] ?? 0, 'eye', 'review'],
+            ['Approval', $statusCounts['approval'] ?? 0, 'shield', 'approval'],
+            ['Review Due', $statusCounts['review_due'] ?? 0, 'clock', 'review_due'],
+            ['Archived', $statusCounts['archived'] ?? 0, 'archive', 'archived'],
+            ['Overdue', $overdueCount, 'alert-triangle', null],
+        ] as [$label, $count, $icon, $statusLink])
+            @if($statusLink)
+                <a href="{{ route('governance.index', ['status' => $statusLink]) }}" class="bg-slate-50/70 rounded-xl p-3 hover:border-[#002f80] border border-transparent transition block">
+            @else
+                <div class="bg-slate-50/70 rounded-xl p-3">
+            @endif
                 <div class="text-2xl font-extrabold text-[#002f80]">{{ $count }}</div>
                 <div class="text-xs text-slate-500 font-semibold">{{ $label }}</div>
-            </div>
+            @if($statusLink)
+                </a>
+            @else
+                </div>
+            @endif
         @endforeach
     </div>
 </div>
