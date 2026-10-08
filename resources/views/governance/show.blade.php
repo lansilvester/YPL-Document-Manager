@@ -2,41 +2,50 @@
 @section('title', $document->title)
 @section('content')
 
-{{-- Breadcrumbs --}}
-@include('components.back-bar', ['trail' => [
-    ['Home', route('home')],
-    ['Governance', route('governance.dashboard')],
-    ['Kelola', route('governance.index')],
-    [$document->title]
-]])
+{{-- Breadcrumb ala mockup: GOVERNANCE / TIPE / UNIT --}}
+<p class="text-[11px] font-bold tracking-widest text-slate-400 mt-2">
+    <a href="{{ route('governance.dashboard') }}" class="hover:text-[#002f80]">GOVERNANCE</a>
+    <span class="mx-1">/</span>
+    <a href="{{ route('governance.index', ['tipe' => $document->doc_type]) }}" class="hover:text-[#002f80]">{{ strtoupper(str_replace('_', ' ', $document->doc_type ?? 'doc')) }}</a>
+    @if($document->unit)
+        <span class="mx-1">/</span>
+        <span>{{ strtoupper($document->unit) }}</span>
+    @endif
+</p>
 
-{{-- Document Passport + Detail --}}
-<div class="grid lg:grid-cols-[340px_minmax(0,1fr)] gap-6 lg:gap-10 mt-3">
-    {{-- Sidebar: Document Passport --}}
-    <aside class="lg:sticky lg:top-24 space-y-5">
-        {{-- Passport Card --}}
+<h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80] mt-2">{{ $document->title }}</h1>
+<div class="flex flex-wrap items-center gap-2 mt-2">
+    <span class="text-xs font-bold {{ $document->statusBadge() }} px-2.5 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</span>
+    <span class="text-xs font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">v{{ $document->version }}</span>
+</div>
+@if($document->subtitle)
+    <p class="text-slate-500 mt-1 font-reading italic">{{ $document->subtitle }}</p>
+@endif
+@if($document->description)
+    <p class="text-sm text-slate-600 mt-2 max-w-3xl">{{ $document->description }}</p>
+@endif
+
+{{-- Passport + Related Knowledge ala mockup --}}
+<div class="grid lg:grid-cols-[340px_minmax(0,1fr)] gap-6 lg:gap-8 mt-6">
+    {{-- Passport Card --}}
+    <aside class="space-y-5">
         <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
-            <h2 class="font-extrabold tracking-tight text-[#002f80] flex items-center gap-2">
-                @include('components.icon', ['name' => 'shield', 'class' => 'w-5 h-5'])
-                DOCUMENT PASSPORT
-            </h2>
-            <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
+            <h2 class="font-extrabold tracking-tight text-[#002f80]">DOCUMENT PASSPORT</h2>
+            <dl class="mt-4 space-y-2.5 text-[13px]">
                 <div><dt class="text-[11px] font-bold text-slate-400">DOC ID</dt><dd class="font-bold font-mono">{{ $document->doc_code ?? '—' }}</dd></div>
-                <div><dt class="text-[11px] font-bold text-slate-400">TYPE</dt><dd class="font-bold">{{ $document->doc_type ? strtoupper(str_replace('_', ' ', $document->doc_type)) : '—' }}</dd></div>
-                <div><dt class="text-[11px] font-bold text-slate-400">VERSION</dt><dd class="font-bold">v{{ $document->version }}</dd></div>
-                <div><dt class="text-[11px] font-bold text-slate-400">STATUS</dt><dd class="font-bold"><span class="inline-flex items-center gap-1.5 {{ $document->statusBadge() }} px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</span></dd></div>
-                <div><dt class="text-[11px] font-bold text-slate-400">CLASS</dt><dd class="font-bold">{{ $document->classification ? strtoupper($document->classification) : '—' }}</dd></div>
-                <div><dt class="text-[11px] font-bold text-slate-400">EFFECTIVE</dt><dd class="font-bold">{{ $document->effective_at?->format('d M Y') ?? '—' }}</dd></div>
-                <div><dt class="text-[11px] font-bold text-slate-400">REVIEW</dt><dd class="font-bold">{{ $document->review_at?->format('d M Y') ?? '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">OWNER</dt><dd class="font-bold">{{ $document->user->name }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">APPROVER</dt><dd class="font-bold">{{ $document->approver->name ?? '—' }}</dd></div>
+                <div><dt class="text-[11px] font-bold text-slate-400">EFFECTIVE</dt><dd class="font-bold">{{ $document->effective_at?->format('d M Y') ?? '—' }}</dd></div>
+                <div><dt class="text-[11px] font-bold text-slate-400">REVIEW</dt><dd class="font-bold">{{ $document->review_at?->format('d M Y') ?? '—' }}</dd></div>
+                <div><dt class="text-[11px] font-bold text-slate-400">CLASS</dt><dd class="font-bold">{{ $document->classification ? strtoupper($document->classification) : '—' }}</dd></div>
+                <div><dt class="text-[11px] font-bold text-slate-400">TYPE</dt><dd class="font-bold">{{ $document->doc_type ? strtoupper(str_replace('_', ' ', $document->doc_type)) : '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">PIC</dt><dd class="font-bold">{{ $document->pic->name ?? $document->pic_name ?? '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">UNIT</dt><dd class="font-bold">{{ $document->unit ?? '—' }}</dd></div>
+                <div><dt class="text-[11px] font-bold text-slate-400">VISIBILITY</dt><dd class="font-bold">{{ strtoupper($document->visibility) }}</dd></div>
                 @if(!empty($document->audience))
-                    <div class="col-span-2"><dt class="text-[11px] font-bold text-slate-400">AUDIENCE</dt><dd class="flex flex-wrap gap-1 mt-1">@foreach($document->audience as $a)<span class="text-[11px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $a)) }}</span>@endforeach</dd></div>
+                    <div><dt class="text-[11px] font-bold text-slate-400">AUDIENCE</dt><dd class="flex flex-wrap gap-1 mt-1">@foreach($document->audience as $a)<span class="text-[11px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $a)) }}</span>@endforeach</dd></div>
                 @endif
                 <div><dt class="text-[11px] font-bold text-slate-400">KATEGORI</dt><dd class="font-bold">{{ $document->category->name ?? '—' }}</dd></div>
-                <div><dt class="text-[11px] font-bold text-slate-400">VISIBILITY</dt><dd class="font-bold">{{ strtoupper($document->visibility) }}</dd></div>
             </dl>
         </div>
 
@@ -68,87 +77,56 @@
         @endif
     </aside>
 
-    {{-- Main Content --}}
-    <div class="min-w-0 space-y-6">
-        {{-- Header --}}
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-                <div class="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider">
-                    <span class="bg-[#002f80]/5 text-[#002f80] px-2.5 py-1 rounded-full">{{ $document->doc_type ? strtoupper(str_replace('_', ' ', $document->doc_type)) : 'DOCUMENT' }}</span>
-                    <span class="{{ $document->statusBadge() }} px-2.5 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</span>
-                    <span class="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">v{{ $document->version }}</span>
-                    @if($document->doc_code)
-                        <span class="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full font-mono text-[10px]">{{ $document->doc_code }}</span>
-                    @endif
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80] mt-2">{{ $document->title }}</h1>
-                @if($document->subtitle)
-                    <p class="text-slate-500 mt-1 font-reading italic">{{ $document->subtitle }}</p>
-                @endif
-            </div>
-            <div class="flex flex-wrap gap-2 shrink-0 mt-3 sm:mt-0">
-                @if($document->file_path)
-                    <a href="{{ route('reader.show', $document) }}" class="btn-primary text-sm">Baca Dokumen</a>
-                @else
-                    <a href="{{ route('documents.show', $document) }}" class="btn-primary text-sm">Baca Dokumen</a>
-                @endif
-                <a href="{{ route('governance.index') }}" class="btn-ghost">← Kembali</a>
-            </div>
+    {{-- Related Knowledge ala mockup --}}
+    <div class="min-w-0">
+        <h2 class="font-extrabold tracking-tight text-[#002f80]">RELATED KNOWLEDGE</h2>
+        <div class="mt-3 space-y-2.5">
+            @forelse($impactMap['references'] as $ref)
+                <a href="{{ $ref['route'] }}" class="flex items-center gap-3 bg-white rounded-2xl border border-[#d6d6d6] px-4 py-3 hover:border-[#002f80] hover:shadow-md transition group">
+                    <span class="w-9 h-9 rounded-xl grid place-items-center bg-slate-100 text-slate-500 group-hover:bg-[#002f80] group-hover:text-white transition shrink-0">@include('components.icon', ['name' => 'file', 'class' => 'w-4 h-4'])</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="block font-bold text-sm text-slate-900 group-hover:text-[#002f80] truncate">{{ $ref['title'] }}</span>
+                        <span class="block text-[11px] text-slate-400">Open →</span>
+                    </span>
+                </a>
+            @empty
+                <p class="text-sm text-slate-400 bg-white rounded-2xl border border-dashed border-[#d6d6d6] p-6 text-center">Belum ada relasi eksplisit. Tambahkan relasi di detail dokumen.</p>
+            @endforelse
+            @if($impactMap['referenced_by']->isNotEmpty())
+                <p class="text-[11px] font-bold tracking-widest text-slate-400 pt-2">DIRUJUK OLEH</p>
+                @foreach($impactMap['referenced_by'] as $ref)
+                    <a href="{{ route('documents.show', $ref['slug']) }}" class="flex items-center gap-3 bg-white rounded-2xl border border-[#d6d6d6] px-4 py-3 hover:border-[#c90018] transition group">
+                        <span class="w-9 h-9 rounded-xl grid place-items-center bg-slate-100 text-slate-500 group-hover:bg-[#c90018] group-hover:text-white transition shrink-0">@include('components.icon', ['name' => 'file', 'class' => 'w-4 h-4'])</span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block font-bold text-sm text-slate-900 group-hover:text-[#c90018] truncate">{{ $ref['source_title'] }}</span>
+                            <span class="block text-[11px] text-slate-400">Open →</span>
+                        </span>
+                    </a>
+                @endforeach
+            @endif
         </div>
-
-        {{-- Description --}}
-        @if($document->description)
-        <div class="prose max-w-none text-slate-600 bg-white rounded-2xl border border-[#d6d6d6] p-5">
-            {!! \Illuminate\Support\Str::markdown($document->description) !!}
+        <div class="flex flex-wrap gap-3 mt-5">
+            @if($document->file_path)
+                <a href="{{ route('reader.show', $document) }}" class="btn-primary">READ DOCUMENT</a>
+            @else
+                <a href="{{ route('documents.show', $document) }}" class="btn-primary">READ DOCUMENT</a>
+            @endif
+            <a href="{{ route('governance.versions', $document) }}" class="btn-ghost">View History</a>
         </div>
-        @endif
+    </div>
+</div>
 
-        {{-- Impact Map --}}
-        <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-slate-100">
-                <h2 class="font-extrabold tracking-tight text-[#002f80] flex items-center gap-2">
-                    @include('components.icon', ['name' => 'git-branch', 'class' => 'w-5 h-5'])
-                    IMPACT MAP
-                </h2>
-            </div>
-            <div class="p-5 space-y-5">
-                {{-- References (Outgoing) --}}
-                @if($impactMap['references']->isNotEmpty())
-                <div>
-                    <h3 class="text-sm font-extrabold tracking-widest text-slate-400 mb-3">REFERENSI KELUAR (Outgoing)</h3>
-                    <div class="space-y-2">
-                        @foreach($impactMap['references'] as $ref)
-                            <a href="{{ $ref['route'] }}" class="flex items-center gap-3 p-3 bg-slate-50/70 rounded-xl hover:bg-[#002f80]/5 transition group">
-                                <span class="text-[10px] font-bold px-2 py-1 rounded-full shrink-0 {{ $ref['target_type'] === 'system' ? 'bg-green-50 text-green-700' : 'bg-[#002f80]/5 text-[#002f80]' }}">{{ strtoupper($ref['type']) }}</span>
-                                <span class="font-bold text-slate-900 group-hover:text-[#002f80] truncate flex-1">{{ $ref['title'] }}</span>
-                                <span class="text-[10px] font-bold text-slate-400 shrink-0">{{ ucfirst($ref['target_type']) }}</span>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
+{{-- Detail tambahan --}}
+<div class="mt-8 space-y-6">
 
-                {{-- Referenced By (Incoming) --}}
-                @if($impactMap['referenced_by']->isNotEmpty())
-                <div class="pt-4 border-t border-slate-100">
-                    <h3 class="text-sm font-extrabold tracking-widest text-slate-400 mb-3">DIRUJUK OLEH (Incoming)</h3>
-                    <div class="space-y-2">
-                        @foreach($impactMap['referenced_by'] as $ref)
-                            <a href="{{ route('documents.show', $ref['slug']) }}" class="flex items-center gap-3 p-3 bg-slate-50/70 rounded-xl hover:bg-[#c90018]/5 transition group">
-                                <span class="text-[10px] font-bold bg-[#c90018]/10 text-[#c90018] px-2 py-1 rounded-full shrink-0">{{ strtoupper($ref['type']) }}</span>
-                                <span class="font-bold text-slate-900 group-hover:text-[#c90018] truncate flex-1">{{ $ref['source_title'] }}</span>
-                                <span class="text-[10px] font-bold text-slate-400 shrink-0">{{ strtoupper(str_replace('_', ' ', $ref['source_type'])) }}</span>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
-
-                @if($impactMap['references']->isEmpty() && $impactMap['referenced_by']->isEmpty())
-                    <p class="text-sm text-slate-400 text-center py-8">Belum ada relasi eksplisit. Tambahkan relasi di detail dokumen.</p>
-                @endif
-            </div>
-        </div>
+        {{-- Impact Map (ringkas → halaman penuh) --}}
+        <a href="{{ route('governance.impact', $document) }}" class="flex items-center gap-3 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 hover:border-[#002f80] hover:shadow-md transition group">
+            <span class="w-10 h-10 rounded-xl grid place-items-center bg-[#002f80]/5 text-[#002f80] group-hover:bg-[#002f80] group-hover:text-white transition shrink-0">@include('components.icon', ['name' => 'git-branch', 'class' => 'w-5 h-5'])</span>
+            <span class="min-w-0 flex-1">
+                <span class="block font-extrabold text-[#002f80]">IMPACT MAP</span>
+                <span class="block text-xs text-slate-500">{{ $impactMap['references']->count() }} referensi keluar · {{ $impactMap['referenced_by']->count() }} dirujuk oleh — buka visualisasi penuh →</span>
+            </span>
+        </a>
 
         {{-- Version History --}}
         <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm overflow-hidden">
