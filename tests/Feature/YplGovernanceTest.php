@@ -123,4 +123,28 @@ class YplGovernanceTest extends TestCase
         $this->get(route('governance.versions', $priv))->assertForbidden();
         $this->actingAs($owner)->get(route('governance.versions', $priv))->assertOk();
     }
+
+    public function test_ekspor_csv_hormati_visibilitas(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        Document::factory()->for($owner)->create([
+            'slug' => 'ekspor-publik', 'title' => 'Dokumen Ekspor Publik', 'visibility' => 'public',
+            'file_path' => 'documents/pub.pdf', 'doc_type' => 'sop', 'status' => 'active',
+        ]);
+        Document::factory()->for($owner)->create([
+            'slug' => 'ekspor-privat', 'title' => 'Dokumen Ekspor Rahasia', 'visibility' => 'private',
+            'file_path' => 'documents/priv3.pdf',
+        ]);
+
+        $res = $this->post(route('governance.export'), [])->assertOk();
+        $res->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $body = $res->streamedContent() ?? $res->getContent();
+        $this->assertStringContainsString('Dokumen Ekspor Publik', $body);
+        $this->assertStringNotContainsString('Dokumen Ekspor Rahasia', $body);
+
+        // Pemilik melihat dokumennya sendiri.
+        $res = $this->actingAs($owner)->post(route('governance.export'), []);
+        $body = $res->streamedContent() ?? $res->getContent();
+        $this->assertStringContainsString('Dokumen Ekspor Rahasia', $body);
+    }
 }

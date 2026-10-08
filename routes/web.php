@@ -75,7 +75,7 @@ Route::get('/tata-kelola/kelola', [GovernanceController::class, 'index'])->name(
 Route::get('/tata-kelola/{document:slug}', [GovernanceController::class, 'show'])->name('governance.show');
 Route::get('/tata-kelola/{document:slug}/versi', [GovernanceController::class, 'versions'])->name('governance.versions');
 Route::get('/tata-kelola/{document:slug}/impact', [GovernanceController::class, 'impactMap'])->name('governance.impact');
-Route::post('/tata-kelola/ekspor', [GovernanceController::class, 'export'])->name('governance.export');
+Route::post('/tata-kelola/ekspor', [GovernanceController::class, 'export'])->middleware('throttle:sensitive')->name('governance.export');
 
 Route::get('/layanan', [PortalController::class, 'services'])->name('services.index');
 Route::get('/komunitas', [PortalController::class, 'community'])->name('community.index');

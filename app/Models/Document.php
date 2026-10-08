@@ -82,6 +82,27 @@ class Document extends Model
         return in_array($to, static::TRANSITIONS[$this->status] ?? [], true);
     }
 
+    /**
+     * Kelas badge Tailwind sesuai status lifecycle.
+     */
+    public function statusBadge(): string
+    {
+        return static::statusBadgeFor($this->status);
+    }
+
+    public static function statusBadgeFor(?string $status): string
+    {
+        return match ($status) {
+            'active' => 'bg-green-50 text-green-700',
+            'draft' => 'bg-slate-100 text-slate-600',
+            'review' => 'bg-blue-50 text-blue-700',
+            'approval' => 'bg-purple-50 text-purple-700',
+            'review_due' => 'bg-amber-50 text-amber-700',
+            'archived' => 'bg-slate-100 text-slate-500',
+            default => 'bg-slate-100 text-slate-600',
+        };
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

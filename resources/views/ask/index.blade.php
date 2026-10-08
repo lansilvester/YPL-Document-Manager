@@ -33,7 +33,7 @@
         <a href="{{ route('documents.show', $hit['document']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block">
           <div class="flex flex-wrap gap-1.5 text-[10px] font-bold">
             <span class="bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $hit['document']->doc_type ?? 'dokumen')) }}</span>
-            <span class="bg-green-50 text-green-700 px-2 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $hit['document']->status)) }}</span>
+            <span class="{{ \App\Models\Document::statusBadgeFor($hit['document']->status) }} px-2 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $hit['document']->status)) }}</span>
             <span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-full">v{{ $hit['document']->version }}</span>
           </div>
           <div class="font-bold text-sm text-slate-900 mt-2 leading-snug">{{ $hit['document']->title }}</div>

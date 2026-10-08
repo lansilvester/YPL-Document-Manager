@@ -248,11 +248,55 @@ class GovernanceController extends Controller
     }
 
     /**
-     * Export governance report (CSV/Excel placeholder).
+     * Export governance report (CSV streaming, chunked, permission-filtered).
      */
     public function export(Request $request): mixed
     {
-        // TODO: Implement CSV/Excel export
-        return back()->with('info', 'Fitur ekspor akan segera tersedia.');
+        $data = $request->validate([
+            'tipe' => ['nullable', 'string', 'max:30'],
+            'status' => ['nullable', 'string', 'max:20'],
+            'audiens' => ['nullable', 'string', 'max:30'],
+            'unit' => ['nullable', 'string', 'max:60'],
+            'q' => ['nullable', 'string', 'max:200'],
+        ]);
+
+        $user = $request->user();
+        $filename = 'governance-'.now()->format('Ymd-His').'.csv';
+
+        return response()->streamDownload(function () use ($data, $user) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // BOM agar Excel baca UTF-8
+            fputcsv($out, ['Doc ID', 'Judul', 'Tipe', 'Versi', 'Status', 'Klasifikasi', 'Owner', 'Approver', 'PIC', 'Unit', 'Effective', 'Review', 'Kategori']);
+
+            Document::query()->with(['category:id,name', 'user:id,name', 'approver:id,name', 'pic:id,name'])
+                ->visibleTo($user)
+                ->when($data['tipe'] ?? null, fn ($q, $v) => $q->where('doc_type', $v))
+                ->when($data['status'] ?? null, fn ($q, $v) => $q->where('status', $v))
+                ->when($data['audiens'] ?? null, fn ($q, $v) => $q->whereJsonContains('audience', $v))
+                ->when($data['unit'] ?? null, fn ($q, $v) => $q->where('unit', 'like', '%'.$v.'%'))
+                ->when($data['q'] ?? null, fn ($q, $v) => $q->searchAny($v))
+                ->orderBy('id')
+                ->chunk(500, function ($docs) use ($out) {
+                    foreach ($docs as $d) {
+                        fputcsv($out, [
+                            $d->doc_code,
+                            $d->title,
+                            $d->doc_type,
+                            $d->version,
+                            $d->status,
+                            $d->classification,
+                            $d->user?->name,
+                            $d->approver?->name,
+                            $d->pic?->name ?? $d->pic_name,
+                            $d->unit,
+                            $d->effective_at?->format('Y-m-d'),
+                            $d->review_at?->format('Y-m-d'),
+                            $d->category?->name,
+                        ]);
+                    }
+                });
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }

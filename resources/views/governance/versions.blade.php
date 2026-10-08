@@ -39,7 +39,7 @@
                             <span class="text-xs font-extrabold bg-[#002f80] text-white px-2.5 py-1 rounded-full shrink-0">v{{ $v->version }}</span>
                             <div>
                                 <div class="flex items-center gap-2 text-sm">
-                                    <span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ $v->to_status === 'active' ? 'bg-green-50 text-green-700' : ($v->to_status === 'archived' ? 'bg-slate-100 text-slate-600' : ($v->to_status === 'approval' ? 'bg-purple-50 text-purple-700' : ($v->to_status === 'review' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'))) }}">
+                                    <span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ \App\Models\Document::statusBadgeFor($v->to_status) }}">
                                         {{ strtoupper(str_replace('_', ' ', $v->from_status)) }} → <strong>{{ strtoupper(str_replace('_', ' ', $v->to_status)) }}</strong>
                                     </span>
                                 </div>
@@ -51,7 +51,7 @@
                             </div>
                         </div>
                         <div class="shrink-0 text-right sm:text-left">
-                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold {{ $v->to_status === 'active' ? 'bg-green-50 text-green-700' : ($v->to_status === 'archived' ? 'bg-slate-100 text-slate-600' : ($v->to_status === 'approval' ? 'bg-purple-50 text-purple-700' : ($v->to_status === 'review' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'))) }}">
+                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold {{ \App\Models\Document::statusBadgeFor($v->to_status) }}">
                                 {{ strtoupper(str_replace('_', ' ', $v->to_status)) }}
                             </span>
                         </div>

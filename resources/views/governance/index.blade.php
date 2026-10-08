@@ -50,6 +50,12 @@
             <a href="{{ route('governance.index') }}" class="text-xs font-bold text-[#c90018]">Reset ✕</a>
         @endif
     </form>
+    <form action="{{ route('governance.export') }}" method="post" class="mt-3 flex justify-end">@csrf
+        @foreach(['q', 'tipe', 'status', 'audiens', 'unit'] as $k)
+            <input type="hidden" name="{{ $k }}" value="{{ $filters[$k] ?? '' }}">
+        @endforeach
+        <button class="text-xs font-bold text-[#002f80] border border-[#002f80]/30 rounded-full px-4 py-1.5 hover:bg-[#002f80] hover:text-white transition">Ekspor CSV</button>
+    </form>
 </div>
 
 {{-- Hasil --}}
@@ -58,7 +64,7 @@
         <a href="{{ route('governance.show', $d) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block group">
             <div class="flex flex-wrap gap-1.5 text-[10px] font-bold">
                 <span class="bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full">{{ $d->doc_type ? strtoupper(str_replace('_', ' ', $d->doc_type)) : 'NO TYPE' }}</span>
-                <span class="bg-green-50 text-green-700 px-2 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $d->status)) }}</span>
+                <span class="{{ $d->statusBadge() }} px-2 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $d->status)) }}</span>
                 <span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-full">v{{ $d->version }}</span>
             </div>
             <div class="font-bold text-slate-900 mt-2 leading-snug line-clamp-2 group-hover:text-[#002f80] transition">{{ $d->title }}</div>

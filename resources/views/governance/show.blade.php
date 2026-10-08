@@ -24,7 +24,7 @@
                 <div><dt class="text-[11px] font-bold text-slate-400">DOC ID</dt><dd class="font-bold font-mono">{{ $document->doc_code ?? '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">TYPE</dt><dd class="font-bold">{{ $document->doc_type ? strtoupper(str_replace('_', ' ', $document->doc_type)) : '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">VERSION</dt><dd class="font-bold">v{{ $document->version }}</dd></div>
-                <div><dt class="text-[11px] font-bold text-slate-400">STATUS</dt><dd class="font-bold"><span class="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</span></dd></div>
+                <div><dt class="text-[11px] font-bold text-slate-400">STATUS</dt><dd class="font-bold"><span class="inline-flex items-center gap-1.5 {{ $document->statusBadge() }} px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</span></dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">CLASS</dt><dd class="font-bold">{{ $document->classification ? strtoupper($document->classification) : '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">EFFECTIVE</dt><dd class="font-bold">{{ $document->effective_at?->format('d M Y') ?? '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">REVIEW</dt><dd class="font-bold">{{ $document->review_at?->format('d M Y') ?? '—' }}</dd></div>
@@ -36,7 +36,7 @@
                     <div class="col-span-2"><dt class="text-[11px] font-bold text-slate-400">AUDIENCE</dt><dd class="flex flex-wrap gap-1 mt-1">@foreach($document->audience as $a)<span class="text-[11px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $a)) }}</span>@endforeach</dd></div>
                 @endif
                 <div><dt class="text-[11px] font-bold text-slate-400">KATEGORI</dt><dd class="font-bold">{{ $document->category->name ?? '—' }}</dd></div>
-                <div><dt class="text-[11px] font-bold text-slate-400">DOC CODE</dt><dd class="font-bold font-mono">{{ $document->doc_code ?? '—' }}</dd></div>
+                <div><dt class="text-[11px] font-bold text-slate-400">VISIBILITY</dt><dd class="font-bold">{{ strtoupper($document->visibility) }}</dd></div>
             </dl>
         </div>
 
@@ -75,7 +75,7 @@
             <div>
                 <div class="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-wider">
                     <span class="bg-[#002f80]/5 text-[#002f80] px-2.5 py-1 rounded-full">{{ $document->doc_type ? strtoupper(str_replace('_', ' ', $document->doc_type)) : 'DOCUMENT' }}</span>
-                    <span class="bg-green-50 text-green-700 px-2.5 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</span>
+                    <span class="{{ $document->statusBadge() }} px-2.5 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</span>
                     <span class="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">v{{ $document->version }}</span>
                     @if($document->doc_code)
                         <span class="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full font-mono text-[10px]">{{ $document->doc_code }}</span>
@@ -87,9 +87,11 @@
                 @endif
             </div>
             <div class="flex flex-wrap gap-2 shrink-0 mt-3 sm:mt-0">
-                @can('transition', [$document, 'active'])
-                    <a href="{{ route('governance.show', $document) }}" class="btn-primary text-sm">Buka Detail</a>
-                @endcan
+                @if($document->file_path)
+                    <a href="{{ route('reader.show', $document) }}" class="btn-primary text-sm">Baca Dokumen</a>
+                @else
+                    <a href="{{ route('documents.show', $document) }}" class="btn-primary text-sm">Baca Dokumen</a>
+                @endif
                 <a href="{{ route('governance.index') }}" class="btn-ghost">← Kembali</a>
             </div>
         </div>
