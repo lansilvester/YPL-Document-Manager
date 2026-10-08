@@ -70,12 +70,12 @@ Route::get('/perpustakaan', [LibraryController::class, 'index'])->name('library.
 Route::get('/perpustakaan/{category:slug}', [LibraryController::class, 'show'])->name('library.show');
 
 // Governance (BAB 13) — Document Control & Governance
-Route::get('/tata-kelola', [GovernanceController::class, 'dashboard'])->name('governance.dashboard');
-Route::get('/tata-kelola/kelola', [GovernanceController::class, 'index'])->name('governance.index');
-Route::get('/tata-kelola/{document:slug}', [GovernanceController::class, 'show'])->name('governance.show');
-Route::get('/tata-kelola/{document:slug}/versi', [GovernanceController::class, 'versions'])->name('governance.versions');
-Route::get('/tata-kelola/{document:slug}/impact', [GovernanceController::class, 'impactMap'])->name('governance.impact');
-Route::post('/tata-kelola/ekspor', [GovernanceController::class, 'export'])->middleware('throttle:sensitive')->name('governance.export');
+Route::get('/governance', [GovernanceController::class, 'index'])->name('governance.index');
+Route::get('/governance/dashboard', [GovernanceController::class, 'dashboard'])->name('governance.dashboard');
+Route::post('/governance/ekspor', [GovernanceController::class, 'export'])->middleware('throttle:sensitive')->name('governance.export');
+Route::get('/governance/{document:slug}', [GovernanceController::class, 'show'])->name('governance.show');
+Route::get('/governance/{document:slug}/versi', [GovernanceController::class, 'versions'])->name('governance.versions');
+Route::get('/governance/{document:slug}/impact', [GovernanceController::class, 'impactMap'])->name('governance.impact');
 
 Route::get('/layanan', [PortalController::class, 'services'])->name('services.index');
 Route::get('/komunitas', [PortalController::class, 'community'])->name('community.index');
