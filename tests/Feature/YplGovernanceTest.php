@@ -231,4 +231,28 @@ class YplGovernanceTest extends TestCase
         $version = $lewat->versions()->latest()->firstOrFail();
         $this->assertEquals('Lewat Review', $version->snapshot['title']);
     }
+
+    public function test_dokumen_show_ikut_mockup_untuk_tipe_governance(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $gov = Document::factory()->for($owner)->create([
+            'slug' => 'gov-mockup', 'title' => 'SOP Mockup', 'visibility' => 'public',
+            'file_path' => 'documents/gov.pdf', 'doc_type' => 'sop', 'status' => 'active',
+        ]);
+        $biasa = Document::factory()->for($owner)->create([
+            'slug' => 'biasa', 'title' => 'Dok Biasa', 'visibility' => 'public',
+            'file_path' => 'documents/biasa.pdf',
+        ]);
+
+        // Jalur user (/dokumen) untuk tipe governance = layout mockup.
+        $this->get(route('documents.show', $gov))->assertOk()
+            ->assertSee('DOCUMENT PASSPORT')
+            ->assertSee('RELATED KNOWLEDGE')
+            ->assertSee('READ DOCUMENT')
+            ->assertSee('View History');
+
+        // Tipe non-governance tetap layout lama (hero gelap).
+        $this->get(route('documents.show', $biasa))->assertOk()
+            ->assertSee('linear-gradient(120deg', false);
+    }
 }

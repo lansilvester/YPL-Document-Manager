@@ -2,6 +2,7 @@
 @section('title', $document->title)
 
 @section('hero')
+@if(!$document->isGovernance())
 <div class="text-white shadow-xl shadow-[#002f80]/25" style="background:linear-gradient(120deg,#000f2e,#002f80 60%,#0a4fc4)">
   <div class="max-w-6xl mx-auto px-4 py-6 sm:py-8 w-full">
     <div class="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
@@ -64,9 +65,62 @@
     </div>
   </div>
 </div>
+@endif
 @endsection
 
 @section('content')
+@if($document->isGovernance())
+{{-- Layout mockup BAB 13 untuk dokumen governance --}}
+@include('components.governance-detail', [
+    'document' => $document,
+    'impactMap' => $impactMap,
+    'transitions' => $transitions ?? [],
+    'isOverdue' => $isOverdue ?? false,
+])
+
+{{-- Aksi dokumen (ringkas, latar terang) --}}
+<div class="flex flex-wrap gap-2 mt-4 text-[13px] font-bold">
+  <a href="{{ route('reader.show', $document) }}" class="btn-ghost !py-2">📖 Baca Imersif</a>
+  @if($document->file_path && \App\Models\Setting::feature('download'))
+    @auth
+      <a href="{{ route('documents.download', $document) }}" class="btn-ghost !py-2 inline-flex items-center gap-2">@include('components.icon', ['name' => 'download', 'class' => 'w-4 h-4']) Unduh PDF</a>
+      <a href="{{ route('documents.downloadHtml', $document) }}" class="btn-ghost !py-2 inline-flex items-center gap-2">@include('components.icon', ['name' => 'file', 'class' => 'w-4 h-4']) Unduh HTML</a>
+    @else
+      <a href="{{ route('login') }}" class="btn-ghost !py-2">Masuk untuk mengunduh</a>
+    @endauth
+  @endif
+  @if(\App\Models\Setting::feature('like'))
+    @auth
+      <form method="post" action="{{ route('documents.like', $document) }}" class="inline">@csrf<button class="btn-ghost !py-2 inline-flex items-center gap-2">@include('components.icon', ['name' => 'heart', 'class' => 'w-4 h-4']) {{ number_format($likesCount) }} Suka</button></form>
+    @endauth
+  @endif
+  @if($canEmbed && \App\Models\Setting::feature('embed'))
+    <button type="button" onclick="openEmbedModal(event)" class="btn-ghost !py-2 inline-flex items-center gap-2">@include('components.icon', ['name' => 'code', 'class' => 'w-4 h-4']) Sematkan</button>
+  @endif
+  @auth
+    @if(\App\Models\Setting::feature('bookmark'))
+      @include('components.bookmark-button', [
+        'document' => $document,
+        'marked' => $isMarked,
+        'labelOn' => 'Tersimpan di Bookmark',
+        'labelOff' => 'Simpan ke Bookmark',
+        'btnClass' => 'btn-ghost !py-2 inline-flex items-center gap-2 cursor-pointer',
+        'iconClass' => 'w-4 h-4',
+        'activeClass' => '!border-amber-400 !text-amber-600',
+        'inactiveClass' => '',
+      ])
+    @endif
+    @if(\App\Models\Setting::feature('share'))<a href="{{ route('documents.share', $document) }}" class="btn-ghost !py-2 inline-flex items-center gap-2">@include('components.icon', ['name' => 'share', 'class' => 'w-4 h-4']) Bagikan</a>@endif
+    @if(auth()->user()->isAdmin() || $document->user_id === auth()->id())
+      @if($document->source_type === 'editor')
+        <a href="{{ route('editor.edit', $document) }}" class="btn-ghost !py-2 inline-flex items-center gap-2">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Ubah Isi</a>
+      @else
+        <a href="{{ route('documents.edit', $document) }}" class="btn-ghost !py-2 inline-flex items-center gap-2">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Ubah</a>
+      @endif
+    @endif
+  @endauth
+</div>
+@else
 @include('components.back-bar', ['trail' => array_filter([['Beranda', route('home')], $document->category ? [$document->category->name, route('documents.index', ['kategori' => $document->category->slug])] : null, [$document->title]])])
 
 {{-- Phase 3 — Document Passport + Lifecycle + Connected Knowledge --}}
@@ -147,8 +201,9 @@
     @endif
   </div>
 </div>
+@endif
 
-<div class="grid lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start">
+<div class="grid lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start mt-6">
   {{-- Kiri: pratinjau dokumen --}}
   <div class="min-w-0">
     {{-- Fase 1: penampil + atur tampilan + lanjut baca --}}

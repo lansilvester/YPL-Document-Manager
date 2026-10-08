@@ -16,6 +16,7 @@ use App\Models\System;
 use App\Models\User;
 use App\Services\DocumentFiles;
 use App\Services\HtmlSanitizer;
+use App\Services\ImpactMap;
 use App\Services\RecommendationEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +46,17 @@ class DocumentController extends Controller
     // Fase 1: buka dokumen + lanjut baca + atur tampilan
     public function show(Document $document)
     {
-        $document->load(['tags', 'approver', 'pic', 'versions.user', 'outgoingRelations.related', 'outgoingRelations.system']);
+        $document->load([
+            'category',
+            'user:id,name,email,role',
+            'approver:id,name,email',
+            'pic:id,name,email',
+            'tags',
+            'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code',
+            'outgoingRelations.system:id,name,slug',
+            'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code',
+            'versions.user:id,name',
+        ]);
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403, 'Dokumen bersifat privat.');
         }
@@ -99,7 +110,11 @@ class DocumentController extends Controller
             }
         }
 
-        return view('documents.show', compact('document', 'pref', 'position', 'isMarked', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'recommendations', 'popular', 'transitions'));
+        // Impact map mockup BAB 13 (untuk dokumen governance).
+        $impactMap = ImpactMap::for($document);
+        $isOverdue = $document->review_at && $document->review_at < now() && $document->status === 'active';
+
+        return view('documents.show', compact('document', 'pref', 'position', 'isMarked', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'recommendations', 'popular', 'transitions', 'impactMap', 'isOverdue'));
     }
 
     /**

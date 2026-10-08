@@ -360,12 +360,24 @@ class Document extends Model
     }
 
     /**
+     * Tipe dokumen yang tampil dengan layout mockup governance (BAB 13).
+     *
+     * @var array<int, string>
+     */
+    public const GOVERNANCE_TYPES = [
+        'policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision', 'form', 'evidence',
+    ];
+
+    /**
      * Scope untuk dokumen governance (tipe policy, regulation, standard, sop, work_instruction, decision, form, evidence).
      */
     public function scopeGovernance($query)
     {
-        return $query->whereIn('doc_type', [
-            'policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision', 'form', 'evidence',
-        ]);
+        return $query->whereIn('doc_type', static::GOVERNANCE_TYPES);
+    }
+
+    public function isGovernance(): bool
+    {
+        return in_array($this->doc_type, static::GOVERNANCE_TYPES, true);
     }
 }
