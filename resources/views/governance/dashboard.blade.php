@@ -148,20 +148,20 @@
                 <div class="font-bold text-sm text-slate-900">Draf Baru</div>
                 <div class="text-xs text-slate-500">Buat dokumen draf</div>
             </a>
-            <a href="{{ route('governance.index', ['status' => 'review'])" class="bg-white border border-[#d6d6d6] rounded-2xl p-4 hover:border-[#002f80] hover:shadow-md transition">
+            <a href="{{ route('governance.index', ['status' => 'review']) }}" class="bg-white border border-[#d6d6d6] rounded-2xl p-4 hover:border-[#002f80] hover:shadow-md transition">
                 <div class="w-10 h-10 rounded-xl grid place-items-center text-white mb-2" style="background:linear-gradient(135deg,#0a4fc4,#002f80)">👁</div>
                 <div class="font-bold text-sm text-slate-900">Perlu Review</div>
-                <div class="text-xs text-slate-500">{{ \App\Models\Document::where('visibility','public')->where('status','review')->count() }} dokumen</div>
+                <div class="text-xs text-slate-500">{{ $stats->review }} dokumen</div>
             </a>
             <a href="{{ route('governance.index', ['status' => 'approval']) }}" class="bg-white border border-[#d6d6d6] rounded-2xl p-4 hover:border-[#002f80] hover:shadow-md transition">
                 <div class="w-10 h-10 rounded-xl grid place-items-center text-white mb-2" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">✓</div>
                 <div class="font-bold text-sm text-slate-900">Menunggu Approval</div>
-                <div class="text-xs text-slate-500">{{ \App\Models\Document::where('visibility','public')->where('status','approval')->count() }} dokumen</div>
+                <div class="text-xs text-slate-500">{{ $stats->approval }} dokumen</div>
             </a>
             <a href="{{ route('governance.index', ['status' => 'review_due']) }}" class="bg-white border border-[#d6d6d6] rounded-2xl p-4 hover:border-[#c90018] hover:shadow-md transition">
                 <div class="w-10 h-10 rounded-xl grid place-items-center text-white mb-2" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">⚠</div>
                 <div class="font-bold text-sm text-slate-900">Overdue Review</div>
-                <div class="text-xs text-slate-500">{{ \App\Models\Document::where('visibility','public')->where('status','active')->whereNotNull('review_at')->where('review_at', '<', now())->count() }} dokumen</div>
+                <div class="text-xs text-slate-500">{{ $stats->overdue_review }} dokumen</div>
             </a>
         </div>
     </div>

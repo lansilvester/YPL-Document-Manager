@@ -4,41 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Document;
 use App\Models\ServiceRequest;
-use Illuminate\Http\Request;
 
 class PortalController extends Controller
 {
-    public function governance(Request $request): mixed
-    {
-        $type = $request->query('tipe');
-        $status = $request->query('status');
-        $audience = $request->query('audiens');
-        $unit = trim((string) $request->query('unit', ''));
-
-        $docs = Document::query()->with(['category', 'user'])
-            ->where('visibility', 'public')
-            ->when($type, fn ($q) => $q->where('doc_type', $type))
-            ->when($status, fn ($q) => $q->where('status', $status))
-            ->when($audience, fn ($q) => $q->whereJsonContains('audience', $audience))
-            ->when($unit !== '', fn ($q) => $q->where('unit', 'like', '%'.$unit.'%'))
-            ->latest()->paginate(12)->withQueryString();
-
-        $typeCounts = Document::query()->where('visibility', 'public')
-            ->selectRaw('doc_type, COUNT(*) as c')->groupBy('doc_type')->pluck('c', 'doc_type');
-        $statusCounts = Document::query()->where('visibility', 'public')
-            ->selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
-
-        return view('portal.governance', [
-            'docs' => $docs,
-            'activeType' => $type,
-            'activeStatus' => $status,
-            'activeAudience' => $audience,
-            'activeUnit' => $unit,
-            'typeCounts' => $typeCounts,
-            'statusCounts' => $statusCounts,
-        ]);
-    }
-
     public function services(): mixed
     {
         $forms = Document::query()->with(['category'])

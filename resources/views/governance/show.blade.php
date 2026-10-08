@@ -188,17 +188,6 @@
         </div>
 
         {{-- Related Documents (same category) --}}
-        @php
-            $relatedSameCat = \App\Models\Document::query()
-                ->with(['category', 'user'])
-                ->where('visibility', 'public')
-                ->where('status', 'active')
-                ->where('category_id', $document->category_id)
-                ->where('id', '!=', $document->id)
-                ->latest()
-                ->limit(6)
-                ->get();
-        @endphp
         @if($relatedSameCat->isNotEmpty())
         <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
             <h2 class="font-extrabold text-[#002f80] mb-3">Dokumen Sejenis ({{ $document->category->name }})</h2>

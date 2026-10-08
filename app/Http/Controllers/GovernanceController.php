@@ -23,8 +23,8 @@ class GovernanceController extends Controller
                 COUNT(CASE WHEN status = "approval" THEN 1 END) as approval,
                 COUNT(CASE WHEN status = "review_due" THEN 1 END) as review_due,
                 COUNT(CASE WHEN status = "archived" THEN 1 END) as archived,
-                COUNT(CASE WHEN review_at IS NOT NULL AND review_at <= CURDATE() AND status = "active" THEN 1 END) as overdue_review
-            ')
+                COUNT(CASE WHEN review_at IS NOT NULL AND review_at <= ? AND status = "active" THEN 1 END) as overdue_review
+            ', [now()->toDateString()])
             ->first();
 
         $typeStats = Document::query()
@@ -46,8 +46,10 @@ class GovernanceController extends Controller
             ->limit(10)
             ->get();
 
+        // Hanya versi dari dokumen yang terlihat user (anti-bocor private).
         $recentChanges = DocumentVersion::query()
             ->with(['document', 'user'])
+            ->whereHas('document', fn ($q) => $q->visibleTo(auth()->user()))
             ->latest()
             ->limit(10)
             ->get();
@@ -69,11 +71,10 @@ class GovernanceController extends Controller
 
         $query = Document::query()
             ->with([
-                'category',
+                'category:id,name,collection',
                 'user:id,name',
                 'approver:id,name',
                 'pic:id,name',
-                'category:id,name,collection',
             ])
             ->where('visibility', 'public')
             ->when($filters['tipe'] ?? null, fn ($q, $v) => $q->where('doc_type', $v))
@@ -185,12 +186,23 @@ class GovernanceController extends Controller
         // Upcoming review
         $isOverdue = $document->review_at && $document->review_at < now() && $document->status === 'active';
 
+        // Dokumen sejenis (kategori sama, aktif, publik)
+        $relatedSameCat = $document->category_id
+            ? Document::query()->with(['category:id,name'])
+                ->visibleTo(auth()->user())
+                ->where('status', 'active')
+                ->where('category_id', $document->category_id)
+                ->where('id', '!=', $document->id)
+                ->latest()->limit(6)->get()
+            : collect();
+
         return view('governance.show', [
             'document' => $document,
             'transitions' => $transitions,
             'impactMap' => $impactMap,
             'versions' => $versions,
             'isOverdue' => $isOverdue,
+            'relatedSameCat' => $relatedSameCat,
         ]);
     }
 
@@ -199,6 +211,10 @@ class GovernanceController extends Controller
      */
     public function versions(Document $document): mixed
     {
+        if (! $document->isVisibleTo(auth()->user())) {
+            abort(403, 'Dokumen bersifat privat.');
+        }
+
         $versions = $document->versions()
             ->with('user:id,name,email')
             ->latest()

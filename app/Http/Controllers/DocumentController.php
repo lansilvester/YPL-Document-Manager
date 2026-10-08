@@ -142,7 +142,7 @@ class DocumentController extends Controller
         $this->authorize('relate', $document);
 
         $data = $request->validate([
-            'related_slug' => ['nullable', 'string', 'max:255', 'required_without:system_slug'],
+            'related_slug' => ['nullable', 'string', 'max:255', 'required_without:system_slug', 'exists:documents,slug'],
             'system_slug' => ['nullable', 'string', 'max:60', 'required_without:related_slug', 'exists:systems,slug'],
             'relation_type' => ['nullable', 'string', 'in:'.implode(',', DocumentRelation::TYPES)],
         ]);
