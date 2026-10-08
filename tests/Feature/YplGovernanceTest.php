@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Document;
+use App\Models\DocumentRelation;
 use App\Models\DocumentVersion;
+use App\Models\System;
 use App\Models\User;
+use Database\Seeders\SystemsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -122,6 +125,37 @@ class YplGovernanceTest extends TestCase
 
         $this->get(route('governance.versions', $priv))->assertForbidden();
         $this->actingAs($owner)->get(route('governance.versions', $priv))->assertOk();
+    }
+
+    public function test_show_tampil_dengan_relasi_masuk_keluar_dan_sistem(): void
+    {
+        $this->seed([SystemsSeeder::class]);
+        $owner = User::factory()->create(['role' => 'staff']);
+        $a = Document::factory()->for($owner)->create([
+            'slug' => 'gov-show-a', 'title' => 'Dok A', 'visibility' => 'public',
+            'file_path' => 'documents/a.pdf', 'status' => 'active',
+        ]);
+        $b = Document::factory()->for($owner)->create([
+            'slug' => 'gov-show-b', 'title' => 'Dok B', 'visibility' => 'public',
+            'file_path' => 'documents/b.pdf', 'status' => 'active',
+        ]);
+        DocumentRelation::create([
+            'document_id' => $a->id, 'related_id' => $b->id, 'relation_type' => 'related',
+        ]);
+        $odoo = System::where('slug', 'odoo-erp')->firstOrFail();
+        DocumentRelation::create([
+            'document_id' => $a->id, 'related_id' => null, 'system_id' => $odoo->id,
+            'relation_type' => 'system',
+        ]);
+
+        $this->get(route('governance.show', $a))->assertOk()
+            ->assertSee('DOCUMENT PASSPORT')
+            ->assertSee('RELATED KNOWLEDGE')
+            ->assertSee('READ DOCUMENT')
+            ->assertSee('View History')
+            ->assertSee('Dok B')
+            ->assertSee('Odoo ERP');
+        $this->get(route('governance.impact', $a))->assertOk();
     }
 
     public function test_ekspor_csv_hormati_visibilitas(): void

@@ -24,7 +24,7 @@
         <div class="bg-white rounded-2xl border border-dashed border-[#d6d6d6] p-12 text-center">
             @include('components.icon', ['name' => 'git-branch', 'class' => 'w-16 h-16 text-slate-300 mx-auto mb-4'])
             <h2 class="text-xl font-extrabold text-slate-900">Belum Ada Relasi</h2>
-            <p class="text-slate-500 mt-2">Dokumen ini belum memiliki relasi eksplisit dengan dokumen atau sistem lain.</            <p class="text-slate-400 text-sm mt-1">Tambahkan relasi di halaman detail untuk memulai visualisasi impact map.</p>
+            <p class="text-slate-500 mt-2">Dokumen ini belum memiliki relasi eksplisit dengan dokumen atau sistem lain.</p></            <p class="text-slate-400 text-sm mt-1">Tambahkan relasi di halaman detail untuk memulai visualisasi impact map.</p>
             <a href="{{ route('governance.show', $document) }}" class="btn-primary mt-4 inline-block">Kelola Relasi →</a>
         </div>
     @else
@@ -66,13 +66,14 @@
                         DIRUJUK OLEH (Incoming) <span class="text-xs font-bold bg-[#c90018] text-white px-2 py-0.5 rounded-full">{{ $impactMap['referenced_by']->count() }}</span>
                     </h3>
                     @if($impactMap['referenced_by']->isEmpty())
-                        <p class="text-sm text-slate-400 text-center py-8">Belum ada dokumen yang mereferensikan dokumen ini.</                    @else
+                        <p class="text-sm text-slate-400 text-center py-8">Belum ada dokumen yang mereferensikan dokumen ini.</p>
+                    @else
                         <div class="space-y-3">
                             @foreach($impactMap['referenced_by'] as $ref)
                                 <a href="{{ route('governance.show', $ref['slug']) }}" class="flex items-center gap-3 p-4 bg-white rounded-xl border border-[#d6d6d6] hover:border-[#c90018] hover:shadow-md transition group">
                                     <span class="text-[10px] font-bold bg-[#c90018]/10 text-[#c90018] px-2.5 py-1 rounded-full shrink-0">{{ strtoupper($ref['type']) }}</span>
                                     <div class="flex-1 min-w-0">
-                                        <a href="{{ route('governance.show', $ref['slug']) }}" class="font-bold text-slate-900 group-hover:text-[#c90018] truncate block">{{ $ref['source_title'] }}</a>
+                                        <span class="font-bold text-slate-900 group-hover:text-[#c90018] truncate block">{{ $ref['source_title'] }}</span>
                                         <div class="text-[11px] text-slate-400 flex items-center gap-1">
                                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#c90018]/10 text-[#c90018]">{{ str_replace('_', ' ', $ref['source_type']) }}</span>
                                         </div>

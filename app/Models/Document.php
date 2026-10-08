@@ -71,6 +71,11 @@ class Document extends Model
         return $this->hasMany(DocumentRelation::class);
     }
 
+    public function incomingRelations(): HasMany
+    {
+        return $this->hasMany(DocumentRelation::class, 'related_id');
+    }
+
     public function relatedDocuments(): BelongsToMany
     {
         return $this->belongsToMany(Document::class, 'document_relations', 'document_id', 'related_id')
