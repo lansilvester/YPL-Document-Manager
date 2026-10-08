@@ -16,6 +16,7 @@ use App\Models\System;
 use App\Models\User;
 use App\Services\DocumentFiles;
 use App\Services\HtmlSanitizer;
+use App\Services\RecommendationEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -77,24 +78,8 @@ class DocumentController extends Controller
             ? HtmlSanitizer::clean($document->content)
             : null;
 
-        // Dokumen sejenis: tag/flag sama; fallback kategori; terakhir semua dokumen lain.
-        $tagIds = $document->tags->pluck('id');
-        $related = Document::query()->with(['category', 'user', 'tags'])
-            ->where('visibility', 'public')
-            ->where('id', '!=', $document->id)
-            ->when($tagIds->isNotEmpty(), fn ($q) => $q->whereHas('tags', fn ($t) => $t->whereIn('tags.id', $tagIds)))
-            ->when($tagIds->isEmpty(), fn ($q) => $q->where('category_id', $document->category_id))
-            ->latest()
-            ->limit(6)
-            ->get();
-        if ($related->isEmpty()) {
-            $related = Document::query()->with(['category', 'user', 'tags'])
-                ->where('visibility', 'public')
-                ->where('id', '!=', $document->id)
-                ->latest()
-                ->limit(6)
-                ->get();
-        }
+        // Rekomendasi pintar (RecommendationEngine) menggantikan "Dokumen sejenis" lama.
+        $recommendations = (new RecommendationEngine(6))->forDocument($document, auth()->user());
 
         // Dokumen populer: paling sering dibaca.
         $popular = Document::query()->with(['category', 'user', 'tags'])
@@ -114,7 +99,7 @@ class DocumentController extends Controller
             }
         }
 
-        return view('documents.show', compact('document', 'pref', 'position', 'isMarked', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'related', 'popular', 'transitions'));
+        return view('documents.show', compact('document', 'pref', 'position', 'isMarked', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'recommendations', 'popular', 'transitions'));
     }
 
     /**

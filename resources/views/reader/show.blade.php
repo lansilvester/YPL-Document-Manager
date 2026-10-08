@@ -73,6 +73,23 @@
       <h2 class="text-xs font-bold tracking-widest text-slate-400 mt-4 mb-2">PAGES</h2>
       <div id="pg-grid" class="pg-grid flex flex-wrap gap-1.5"></div>
     </div>
+
+    {{-- Rekomendasi di Reader --}}
+    @if($recommendations->isNotEmpty())
+      <div class="px-5 pt-4 pb-5 border-t border-slate-200">
+        <h2 class="text-xs font-bold tracking-widest text-[#002f80] mb-3">REKOMENDASI</h2>
+        <div class="space-y-2">
+          @foreach($recommendations as $rec)
+            <a href="{{ route('reader.show', $rec['document']) }}" class="block px-3 py-2 rounded-xl hover:bg-[#002f80]/5 text-sm">
+              <span class="text-slate-400 font-bold mr-2">{{ $loop->iteration }}.</span>{{ $rec['document']->title }}
+              @if($rec['reasons'])
+                <span class="block text-[10px] text-[#002f80] font-bold mt-1">{{ $rec['reasons'][0] }}</span>
+              @endif
+            </a>
+          @endforeach
+        </div>
+      </div>
+    @endif
   </aside>
 
   <main id="stage" class="flex-1 min-w-0 overflow-y-auto">

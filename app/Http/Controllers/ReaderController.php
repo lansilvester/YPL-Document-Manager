@@ -6,6 +6,7 @@ use App\Models\Bookmark;
 use App\Models\Document;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
+use App\Services\RecommendationEngine;
 
 class ReaderController extends Controller
 {
@@ -38,6 +39,9 @@ class ReaderController extends Controller
             ->where('id', '!=', $document->id)
             ->latest()->limit(20)->get();
 
-        return view('reader.show', compact('document', 'pref', 'position', 'isMarked', 'chapters'));
+        // Rekomendasi di Reader (sidebar kanan)
+        $recommendations = (new RecommendationEngine(5))->forDocument($document, auth()->user());
+
+        return view('reader.show', compact('document', 'pref', 'position', 'isMarked', 'chapters', 'recommendations'));
     }
 }

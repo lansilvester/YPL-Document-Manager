@@ -182,30 +182,34 @@
     @endif
   </div>
 
-  {{-- Kanan: dokumen dengan jenis tag/flag yang sama --}}
+  {{-- Kanan: Rekomendasi pintar --}}
   <aside class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-4">
     <div class="flex items-center gap-2 text-[#002f80] font-extrabold">
       @include('components.icon', ['name' => 'tag', 'class' => 'w-4.5 h-4.5'])
-      <h2 class="text-sm">Dokumen Sejenis</h2>
+      <h2 class="text-sm">REKOMENDASI UNTUK ANDA</h2>
     </div>
-    @if($document->tags->isNotEmpty())
-      <div class="flex flex-wrap gap-1 mt-2 mb-1">@include('components.tag-badges', ['tags' => $document->tags->take(4)])</div>
+    @if($recommendations->isNotEmpty())
+      <div class="mt-2 divide-y divide-slate-100">
+        @forelse($recommendations as $rec)
+          <a href="{{ route('documents.show', $rec['document']) }}" class="flex items-start gap-3 py-2.5 group">
+            <span class="w-9 h-9 rounded-xl grid place-items-center text-white text-sm font-extrabold shrink-0" style="background:{{ ['linear-gradient(135deg,#001c55,#002f80)','linear-gradient(135deg,#002f80,#3b6fd4)','linear-gradient(135deg,#7a0010,#c90018)','linear-gradient(135deg,#334155,#64748b)'][$loop->iteration % 4] }}">{{ $loop->iteration }}</span>
+            <span class="min-w-0">
+              <span class="block font-bold text-slate-800 text-sm leading-snug line-clamp-2 group-hover:text-[#002f80]">{{ $rec['document']->title }}</span>
+              <span class="block text-[11px] text-slate-400 mt-0.5">
+                @if($rec['reasons'])
+                  <span class="text-[10px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-0.5 rounded-full">{{ $rec['reasons'][0] }}</span>
+                @endif
+                <span class="ml-2 inline-flex items-center gap-1">@include('components.icon', ['name' => 'eye', 'class' => 'w-3 h-3']) {{ number_format($rec['document']->views_count) }} kali dibaca</span>
+              </span>
+            </span>
+          </a>
+        @empty
+          <p class="text-[13px] text-slate-400">Belum ada rekomendasi untuk dokumen ini.</p>
+        @endforelse
+      </div>
     @else
-      <p class="text-[11px] text-slate-400 mt-1">Kategori: <span class="font-bold text-slate-600">{{ $document->category->name ?? 'Tanpa kategori' }}</span></p>
+      <p class="text-[13px] text-slate-400 mt-1">Belum ada rekomendasi untuk dokumen ini.</p>
     @endif
-    <div class="mt-2 divide-y divide-slate-100">
-      @forelse($related as $r)
-        <a href="{{ route('documents.show', $r) }}" class="flex items-start gap-3 py-2.5 group">
-          <span class="w-9 h-9 rounded-xl grid place-items-center text-white text-sm font-extrabold shrink-0" style="background:{{ ['linear-gradient(135deg,#001c55,#002f80)','linear-gradient(135deg,#002f80,#3b6fd4)','linear-gradient(135deg,#7a0010,#c90018)','linear-gradient(135deg,#334155,#64748b)'][$r->id % 4] }}">{{ strtoupper(mb_substr($r->title, 0, 1)) }}</span>
-          <span class="min-w-0">
-            <span class="block font-bold text-slate-800 text-sm leading-snug line-clamp-2 group-hover:text-[#002f80] transition">{{ $r->title }}</span>
-            <span class="block text-[11px] text-slate-400 mt-0.5 inline-flex items-center gap-1">@include('components.icon', ['name' => 'eye', 'class' => 'w-3 h-3']) {{ number_format($r->views_count) }} kali dibaca</span>
-          </span>
-        </a>
-      @empty
-        <p class="text-sm text-slate-400 py-2">Belum ada dokumen sejenis.</p>
-      @endforelse
-    </div>
   </aside>
 </div>
 
