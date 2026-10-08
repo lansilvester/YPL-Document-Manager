@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DocumentVersion extends Model
 {
-    protected $fillable = ['document_id', 'user_id', 'version', 'from_status', 'to_status', 'change_note'];
+    protected $fillable = ['document_id', 'user_id', 'version', 'from_status', 'to_status', 'change_note', 'snapshot'];
+
+    protected function casts(): array
+    {
+        return ['snapshot' => 'array'];
+    }
 
     public function document(): BelongsTo
     {

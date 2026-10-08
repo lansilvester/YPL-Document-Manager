@@ -108,6 +108,27 @@ class Document extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Snapshot isi revisi untuk revision history (BAB 13).
+     *
+     * @return array<string, mixed>
+     */
+    public function snapshot(): array
+    {
+        return [
+            'title' => $this->title,
+            'subtitle' => $this->subtitle,
+            'description' => $this->description,
+            'doc_type' => $this->doc_type,
+            'version' => $this->version,
+            'classification' => $this->classification,
+            'audience' => $this->audience,
+            'unit' => $this->unit,
+            'effective_at' => $this->effective_at?->format('Y-m-d'),
+            'review_at' => $this->review_at?->format('Y-m-d'),
+        ];
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

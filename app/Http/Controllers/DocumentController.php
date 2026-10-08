@@ -123,6 +123,7 @@ class DocumentController extends Controller
                 'from_status' => $from,
                 'to_status' => $data['to'],
                 'change_note' => $data['change_note'] ?? null,
+                'snapshot' => $document->snapshot(),
             ]);
             $document->update(array_filter([
                 'status' => $data['to'],

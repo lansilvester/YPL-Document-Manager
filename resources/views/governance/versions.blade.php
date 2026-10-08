@@ -65,6 +65,16 @@
                             </div>
                         </div>
                     @endif
+                    @if(!empty($v->snapshot))
+                        <details class="mt-2 text-xs">
+                            <summary class="cursor-pointer font-bold text-[#002f80]">Snapshot isi revisi</summary>
+                            <dl class="mt-2 grid sm:grid-cols-2 gap-x-4 gap-y-1 text-slate-600 bg-slate-50/70 rounded-xl p-3">
+                                @foreach($v->snapshot as $k => $sv)
+                                    <div class="flex gap-2 min-w-0"><dt class="font-bold text-slate-400 shrink-0">{{ strtoupper(str_replace('_', ' ', $k)) }}:</dt><dd class="truncate">{{ is_array($sv) ? implode(', ', $sv) : ($sv ?? '—') }}</dd></div>
+                                @endforeach
+                            </dl>
+                        </details>
+                    @endif
                 </div>
             @endforeach
         </div>

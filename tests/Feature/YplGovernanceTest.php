@@ -147,4 +147,54 @@ class YplGovernanceTest extends TestCase
         $body = $res->streamedContent() ?? $res->getContent();
         $this->assertStringContainsString('Dokumen Ekspor Rahasia', $body);
     }
+
+    public function test_transisi_menyimpan_snapshot_revisi(): void
+    {
+        $owner = User::factory()->create(['role' => 'anggota']);
+        $doc = Document::factory()->for($owner)->create([
+            'slug' => 'snap-doc', 'title' => 'Judul Snapshot', 'visibility' => 'public',
+            'file_path' => 'documents/snap.pdf', 'status' => 'draft',
+            'subtitle' => 'Sub kinn', 'unit' => 'Unit A',
+        ]);
+
+        $this->actingAs($owner)->post(route('documents.transition', $doc), ['to' => 'review'])
+            ->assertRedirect();
+
+        $version = $doc->versions()->latest()->firstOrFail();
+        $this->assertEquals('Judul Snapshot', $version->snapshot['title']);
+        $this->assertEquals('Unit A', $version->snapshot['unit']);
+        $this->get(route('governance.versions', $doc))->assertOk()
+            ->assertSee('Snapshot isi revisi');
+    }
+
+    public function test_command_tandai_review_due_otomatis(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $lewat = Document::factory()->for($owner)->create([
+            'slug' => 'lewat-review', 'title' => 'Lewat Review', 'visibility' => 'public',
+            'file_path' => 'documents/lewat.pdf', 'status' => 'active',
+            'review_at' => now()->subDay()->format('Y-m-d'),
+        ]);
+        $nanti = Document::factory()->for($owner)->create([
+            'slug' => 'nanti-review', 'title' => 'Nanti Review', 'visibility' => 'public',
+            'file_path' => 'documents/nanti.pdf', 'status' => 'active',
+            'review_at' => now()->addMonth()->format('Y-m-d'),
+        ]);
+        $draf = Document::factory()->for($owner)->create([
+            'slug' => 'draf-lama', 'title' => 'Draf Lama', 'visibility' => 'public',
+            'file_path' => 'documents/draf.pdf', 'status' => 'draft',
+            'review_at' => now()->subDay()->format('Y-m-d'),
+        ]);
+
+        $this->artisan('governance:mark-review-due')->assertSuccessful();
+
+        $this->assertEquals('review_due', $lewat->fresh()->status);
+        $this->assertEquals('active', $nanti->fresh()->status);
+        $this->assertEquals('draft', $draf->fresh()->status);
+        $this->assertDatabaseHas('document_versions', [
+            'document_id' => $lewat->id, 'from_status' => 'active', 'to_status' => 'review_due',
+        ]);
+        $version = $lewat->versions()->latest()->firstOrFail();
+        $this->assertEquals('Lewat Review', $version->snapshot['title']);
+    }
 }
