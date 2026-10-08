@@ -75,6 +75,7 @@ class GovernanceController extends Controller
                 'user:id,name',
                 'approver:id,name',
                 'pic:id,name',
+                'tags:id,name',
             ])
             ->where('visibility', 'public')
             ->when($filters['tipe'] ?? null, fn ($q, $v) => $q->where('doc_type', $v))

@@ -311,4 +311,14 @@ class Document extends Model
     {
         return $this->file_path ? route('documents.stream', $this) : null;
     }
+
+    /**
+     * Scope untuk dokumen governance (tipe policy, regulation, standard, sop, work_instruction, decision, form, evidence).
+     */
+    public function scopeGovernance($query)
+    {
+        return $query->whereIn('doc_type', [
+            'policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision', 'form', 'evidence',
+        ]);
+    }
 }
