@@ -24,6 +24,12 @@
   .prose ul { list-style: disc; margin-left: 1.4em; } .prose ol { list-style: decimal; margin-left: 1.4em; }
   .field { width: 100%; border-radius: .8rem; border: 1px solid #d6d6d6; padding: .6rem .9rem; font-size: .9rem; background: #fff; }
   .field:focus { outline: none; border-color: #002f80; box-shadow: 0 0 0 3px rgba(0,47,128,.15); }
+  /* Skala tipografi kanonis BAB 15: judul halaman, eyebrow, label seksi */
+  .page-title { font-size: 1.5rem; line-height: 2rem; font-weight: 800; letter-spacing: -0.025em; color: #002f80; }
+  @media (min-width: 640px) { .page-title { font-size: 1.875rem; line-height: 2.25rem; } }
+  .page-eyebrow { font-size: .75rem; font-weight: 700; letter-spacing: .1em; }
+  .page-sub { font-size: .875rem; color: #64748b; margin-top: .25rem; }
+  .section-label { font-size: .875rem; font-weight: 800; letter-spacing: .1em; color: #002f80; }
   .btn-primary { background: linear-gradient(135deg, #002f80, #0046c0); color: #fff; border-radius: 9999px; padding: .6rem 1.4rem; font-weight: 700; font-size: .875rem; box-shadow: 0 8px 20px -8px rgba(0,47,128,.55); transition: .2s; display: inline-flex; align-items: center; gap: .45rem; justify-content: center; }
   .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 24px -8px rgba(0,47,128,.6); }
   .btn-accent { background: linear-gradient(135deg, #a30014, #c90018); color: #fff; border-radius: 9999px; padding: .6rem 1.4rem; font-weight: 700; font-size: .875rem; box-shadow: 0 8px 20px -8px rgba(201,0,24,.55); transition: .2s; display: inline-flex; align-items: center; gap: .45rem; justify-content: center; }

@@ -1,8 +1,8 @@
 @extends('layout')
 @section('title', 'Layanan')
 @section('content')
-<p class="text-xs font-bold tracking-widest text-[#c90018] mt-2">SERVICES</p>
-<h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80]">Saya ingin…</h1>
+<p class="page-eyebrow text-[#c90018] mt-2">SERVICES</p>
+<h1 class="page-title">Saya ingin…</h1>
 <p class="text-sm text-slate-500 mt-1">Ajukan kebutuhan tanpa harus paham struktur organisasi. @auth @if($myPending) <a href="{{ route('services.my') }}" class="font-bold text-[#002f80] underline">{{ $myPending }} pengajuan menunggu</a>. @endif @endauth</p>
 
 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">

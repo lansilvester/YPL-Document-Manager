@@ -1,8 +1,8 @@
 @extends('layout')
 @section('title', $q !== '' ? 'Hasil cari: '.$q : 'Pencarian')
 @section('content')
-<p class="text-xs font-bold tracking-widest text-[#c90018] mt-2">UNIVERSAL SEARCH</p>
-<h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80]">Cari knowledge YPL</h1>
+<p class="page-eyebrow text-[#c90018] mt-2">UNIVERSAL SEARCH</p>
+<h1 class="page-title">Cari knowledge YPL</h1>
 
 <form action="{{ route('search.index') }}" method="get" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg border border-[#d6d6d6] max-w-xl">
   <input name="q" value="{{ $q }}" maxlength="200" placeholder="Dokumen, layanan, atau orang…" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
@@ -25,7 +25,7 @@
   @endif
 
   @if($services->isNotEmpty())
-    <h2 class="text-sm font-extrabold tracking-widest text-[#002f80] mt-6 mb-2">LAYANAN & AKSI ({{ $services->count() }})</h2>
+    <h2 class="section-label mt-6 mb-2">LAYANAN & AKSI ({{ $services->count() }})</h2>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       @foreach($services as $s)
         <a href="{{ route('services.request', $s['key']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block">
@@ -39,7 +39,7 @@
 
   @if($grouped->isNotEmpty())
     @foreach($grouped as $type => $docs)
-      <h2 class="text-sm font-extrabold tracking-widest text-[#002f80] mt-6 mb-2">{{ strtoupper(str_replace('_', ' ', $type)) }} ({{ $docs->count() }})</h2>
+      <h2 class="section-label mt-6 mb-2">{{ strtoupper(str_replace('_', ' ', $type)) }} ({{ $docs->count() }})</h2>
       <div class="grid sm:grid-cols-2 gap-3">
         @foreach($docs as $d)
           <a href="{{ route('documents.show', $d) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block group">
@@ -54,7 +54,7 @@
 
   @if(auth()->check())
     @if($people->isNotEmpty())
-      <h2 class="text-sm font-extrabold tracking-widest text-[#002f80] mt-6 mb-2">ORANG ({{ $people->count() }})</h2>
+      <h2 class="section-label mt-6 mb-2">ORANG ({{ $people->count() }})</h2>
       <div class="grid sm:grid-cols-2 gap-3">
         @foreach($people as $p)
           <div class="bg-white rounded-2xl border border-[#d6d6d6] p-4">

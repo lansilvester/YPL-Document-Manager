@@ -1,8 +1,8 @@
 @extends('layout')
 @section('title', 'Sistem YPL')
 @section('content')
-<p class="text-xs font-bold tracking-widest text-[#c90018] mt-2">KNOWLEDGE GRAPH · SYSTEMS</p>
-<h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80]">Sistem Operasional YPL</h1>
+<p class="page-eyebrow text-[#c90018] mt-2">KNOWLEDGE GRAPH · SYSTEMS</p>
+<h1 class="page-title">Sistem Operasional YPL</h1>
 <p class="text-sm text-slate-500 mt-1">Simpul knowledge graph: dokumen governance tertaut ke sistem yang menjalankannya.</p>
 <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
   @foreach($systems as $s)

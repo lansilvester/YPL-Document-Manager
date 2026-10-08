@@ -14,7 +14,7 @@ class DocumentPolicy
 
     public function update(User $user, Document $document): bool
     {
-        return $user->isAdmin() || $document->user_id === $user->id;
+        return $user->isAdmin() || $user->isStaff() || $document->user_id === $user->id;
     }
 
     public function delete(User $user, Document $document): bool

@@ -3,7 +3,7 @@
 @section('title', 'Kelola Kategori')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dasbor Admin', route('admin.dashboard')], ['Kelola Kategori']]])
-<h1 class="text-2xl font-extrabold tracking-tight text-[#002f80] mb-1">Kelola Handbook & Koleksi</h1>
+<h1 class="page-title mb-1">Kelola Handbook & Koleksi</h1>
 <p class="text-sm text-slate-500 mb-5">10 Handbook B01–B10 adalah entitas resmi — hanya admin yang dapat mengubahnya. Slug dijaga stabil agar URL bookshelf tidak rusak.</p>
 
 <h2 class="font-extrabold text-[#002f80] mb-2">10 Living Handbook</h2>

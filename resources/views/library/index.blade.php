@@ -2,7 +2,7 @@
 @section('title', 'Perpustakaan')
 @section('content')
 <div class="mt-2">
-  <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80]">YPL DIGITAL BOOKSHELF</h1>
+  <h1 class="page-title">YPL DIGITAL BOOKSHELF</h1>
   <p class="text-xs sm:text-sm text-slate-500 mt-1">Institutional knowledge — designed to be read, explored and connected.</p>
   <div class="flex gap-2 mt-3 text-[13px] font-semibold overflow-x-auto pb-1">
     <a href="{{ route('library.index', ['koleksi' => 'semua']) }}" class="shrink-0 px-4 py-1.5 rounded-full border transition {{ $filter === 'semua' ? 'bg-[#002f80] text-white border-[#002f80]' : 'bg-white border-[#d6d6d6] hover:border-[#002f80]' }}">All</a>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Document;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
@@ -24,11 +25,11 @@ class HomeController extends Controller
             'latestDocs' => $latest,
             'todayDocs' => $todayDocs,
             'q' => $q,
-            'stats' => [
+            'stats' => Cache::remember('home_public_stats', 300, fn () => [
                 'dokumen' => Document::where('visibility', 'public')->count(),
                 'kategori' => Category::count(),
-                'views' => Document::where('visibility', 'public')->sum('views_count'),
-            ],
+                'views' => (int) Document::where('visibility', 'public')->sum('views_count'),
+            ]),
         ]);
     }
 }

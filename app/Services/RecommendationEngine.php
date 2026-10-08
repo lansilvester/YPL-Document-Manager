@@ -43,7 +43,6 @@ class RecommendationEngine
                 'user',
                 'outgoingRelations.related' => fn ($q) => $q->with(['category', 'user']),
                 'outgoingRelations.system',
-                'tags',
             ])
             ->visibleTo($user)
             ->where('id', '!=', $document->id)

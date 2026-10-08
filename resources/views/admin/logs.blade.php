@@ -6,7 +6,7 @@
 <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
   <div class="flex items-center gap-3">
     <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#001c55,#0046c0)">@include('components.icon', ['name' => 'scroll', 'class' => 'w-5 h-5'])</span>
-    <div><h1 class="text-2xl font-extrabold tracking-tight text-[#002f80]">Riwayat Aktivitas</h1><p class="text-sm text-slate-500">Log audit pembukaan, pengunggahan, dan perubahan.</p></div>
+    <div><h1 class="page-title">Riwayat Aktivitas</h1><p class="text-sm text-slate-500">Log audit pembukaan, pengunggahan, dan perubahan.</p></div>
   </div>
   <form method="get" class="text-sm">
     <select name="aksi" class="field !w-auto !rounded-full !py-2 text-[13px] font-bold" onchange="this.form.submit()">

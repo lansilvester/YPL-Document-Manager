@@ -46,18 +46,6 @@ class PortalController extends Controller
         ]);
     }
 
-    public function ask(): mixed
-    {
-        return view('portal.placeholder', [
-            'eyebrow' => 'ASK YPL',
-            'title' => 'Ask YPL',
-            'desc' => 'Asisten knowledge berbasis sumber resmi dengan sitasi. Hadir penuh di Phase 5 — untuk sekarang gunakan pencarian.',
-            'actions' => [
-                ['label' => 'Cari Knowledge', 'href' => route('home'), 'primary' => true],
-            ],
-        ]);
-    }
-
     public function insight(): mixed
     {
         return view('portal.placeholder', [

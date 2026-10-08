@@ -35,7 +35,7 @@
 
 {{-- Saya ingin... (BAB 5: Handbook, Policy, SOP, Formulir, Calendar, Ask YPL) --}}
 <div class="mt-6">
-  <h2 class="text-sm font-extrabold tracking-widest text-[#002f80]">SAYA INGIN…</h2>
+  <h2 class="section-label">SAYA INGIN…</h2>
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-2">
     <a href="{{ route('library.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Handbook</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
     <a href="{{ route('governance.index', ['tipe' => 'policy']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Policy</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>

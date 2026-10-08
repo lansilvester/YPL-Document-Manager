@@ -17,7 +17,7 @@ $allCount = $roleCounts->sum();
 <div class="flex items-center gap-3 mb-4">
   <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#001c55,#002f80)">@include('components.icon', ['name' => 'users', 'class' => 'w-5 h-5'])</span>
   <div class="flex-1">
-    <h1 class="text-2xl font-extrabold tracking-tight text-[#002f80]">Kelola Pengguna</h1>
+    <h1 class="page-title">Kelola Pengguna</h1>
     <p class="text-sm text-slate-500">Daftar akun komunitas. @if(! $isSuperAdmin)Akun Super Admin tidak ditampilkan untuk admin.@endif</p>
   </div>
 </div>

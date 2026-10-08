@@ -22,7 +22,7 @@ $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STA
     @endif
     <div class="flex-1 min-w-52">
       <div class="flex flex-wrap items-center gap-2">
-        <h1 class="text-2xl font-extrabold tracking-tight">{{ $user->name }}</h1>
+        <h1 class="page-title">{{ $user->name }}</h1>
         <span class="text-[11px] font-bold border rounded-full px-2.5 py-0.5" style="{{ $roleStyle }}">{{ $roleLabel }}</span>
       </div>
       <p class="text-sm text-slate-300 mt-0.5">{{ $user->academic_info ?? $user->email }}</p>

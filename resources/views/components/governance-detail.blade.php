@@ -11,7 +11,7 @@
     @endif
 </p>
 
-<h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80] mt-2">{{ $document->title }}</h1>
+<h1 class="page-title mt-2">{{ $document->title }}</h1>
 <div class="flex flex-wrap items-center gap-2 mt-2">
     <span class="text-xs font-bold {{ $document->statusBadge() }} px-2.5 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</span>
     <span class="text-xs font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">v{{ $document->version }}</span>

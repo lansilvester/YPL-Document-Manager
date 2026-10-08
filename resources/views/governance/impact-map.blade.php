@@ -14,7 +14,7 @@
     <div class="flex items-center justify-between mb-6">
         <div>
             <p class="text-xs font-bold tracking-widest text-[#c90018]">IMPACT MAP</p>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80] mt-1">{{ $document->title }}</h1>
+            <h1 class="page-title mt-1">{{ $document->title }}</h1>
             <p class="text-sm text-slate-500 mt-1">Visualisasi relasi dokumen & sistem terkait</p>
         </div>
         <a href="{{ route('governance.show', $document) }}" class="btn-ghost">← Kembali</a>

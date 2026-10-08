@@ -5,7 +5,7 @@
 @include('components.back-bar', ['trail' => [['Pusat Kendali', route('sa.dashboard')], ['Definisi Peran']]])
 <div class="flex flex-wrap items-end gap-3 mb-4">
   <div class="flex-1 min-w-52">
-    <h1 class="text-2xl font-extrabold tracking-tight text-[#002f80]">Definisi Peran Role-Aware</h1>
+    <h1 class="page-title">Definisi Peran Role-Aware</h1>
     <p class="text-sm text-slate-500">Khusus Super Admin. Peran sistem (🔒) terkunci dari hapus dan ganti slug. Prioritas kecil = konten diprioritaskan lebih dulu.</p>
   </div>
 </div>

@@ -99,6 +99,7 @@ class StaffController extends Controller
 
     public function update(Request $request, Document $document)
     {
+        $this->authorize('update', $document);
         DocumentFiles::ensureValidUpload($request);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -153,6 +154,7 @@ class StaffController extends Controller
 
     public function destroy(Document $document)
     {
+        $this->authorize('delete', $document);
         $path = $document->file_path;
         $title = $document->title;
         DB::transaction(function () use ($document) {

@@ -26,7 +26,7 @@
       <span class="text-xs font-bold bg-[#002f80]/5 text-[#002f80] px-3 py-1 rounded-full">v1.0</span>
       <span class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">{{ $docs->total() }} dokumen</span>
     </div>
-    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80] mt-2">{{ $category->name }}</h1>
+    <h1 class="page-title mt-2">{{ $category->name }}</h1>
     <p class="text-sm text-slate-500 mt-1 max-w-2xl">{{ $category->description }}</p>
     <div class="flex flex-wrap items-center gap-3 mt-4">
       @if($first)

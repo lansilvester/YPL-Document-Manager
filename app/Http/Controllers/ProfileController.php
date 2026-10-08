@@ -73,7 +73,7 @@ class ProfileController extends Controller
         // Normalisasi nomor WA: 0896…, +62896…, 62896…, 896… → +62896…
         $wa = null;
         if (! empty($data['wa_number'])) {
-            $wa = $this->normalizeWa($data['wa_number']);
+            $wa = WaNumber::normalize($data['wa_number']);
             if (! $wa) {
                 throw ValidationException::withMessages([
                     'wa_number' => 'Nomor WA tidak dikenali. Tulis nomor HP Indonesia, contoh: 089612345678 atau +6289612345678.',
@@ -111,15 +111,5 @@ class ProfileController extends Controller
         ActivityLog::record(auth()->id(), null, 'password_change');
 
         return back()->with('password_changed', 'Kata sandi berhasil diganti. Gunakan kata sandi baru saat masuk berikutnya.');
-    }
-
-    /**
-     * Normalisasi nomor HP Indonesia ke format +62….
-     * Menerima: 0896…, +62896…, 62896…, 896…, (0896) 123-4567, dst.
-     * Mengembalikan null bila tidak dikenali sebagai nomor HP Indonesia.
-     */
-    private function normalizeWa(string $input): ?string
-    {
-        return WaNumber::normalize($input);
     }
 }

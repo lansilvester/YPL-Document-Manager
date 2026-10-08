@@ -1,7 +1,7 @@
 @extends('layout')
 @section('title', 'Permintaan Saya')
 @section('content')
-<h1 class="text-2xl font-extrabold tracking-tight text-[#002f80] mt-4">Permintaan Saya</h1>
+<h1 class="page-title mt-4">Permintaan Saya</h1>
 <p class="text-sm text-slate-500">Alur: pending → approved/rejected → done.</p>
 <div class="space-y-3 mt-4">
   @forelse($reqs as $r)

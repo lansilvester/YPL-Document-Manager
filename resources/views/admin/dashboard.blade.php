@@ -3,7 +3,7 @@
 @section('title', 'Dasbor Admin')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dasbor Admin']]])
-<h1 class="text-2xl font-extrabold tracking-tight text-[#002f80]">Dasbor Yayasan</h1>
+<h1 class="page-title">Dasbor Yayasan</h1>
 <p class="text-sm text-slate-500 mb-5">Pantau kesehatan platform dalam sekejap.</p>
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
   @foreach([['Dokumen', $stats['dokumen'], 'file', 'linear-gradient(135deg,#001c55,#002f80)'], ['Publik', $stats['publik'], 'globe', 'linear-gradient(135deg,#002f80,#3b6fd4)'], ['Tayangan', $stats['views'], 'eye', 'linear-gradient(135deg,#7a0010,#c90018)'], ['Pengguna', $stats['pengguna'], 'users', 'linear-gradient(135deg,#334155,#64748b)']] as [$l, $v, $i, $g])

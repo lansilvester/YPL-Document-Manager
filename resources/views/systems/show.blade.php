@@ -2,7 +2,7 @@
 @section('title', $system->name)
 @section('content')
 <p class="text-xs font-bold tracking-widest text-slate-500 mt-2">SYSTEMS / {{ strtoupper($system->slug) }}</p>
-<h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80] mt-1">{{ $system->name }}</h1>
+<h1 class="page-title mt-1">{{ $system->name }}</h1>
 <p class="text-sm text-slate-500 mt-1">{{ $system->description }}</p>
 <div class="flex gap-2 mt-4">
   <a href="{{ route('systems.index') }}" class="btn-ghost">← Semua Sistem</a>

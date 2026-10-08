@@ -4,7 +4,7 @@
 <div class="flex items-center justify-between mb-6">
     <div>
         <p class="text-xs font-bold tracking-widest text-[#c90018]">GOVERNANCE</p>
-        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80]">Kelola Dokumen Governance</h1>
+        <h1 class="page-title">Kelola Dokumen Governance</h1>
         <p class="text-sm text-slate-500 mt-1">Lifecycle DRAFT → REVIEW → APPROVAL → ACTIVE → REVIEW DUE → ARCHIVED, dengan Document Passport per dokumen.</p>
     </div>
     <a href="{{ route('governance.dashboard') }}" class="btn-ghost">← Dashboard</a>

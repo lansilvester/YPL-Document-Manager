@@ -1,8 +1,8 @@
 @extends('layout')
 @section('title', 'Ask YPL')
 @section('content')
-<p class="text-xs font-bold tracking-widest text-[#c90018] mt-2">ASK YPL</p>
-<h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#002f80]">Tanya knowledge YPL</h1>
+<p class="page-eyebrow text-[#c90018] mt-2">ASK YPL</p>
+<h1 class="page-title">Tanya knowledge YPL</h1>
 <p class="text-sm text-slate-500 mt-1">Dijawab dari dokumen resmi sesuai otoritas Anda — selalu dengan sitasi sumber.</p>
 
 <form action="{{ route('ask.query') }}" method="post" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg border border-[#d6d6d6]">@csrf
@@ -27,7 +27,7 @@
   </div>
 
   @if($found)
-    <h2 class="text-sm font-extrabold tracking-widest text-[#002f80] mt-6 mb-2">SUMBER ({{ count($sources) }})</h2>
+    <h2 class="section-label mt-6 mb-2">SUMBER ({{ count($sources) }})</h2>
     <div class="grid sm:grid-cols-2 gap-3">
       @foreach($sources as $hit)
         <a href="{{ route('documents.show', $hit['document']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block">

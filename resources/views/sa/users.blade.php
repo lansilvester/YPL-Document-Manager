@@ -6,7 +6,7 @@
 <div class="flex items-center gap-3 mb-1">
   <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#7a0010,#c90018)">@include('components.icon', ['name' => 'users', 'class' => 'w-5 h-5'])</span>
   <div class="flex-1">
-    <h1 class="text-2xl font-extrabold tracking-tight text-[#002f80]">Kelola Pengguna</h1>
+    <h1 class="page-title">Kelola Pengguna</h1>
     <p class="text-sm text-slate-500">Wilayah Super Admin — akun superadmin tidak dapat diubah.</p>
   </div>
   <a href="{{ route('sa.settings') }}" class="btn-ghost !py-2 text-[13px]">Pengaturan Web</a>

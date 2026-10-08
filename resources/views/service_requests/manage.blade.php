@@ -1,7 +1,7 @@
 @extends('layout')
 @section('title', 'Kelola Permintaan')
 @section('content')
-<h1 class="text-2xl font-extrabold tracking-tight text-[#002f80] mt-4">Kelola Permintaan Layanan</h1>
+<h1 class="page-title mt-4">Kelola Permintaan Layanan</h1>
 <div class="flex gap-2 mt-3 text-xs font-bold overflow-x-auto pb-1">
   <a href="{{ route('staff.requests') }}" class="shrink-0 px-3 py-1.5 rounded-full border transition {{ !$activeStatus ? 'bg-[#002f80] text-white border-[#002f80]' : 'bg-white border-[#d6d6d6]' }}">Semua{{ isset($counts) ? ' · '.$counts->sum() : '' }}</a>
   @foreach(\App\Models\ServiceRequest::STATUSES as $s)

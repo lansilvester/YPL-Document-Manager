@@ -14,7 +14,7 @@ $storeLabel = $store >= 1073741824 ? round($store / 1073741824, 2).' GB' : round
     <span class="w-14 h-14 rounded-2xl grid place-items-center bg-white/15 border border-white/25">@include('components.icon', ['name' => 'shield', 'class' => 'w-7 h-7'])</span>
     <div class="flex-1 min-w-52">
       <div class="flex flex-wrap items-center gap-2">
-        <h1 class="text-2xl font-extrabold tracking-tight">Pusat Kendali</h1>
+        <h1 class="page-title">Pusat Kendali</h1>
         <span class="text-[11px] font-bold bg-[#c90018] rounded-full px-2.5 py-0.5">SUPER ADMIN</span>
       </div>
       <p class="text-sm text-slate-300">Halo, <strong class="text-white">{{ auth()->user()->name }}</strong> · {{ now()->format('l, d M Y') }}</p>
