@@ -5,6 +5,7 @@ use App\Http\Controllers\AskController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EditorController;
+use App\Http\Controllers\GovernanceController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\LibraryController;
@@ -67,7 +68,15 @@ Route::get('/cari', [SearchController::class, 'index'])->name('search.index');
 // YPL SDL Phase 1 — Information Architecture.
 Route::get('/perpustakaan', [LibraryController::class, 'index'])->name('library.index');
 Route::get('/perpustakaan/{category:slug}', [LibraryController::class, 'show'])->name('library.show');
-Route::get('/tata-kelola', [PortalController::class, 'governance'])->name('governance.index');
+
+// Governance (BAB 13) — Document Control & Governance
+Route::get('/tata-kelola', [GovernanceController::class, 'dashboard'])->name('governance.dashboard');
+Route::get('/tata-kelola/kelola', [GovernanceController::class, 'index'])->name('governance.index');
+Route::get('/tata-kelola/{document:slug}', [GovernanceController::class, 'show'])->name('governance.show');
+Route::get('/tata-kelola/{document:slug}/versi', [GovernanceController::class, 'versions'])->name('governance.versions');
+Route::get('/tata-kelola/{document:slug}/impact', [GovernanceController::class, 'impactMap'])->name('governance.impact');
+Route::post('/tata-kelola/ekspor', [GovernanceController::class, 'export'])->name('governance.export');
+
 Route::get('/layanan', [PortalController::class, 'services'])->name('services.index');
 Route::get('/komunitas', [PortalController::class, 'community'])->name('community.index');
 Route::get('/kalender', [PortalController::class, 'calendar'])->name('calendar.index');
