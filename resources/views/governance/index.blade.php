@@ -5,7 +5,12 @@
     <div>
         <p class="text-xs font-bold tracking-widest text-[#c90018]">GOVERNANCE</p>
         <h1 class="page-title">Kelola Dokumen Governance</h1>
-        <p class="text-sm text-slate-500 mt-1">Lifecycle DRAFT → REVIEW → APPROVAL → ACTIVE → REVIEW DUE → ARCHIVED, dengan Document Passport per dokumen.</p>
+        <p class="page-sub max-w-3xl">Setiap dokumen resmi YPL — Policy, SOP, hingga Formulir — berjalan melalui siklus hidup yang transparan: disusun sebagai draf, ditelaah, disetujui, diberlakukan, ditinjau berkala, hingga diarsipkan. Masing-masing membawa <strong>Document Passport</strong> berisi pemilik, pemberi persetujuan, tanggal berlaku, dan riwayat versinya. Klik tahapan di bawah untuk memfilter.</p>
+        <div class="flex flex-wrap items-center gap-1.5 mt-3" aria-label="Tahapan lifecycle">
+            @foreach(['draft' => 'Draf', 'review' => 'Review', 'approval' => 'Approval', 'active' => 'Active', 'review_due' => 'Review Due', 'archived' => 'Archived'] as $st => $label)
+                <a href="{{ route('governance.index', ['status' => $st]) }}" class="inline-flex items-center gap-1.5 text-[11px] font-bold {{ \App\Models\Document::statusBadgeFor($st) }} pl-2.5 pr-1 py-1 rounded-full hover:shadow-md transition"><span class="w-4 h-4 rounded-full bg-white/60 grid place-items-center text-[9px]">{{ $loop->iteration }}</span>{{ $label }}</a>@if(!$loop->last)<span class="text-slate-300 font-bold">→</span>@endif
+            @endforeach
+        </div>
     </div>
     <a href="{{ route('governance.dashboard') }}" class="btn-ghost">← Dashboard</a>
 </div>

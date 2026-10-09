@@ -94,7 +94,7 @@ class YplGovernanceTest extends TestCase
             'file_path' => 'documents/px.pdf', 'doc_type' => 'policy', 'status' => 'active',
         ]);
 
-        $this->get(route('governance.index'))->assertOk()->assertSee('Lifecycle');
+        $this->get(route('governance.index'))->assertOk()->assertSee('siklus hidup yang transparan');
         $this->get(route('governance.index', ['tipe' => 'policy']))->assertOk()->assertSee('Policy X');
         $this->get(route('governance.index', ['status' => 'draft']))->assertOk();
     }
