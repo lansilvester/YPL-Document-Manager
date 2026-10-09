@@ -4,7 +4,7 @@
 
 @include('components.back-bar', ['trail' => [
     ['Home', route('home')],
-    ['Governance', route('governance.dashboard')],
+    ['Governance', route('governance.index')],
     ['Kelola', route('governance.index')],
     [$document->title, route('governance.show', $document)],
     ['Version History']

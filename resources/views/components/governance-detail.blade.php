@@ -2,7 +2,7 @@
   Variabel: $document, $impactMap. Opsional: $transitions, $isOverdue. --}}
 {{-- Breadcrumb ala mockup: GOVERNANCE / TIPE / UNIT --}}
 <p class="text-[11px] font-bold tracking-widest text-slate-400 mt-2">
-    <a href="{{ route('governance.dashboard') }}" class="hover:text-[#002f80]">GOVERNANCE</a>
+    <a href="{{ route('governance.index') }}" class="hover:text-[#002f80]">GOVERNANCE</a>
     <span class="mx-1">/</span>
     <a href="{{ route('governance.index', ['tipe' => $document->doc_type]) }}" class="hover:text-[#002f80]">{{ strtoupper(str_replace('_', ' ', $document->doc_type ?? 'doc')) }}</a>
     @if($document->unit)

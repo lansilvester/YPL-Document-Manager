@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Document;
 use App\Models\DocumentRelation;
-use App\Models\DocumentVersion;
 use App\Models\System;
 use App\Models\User;
 use Database\Seeders\SystemsSeeder;
@@ -97,22 +96,6 @@ class YplGovernanceTest extends TestCase
         $this->get(route('governance.index'))->assertOk()->assertSee('Kelola Dokumen Governance');
         $this->get(route('governance.index', ['tipe' => 'policy']))->assertOk()->assertSee('Policy X');
         $this->get(route('governance.index', ['status' => 'draft']))->assertOk();
-    }
-
-    public function test_dashboard_tanpa_bocor_private(): void
-    {
-        $owner = User::factory()->create(['role' => 'staff']);
-        $priv = Document::factory()->for($owner)->create([
-            'slug' => 'priv-dashboard', 'title' => 'Rahasia Dashboard XyZ', 'visibility' => 'private',
-            'file_path' => 'documents/priv.pdf',
-        ]);
-        DocumentVersion::create([
-            'document_id' => $priv->id, 'user_id' => $owner->id,
-            'version' => '1.0', 'from_status' => 'draft', 'to_status' => 'review',
-        ]);
-
-        $this->get(route('governance.dashboard'))->assertOk()
-            ->assertDontSee('Rahasia Dashboard XyZ');
     }
 
     public function test_versi_private_ditolak_untuk_tamu(): void

@@ -1,12 +1,9 @@
 @extends('layout')
 @section('title', 'Kelola Governance')
 @section('content')
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <p class="text-xs font-bold tracking-widest text-[#c90018]">GOVERNANCE</p>
-        <h1 class="page-title">Kelola Dokumen Governance</h1>
-    </div>
-    <a href="{{ route('governance.dashboard') }}" class="btn-ghost">← Dashboard</a>
+<div class="mb-6">
+    <p class="text-xs font-bold tracking-widest text-[#c90018]">GOVERNANCE</p>
+    <h1 class="page-title">Kelola Dokumen Governance</h1>
 </div>
 
 {{-- Filter Bar --}}

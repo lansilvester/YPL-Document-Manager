@@ -3,66 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
-use App\Models\DocumentVersion;
 use App\Services\ImpactMap;
 use Illuminate\Http\Request;
 
 class GovernanceController extends Controller
 {
-    /**
-     * Governance Dashboard — statistik & akses cepat.
-     */
-    public function dashboard(): mixed
-    {
-        $stats = Document::query()
-            ->where('visibility', 'public')
-            ->selectRaw('
-                COUNT(*) as total,
-                COUNT(CASE WHEN status = "active" THEN 1 END) as active,
-                COUNT(CASE WHEN status = "draft" THEN 1 END) as draft,
-                COUNT(CASE WHEN status = "review" THEN 1 END) as review,
-                COUNT(CASE WHEN status = "approval" THEN 1 END) as approval,
-                COUNT(CASE WHEN status = "review_due" THEN 1 END) as review_due,
-                COUNT(CASE WHEN status = "archived" THEN 1 END) as archived,
-                COUNT(CASE WHEN review_at IS NOT NULL AND review_at <= ? AND status = "active" THEN 1 END) as overdue_review
-            ', [now()->toDateString()])
-            ->first();
-
-        $typeStats = Document::query()
-            ->where('visibility', 'public')
-            ->selectRaw('doc_type, status, COUNT(*) as count')
-            ->groupBy('doc_type', 'status')
-            ->get()
-            ->groupBy('doc_type')
-            ->map(fn ($items) => $items->pluck('count', 'status')->toArray());
-
-        $upcomingReviews = Document::query()
-            ->where('visibility', 'public')
-            ->where('status', 'active')
-            ->whereNotNull('review_at')
-            ->where('review_at', '>=', now())
-            ->where('review_at', '<=', now()->addDays(30))
-            ->with(['category', 'user'])
-            ->orderBy('review_at')
-            ->limit(10)
-            ->get();
-
-        // Hanya versi dari dokumen yang terlihat user (anti-bocor private).
-        $recentChanges = DocumentVersion::query()
-            ->with(['document', 'user'])
-            ->whereHas('document', fn ($q) => $q->visibleTo(auth()->user()))
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        return view('governance.dashboard', [
-            'stats' => $stats,
-            'typeStats' => $typeStats,
-            'upcomingReviews' => $upcomingReviews,
-            'recentChanges' => $recentChanges,
-        ]);
-    }
-
     /**
      * Daftar dokumen governance dengan filter lengkap.
      */
