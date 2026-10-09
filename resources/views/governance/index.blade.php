@@ -5,7 +5,6 @@
     <div>
         <p class="text-xs font-bold tracking-widest text-[#c90018]">GOVERNANCE</p>
         <h1 class="page-title">Kelola Dokumen Governance</h1>
-        <p class="page-sub max-w-3xl">Setiap dokumen resmi YPL — Policy, SOP, hingga Formulir — berjalan melalui siklus hidup yang transparan: disusun sebagai draf, ditelaah, disetujui, diberlakukan, ditinjau berkala, hingga diarsipkan. Masing-masing membawa <strong>Document Passport</strong> berisi pemilik, pemberi persetujuan, tanggal berlaku, dan riwayat versinya.</p>
     </div>
     <a href="{{ route('governance.dashboard') }}" class="btn-ghost">← Dashboard</a>
 </div>
