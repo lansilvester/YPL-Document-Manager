@@ -98,9 +98,9 @@ class GovernanceController extends Controller
             'approver:id,name,email',
             'pic:id,name,email',
             'tags',
-            'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code',
+            'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
             'outgoingRelations.system:id,name,slug',
-            'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code',
+            'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
         ]);
 
         // Transitions allowed for current user
@@ -115,7 +115,7 @@ class GovernanceController extends Controller
 
         // Impact map: dokumen yang merujuk ke dokumen ini + dokumen yang direferensikan.
         // Lewati relasi yatim (target terhapus) agar route() tak error.
-        $impactMap = ImpactMap::for($document);
+        $impactMap = ImpactMap::for($document, auth()->user());
 
         // Upcoming review
         $isOverdue = $document->review_at && $document->review_at < now() && $document->status === 'active';
@@ -149,23 +149,27 @@ class GovernanceController extends Controller
     }
 
     /**
-     * Impact map / related documents visual.
+     * Impact map / related documents visual (BAB 12: daftar + graf node-link).
      */
-    public function impactMap(Document $document): mixed
+    public function impactMap(Document $document, Request $request): mixed
     {
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403);
         }
 
+        $depth = (int) $request->query('kedalaman', 2);
+
         $document->load([
-            'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code',
+            'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
             'outgoingRelations.system:id,name,slug',
-            'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code',
+            'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
         ]);
 
         return view('governance.impact-map', [
             'document' => $document,
-            'impactMap' => ImpactMap::for($document),
+            'impactMap' => ImpactMap::for($document, auth()->user()),
+            'graph' => ImpactMap::graph($document, auth()->user(), $depth),
+            'depth' => max(1, min(2, $depth)),
         ]);
     }
 

@@ -52,9 +52,9 @@ class DocumentController extends Controller
             'approver:id,name,email',
             'pic:id,name,email',
             'tags',
-            'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code',
+            'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
             'outgoingRelations.system:id,name,slug',
-            'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code',
+            'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
             'versions.user:id,name',
         ]);
         if (! $document->isVisibleTo(auth()->user())) {
@@ -111,7 +111,7 @@ class DocumentController extends Controller
         }
 
         // Impact map mockup BAB 13 (untuk dokumen governance).
-        $impactMap = ImpactMap::for($document);
+        $impactMap = ImpactMap::for($document, auth()->user());
         $isOverdue = $document->review_at && $document->review_at < now() && $document->status === 'active';
 
         return view('documents.show', compact('document', 'pref', 'position', 'isMarked', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'recommendations', 'popular', 'transitions', 'impactMap', 'isOverdue'));
