@@ -71,7 +71,8 @@
         <button class="shrink-0 rounded-full bg-[#002f80] text-white font-bold text-sm px-4">Go</button>
       </form>
       <h2 class="text-xs font-bold tracking-widest text-slate-400 mt-4 mb-2">PAGES</h2>
-      <div id="pg-grid" class="pg-grid flex flex-wrap gap-1.5"></div>
+      <div id="pg-grid" class="pg-grid grid grid-cols-3 gap-2"></div>
+      <p class="text-[11px] text-slate-400 mt-1.5">Pratinjau dimuat saat terlihat. Klik untuk lompat.</p>
     </div>
 
     {{-- Rekomendasi di Reader --}}
@@ -116,6 +117,29 @@
         </label>
       </div>
     </div>
+    @auth
+    <div id="notes-panel" class="hidden mx-auto max-w-2xl mt-3 px-3">
+      <div class="bg-[#f5f1e8] text-slate-800 rounded-2xl p-4 shadow-xl">
+        <h2 class="text-xs font-bold tracking-widest text-[#002f80] mb-2">CATATAN SAYA</h2>
+        <form id="form-note" class="flex gap-2">
+          <input id="in-note" maxlength="1000" placeholder="Tulis catatan untuk halaman ini…" class="flex-1 rounded-full bg-white border border-slate-300 px-4 text-sm outline-none min-w-0" aria-label="Isi catatan">
+          <button class="shrink-0 rounded-full bg-[#002f80] text-white font-bold text-sm px-5 py-2">Simpan</button>
+        </form>
+        <p id="notes-error" class="hidden text-xs font-bold text-[#c90018] mt-1.5"></p>
+        <div id="notes-list" class="mt-2 space-y-1.5 max-h-56 overflow-y-auto">
+          @forelse($notes as $note)
+            <div class="flex items-start gap-2 bg-white rounded-xl px-3 py-2 text-sm" data-note="{{ $note->id }}">
+              <button class="shrink-0 text-[11px] font-bold bg-[#002f80]/10 text-[#002f80] rounded-full px-2 py-0.5" data-jump="{{ $note->page }}" aria-label="Lompat ke halaman {{ $note->page }}">hlm. {{ $note->page }}</button>
+              <span class="flex-1 min-w-0">{{ $note->body }}</span>
+              <button class="shrink-0 text-slate-300 hover:text-[#c90018] font-bold" data-del="{{ route('api.notes.destroy', [$document, $note]) }}" data-id="{{ $note->id }}" aria-label="Hapus catatan">✕</button>
+            </div>
+          @empty
+            <p id="notes-empty" class="text-xs text-slate-500 py-2">Belum ada catatan. Catatan tersimpan per halaman dan hanya terlihat oleh Anda.</p>
+          @endforelse
+        </div>
+      </div>
+    </div>
+    @endauth
     <div id="pages" class="flex flex-wrap justify-center items-start gap-5 p-4 sm:p-6 min-h-[60vh]"></div>
   </main>
 </div>
@@ -143,6 +167,11 @@
       </a>
     @endauth
     <button id="btn-aa" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="aa-panel">Aa</button>
+    @auth
+      <button id="btn-notes" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="notes-panel">✎ <span class="hidden sm:inline">Catatan</span>@if($notes->isNotEmpty())<span id="notes-count" class="ml-1 text-[10px] bg-amber-300 text-slate-900 rounded-full px-1.5 py-0.5">{{ $notes->count() }}</span>@endif</button>
+    @else
+      <a href="{{ route('login') }}" class="px-3 py-2 rounded-full hover:bg-white/10 text-white/80">✎ <span class="hidden sm:inline">Catatan</span></a>
+    @endauth
     <a href="{{ route('ask.index') }}" class="px-3 py-2 rounded-full hover:bg-white/10">✦ <span class="hidden sm:inline">Ask YPL</span></a>
     <span class="flex-1"></span>
     <button id="btn-prev" aria-label="Halaman sebelumnya" class="w-9 h-9 rounded-full grid place-items-center hover:bg-white/10 shrink-0">◀</button>
@@ -159,6 +188,7 @@ const START_PAGE = @json(auth()->check() && $position ? (int) $position->page : 
 const IS_AUTH = @json(auth()->check());
 const SAVE_POS_URL = @json(auth()->check() ? route('api.position', $document) : null);
 const SAVE_PREF_URL = @json(auth()->check() ? route('api.prefs') : null);
+const NOTE_SAVE_URL = @json(auth()->check() ? route('api.notes.store', $document) : null);
 const CSRF = @json(csrf_token());
 let pdf = null, page = START_PAGE, zoom = @json((int) $pref->zoom), layout = @json($pref->layout);
 let theme = @json($pref->theme);
@@ -200,14 +230,38 @@ function buildGrid() {
   if (!pdf || g.dataset.built) return;
   g.dataset.built = '1';
   const n = Math.min(pdf.numPages, 200);
+  const renderThumb = async (btn) => {
+    if (btn.dataset.done) return;
+    btn.dataset.done = '1';
+    try {
+      const p = await pdf.getPage(+btn.dataset.page);
+      const vp = p.getViewport({ scale: 0.32 });
+      const cv = btn.querySelector('canvas');
+      cv.height = vp.height; cv.width = vp.width;
+      await p.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    } catch (err) { btn.querySelector('span').textContent = btn.dataset.page; }
+  };
+  const immediates = [];
   for (let i = 1; i <= n; i++) {
     const b = document.createElement('button');
-    b.textContent = i;
-    b.className = 'w-9 h-9 rounded-full text-xs font-bold border border-slate-300 hover:bg-[#002f80] hover:text-white';
+    b.dataset.page = i;
+    b.className = 'rounded-xl overflow-hidden border border-slate-300 bg-white hover:border-[#002f80] hover:shadow-md transition text-center';
     b.setAttribute('aria-label', 'Ke halaman ' + i);
     b.onclick = () => { page = i; render(true); };
+    const cv = document.createElement('canvas');
+    cv.className = 'w-full h-auto block bg-slate-100';
+    const lb = document.createElement('span');
+    lb.className = 'block text-[10px] font-bold text-slate-500 py-1';
+    lb.textContent = i;
+    b.appendChild(cv); b.appendChild(lb);
     g.appendChild(b);
+    immediates.push(b);
   }
+  if (!('IntersectionObserver' in window)) { immediates.forEach(renderThumb); return; }
+  const io = new IntersectionObserver((ents) => {
+    ents.forEach((en) => { if (en.isIntersecting) { renderThumb(en.target); io.unobserve(en.target); } });
+  }, { root: document.getElementById('toc-drawer'), rootMargin: '300px' });
+  immediates.forEach((b) => io.observe(b));
 }
 async function searchBook(q) {
   const meta = document.getElementById('search-meta'), hits = document.getElementById('search-hits');
@@ -248,6 +302,58 @@ const sp = document.getElementById('search-panel'), btnSearch = document.getElem
 btnSearch.onclick = () => { const open = sp.classList.toggle('hidden'); btnSearch.setAttribute('aria-expanded', String(!open)); if (!open) document.getElementById('in-search').focus(); };
 const aa = document.getElementById('aa-panel'), btnAa = document.getElementById('btn-aa');
 btnAa.onclick = () => { const open = aa.classList.toggle('hidden'); btnAa.setAttribute('aria-expanded', String(!open)); };
+const np = document.getElementById('notes-panel'), btnNotes = document.getElementById('btn-notes');
+if (btnNotes && np) btnNotes.onclick = () => { const open = np.classList.toggle('hidden'); btnNotes.setAttribute('aria-expanded', String(!open)); };
+function noteRow(id, pg, body, delUrl) {
+  const row = document.createElement('div');
+  row.className = 'flex items-start gap-2 bg-white rounded-xl px-3 py-2 text-sm';
+  row.dataset.note = id;
+  const jump = document.createElement('button');
+  jump.className = 'shrink-0 text-[11px] font-bold bg-[#002f80]/10 text-[#002f80] rounded-full px-2 py-0.5';
+  jump.textContent = 'hlm. ' + pg;
+  jump.setAttribute('aria-label', 'Lompat ke halaman ' + pg);
+  jump.onclick = () => { page = pg; render(true); };
+  const tx = document.createElement('span');
+  tx.className = 'flex-1 min-w-0';
+  tx.textContent = body;
+  const del = document.createElement('button');
+  del.className = 'shrink-0 text-slate-300 hover:text-[#c90018] font-bold';
+  del.textContent = '✕';
+  del.setAttribute('aria-label', 'Hapus catatan');
+  del.onclick = () => deleteNote(delUrl, id);
+  row.appendChild(jump); row.appendChild(tx); row.appendChild(del);
+  return row;
+}
+async function deleteNote(url, id) {
+  const res = await fetch(url, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+  if (!res.ok) return;
+  document.querySelectorAll('[data-note="' + id + '"]').forEach((el) => el.remove());
+}
+const formNote = document.getElementById('form-note');
+if (formNote) formNote.onsubmit = async (e) => {
+  e.preventDefault();
+  const inp = document.getElementById('in-note'), err = document.getElementById('notes-error');
+  const body = inp.value.trim();
+  err.classList.add('hidden');
+  if (!body) { err.textContent = 'Isi catatan dulu.'; err.classList.remove('hidden'); return; }
+  const res = await fetch(NOTE_SAVE_URL, { method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+    body: JSON.stringify({ page, body }) });
+  if (res.status === 422) { err.textContent = 'Catatan maksimal 1000 karakter.'; err.classList.remove('hidden'); return; }
+  if (!res.ok) { err.textContent = 'Gagal menyimpan. Coba lagi.'; err.classList.remove('hidden'); return; }
+  const data = await res.json();
+  const list = document.getElementById('notes-list');
+  const empty = document.getElementById('notes-empty');
+  if (empty) empty.remove();
+  list.prepend(noteRow(data.note.id, data.note.page, data.note.body, data.note.delete_url));
+  inp.value = '';
+};
+document.getElementById('notes-list')?.addEventListener('click', (e) => {
+  const j = e.target.closest('[data-jump]');
+  if (j) { page = +j.dataset.jump; render(true); return; }
+  const d = e.target.closest('[data-del]');
+  if (d) deleteNote(d.dataset.del, d.dataset.id);
+});
 document.getElementById('form-search').onsubmit = (e) => { e.preventDefault(); const q = document.getElementById('in-search').value.trim(); if (q) searchBook(q); };
 document.getElementById('form-jump').onsubmit = (e) => { e.preventDefault(); const v = parseInt(document.getElementById('in-jump').value, 10); if (v >= 1) { page = v; render(true); } };
 document.getElementById('btn-prev').onclick = () => step(-1);

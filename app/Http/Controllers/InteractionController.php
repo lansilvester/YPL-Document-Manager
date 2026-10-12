@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Bookmark;
 use App\Models\Document;
 use App\Models\Like;
+use App\Models\ReadingNote;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
 use App\Models\Setting;
@@ -135,5 +136,44 @@ class InteractionController extends Controller
         ReadingPref::updateOrCreate(['user_id' => auth()->id()], $data);
 
         return response()->json(['ok' => true]);
+    }
+
+    // BAB 8: catatan pembaca per halaman — milik sendiri, hormati visibilitas.
+    public function storeNote(Request $request, Document $document)
+    {
+        if (! $document->isVisibleTo(auth()->user())) {
+            abort(403);
+        }
+        $data = $request->validate([
+            'page' => ['required', 'integer', 'min:1', 'max:5000'],
+            'body' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $note = ReadingNote::create([
+            'user_id' => auth()->id(), 'document_id' => $document->id,
+            'page' => $data['page'], 'body' => $data['body'],
+        ]);
+        ActivityLog::record(auth()->id(), $document->id, 'note', ['page' => $note->page]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['ok' => true, 'note' => array_merge(
+                $note->only(['id', 'page', 'body', 'created_at']),
+                ['delete_url' => route('api.notes.destroy', [$document, $note])]
+            )]);
+        }
+
+        return back()->with('ok', 'Catatan tersimpan di halaman '.$note->page.'.');
+    }
+
+    public function destroyNote(Request $request, Document $document, ReadingNote $note)
+    {
+        abort_unless($note->document_id === $document->id && $note->user_id === auth()->id(), 404);
+        $note->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['ok' => true]);
+        }
+
+        return back()->with('ok', 'Catatan dihapus.');
     }
 }

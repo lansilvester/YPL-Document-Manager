@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bookmark;
 use App\Models\Document;
+use App\Models\ReadingNote;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
 use App\Services\RecommendationEngine;
@@ -42,6 +43,12 @@ class ReaderController extends Controller
         // Rekomendasi di Reader (sidebar kanan)
         $recommendations = (new RecommendationEngine(5))->forDocument($document, auth()->user());
 
-        return view('reader.show', compact('document', 'pref', 'position', 'isMarked', 'chapters', 'recommendations'));
+        // Catatan milik sendiri (BAB 8) — satu query, tanpa N+1.
+        $notes = $user
+            ? ReadingNote::where('user_id', $user->id)->where('document_id', $document->id)
+                ->orderBy('page')->orderBy('id')->get()
+            : collect();
+
+        return view('reader.show', compact('document', 'pref', 'position', 'isMarked', 'chapters', 'recommendations', 'notes'));
     }
 }

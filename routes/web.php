@@ -138,6 +138,8 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/api/dokumen/{document:slug}/posisi', [InteractionController::class, 'savePosition'])->middleware('throttle:interactions')->name('api.position');
     Route::post('/api/preferensi-baca', [InteractionController::class, 'savePrefs'])->middleware('throttle:interactions')->name('api.prefs');
+    Route::post('/api/dokumen/{document:slug}/catatan', [InteractionController::class, 'storeNote'])->middleware('throttle:interactions')->name('api.notes.store');
+    Route::delete('/api/dokumen/{document:slug}/catatan/{note}', [InteractionController::class, 'destroyNote'])->middleware('throttle:interactions')->name('api.notes.destroy');
 
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
