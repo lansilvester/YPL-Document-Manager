@@ -30,7 +30,7 @@ use Illuminate\Support\Str;
 // Rute deploy sekali-pakai (tanpa SSH): /deploy/SECRET.
 // Wajib set DEPLOY_SECRET acak di .env, jalankan sekali, lalu HAPUS rute ini.
 Route::get('/deploy/{secret}', function (string $secret) {
-    $expected = (string) env('DEPLOY_SECRET', '');
+    $expected = (string) ($_ENV['DEPLOY_SECRET'] ?? getenv('DEPLOY_SECRET') ?? '');
     abort_unless($expected !== '' && hash_equals($expected, $secret), 404);
 
     Artisan::call('migrate', ['--force' => true]);
@@ -43,7 +43,8 @@ Route::get('/deploy/{secret}', function (string $secret) {
     $out[] = "Activity logs pruned: {$pruned} rows deleted.";
 
     // Promosikan SATU akun menjadi Super Admin bila diminta (sekali saja).
-    if ($email = env('DEPLOY_SA_EMAIL')) {
+    $saEmail = (string) ($_ENV['DEPLOY_SA_EMAIL'] ?? getenv('DEPLOY_SA_EMAIL') ?? '');
+    if ($email = $saEmail) {
         $user = User::where('email', $email)->first();
         if (! User::where('role', 'superadmin')->exists()) {
             $password = Str::random(16);

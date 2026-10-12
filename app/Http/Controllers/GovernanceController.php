@@ -15,7 +15,11 @@ class GovernanceController extends Controller
     {
         $filters = $request->only(['tipe', 'status', 'audiens', 'unit', 'q', 'sort']);
 
-        $query = Document::query()
+        // Basis kriteria 12 opsi A: tamu/komunitas hanya versi berlaku,
+        // staff ke atas tetap memantau draf (lifecycle).
+        $base = Document::query()->visibleTo(auth()->user());
+
+        $query = (clone $base)
             ->with([
                 'category:id,name,collection',
                 'user:id,name',
@@ -23,7 +27,6 @@ class GovernanceController extends Controller
                 'pic:id,name',
                 'tags:id,name',
             ])
-            ->where('visibility', 'public')
             ->when($filters['tipe'] ?? null, fn ($q, $v) => $q->where('doc_type', $v))
             ->when($filters['status'] ?? null, fn ($q, $v) => $q->where('status', $v))
             ->when($filters['audiens'] ?? null, fn ($q, $v) => $q->whereJsonContains('audience', $v))
@@ -42,20 +45,20 @@ class GovernanceController extends Controller
 
         $docs = $query->paginate(20)->withQueryString();
 
-        // Filter options & counts
-        $typeCounts = Document::where('visibility', 'public')
+        // Filter options & counts — basis otoritas yang sama.
+        $typeCounts = (clone $base)
             ->selectRaw('doc_type, COUNT(*) as c')
             ->groupBy('doc_type')
             ->pluck('c', 'doc_type');
 
-        $statusCounts = Document::where('visibility', 'public')
+        $statusCounts = (clone $base)
             ->selectRaw('status, COUNT(*) as c')
             ->groupBy('status')
             ->pluck('c', 'status');
 
         $audienceOptions = Document::AUDIENCES;
 
-        $unitOptions = Document::where('visibility', 'public')
+        $unitOptions = (clone $base)
             ->whereNotNull('unit')
             ->distinct('unit')
             ->pluck('unit')
@@ -63,7 +66,7 @@ class GovernanceController extends Controller
             ->sort()
             ->values();
 
-        $overdueCount = Document::where('visibility', 'public')
+        $overdueCount = (clone $base)
             ->where('status', 'active')
             ->whereNotNull('review_at')
             ->whereDate('review_at', '<', now()->toDateString())

@@ -319,20 +319,32 @@ class Document extends Model
         return '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $term).'%';
     }
 
+    /** Status yang boleh tampil di katalog publik (kriteria 12, opsi A). */
+    public const LIVE_STATUSES = ['active', 'review_due'];
+
     public function isVisibleTo(?User $user): bool
     {
-        if ($this->visibility === 'public') {
-            return true;
-        }
         if (! $user) {
-            return false;
+            return $this->visibility === 'public'
+                && in_array($this->status, self::LIVE_STATUSES, true);
         }
         if ($user->role === 'admin' || $this->user_id === $user->id) {
             return true;
         }
+        if ($this->visibility === 'private') {
+            return false;
+        }
+        // Staff pengelola menelaah draf internal non-privat (lifecycle).
+        if ($user->isStaff()) {
+            return true;
+        }
+        // Komunitas: hanya versi yang berlaku.
+        if (! in_array($this->status, self::LIVE_STATUSES, true)) {
+            return false;
+        }
 
         // restricted = hanya pengguna login (komunitas YPL)
-        return $this->visibility === 'restricted';
+        return $this->visibility === 'public' || $this->visibility === 'restricted';
     }
 
     /**
@@ -342,15 +354,21 @@ class Document extends Model
     public function scopeVisibleTo($query, ?User $user)
     {
         if (! $user) {
-            return $query->where('visibility', 'public');
+            return $query->where('visibility', 'public')->whereIn('status', self::LIVE_STATUSES);
         }
         if ($user->role === 'admin') {
             return $query;
         }
+        if ($user->isStaff()) {
+            // Setara isVisibleTo: semua non-privat + milik sendiri.
+            return $query->where(fn ($w) => $w
+                ->where('visibility', '!=', 'private')
+                ->orWhere('user_id', $user->id));
+        }
 
         return $query->where(fn ($w) => $w
-            ->where('visibility', 'public')
-            ->orWhere('visibility', 'restricted')
+            ->where(fn ($q) => $q->where('visibility', 'public')->whereIn('status', self::LIVE_STATUSES))
+            ->orWhere(fn ($q) => $q->where('visibility', 'restricted')->whereIn('status', self::LIVE_STATUSES))
             ->orWhere('user_id', $user->id));
     }
 

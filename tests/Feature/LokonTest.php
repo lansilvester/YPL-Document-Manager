@@ -217,6 +217,7 @@ class LokonTest extends TestCase
             'title' => 'Bacaan Publik', 'visibility' => 'public', 'file' => $pdf,
         ])->assertRedirect();
         $doc = Document::where('title', 'Bacaan Publik')->first();
+        $doc->update(['status' => 'active']); // keterbacaan publik butuh status berlaku
 
         // keluar dulu agar simulasi sebagai tamu
         $this->post('/keluar');
@@ -332,6 +333,7 @@ class LokonTest extends TestCase
             'title' => 'Untuk Riwayat', 'visibility' => 'public', 'file' => $pdf,
         ]);
         $doc = Document::where('title', 'Untuk Riwayat')->first();
+        $doc->update(['status' => 'active']);
 
         // dasbor profil memuat info, unggahan, dan riwayat
         $this->actingAs($user)->get(route('documents.show', $doc))->assertOk();
@@ -455,6 +457,7 @@ class LokonTest extends TestCase
             'title' => 'Dokumen Fitur', 'visibility' => 'public', 'file' => $pdf,
         ]);
         $doc = Document::where('title', 'Dokumen Fitur')->first();
+        $doc->update(['status' => 'active']);
         $this->post('/keluar');
 
         // tamu: tombol suka mengajak login, semat publik bisa dibuka

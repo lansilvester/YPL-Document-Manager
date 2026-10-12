@@ -30,7 +30,7 @@ class YplReaderTest extends TestCase
     {
         $user = User::factory()->create();
         $doc = Document::factory()->for($user)->create([
-            'slug' => 'reader-book-a', 'title' => 'Buku Reader A', 'visibility' => 'public',
+            'slug' => 'reader-book-a', 'title' => 'Buku Reader A', 'visibility' => 'public', 'status' => 'active',
             'file_path' => 'documents/uji-reader-a.pdf',
         ]);
 
@@ -124,7 +124,7 @@ class YplReaderTest extends TestCase
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $doc = Document::factory()->for($owner)->create([
-            'slug' => 'reader-note', 'title' => 'Note Book', 'visibility' => 'public',
+            'slug' => 'reader-note', 'title' => 'Note Book', 'visibility' => 'public', 'status' => 'active',
             'file_path' => 'documents/uji-reader-note.pdf',
         ]);
 

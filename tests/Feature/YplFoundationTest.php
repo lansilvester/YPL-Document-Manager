@@ -93,7 +93,7 @@ class YplFoundationTest extends TestCase
         $this->seed(RoleSeeder::class);
         $staff = User::factory()->create(['role' => 'staff', 'name' => 'Komunitas Staff X', 'academic_info' => 'Keuangan']);
         Document::factory()->for($staff)->create([
-            'slug' => 'doc-unit-x', 'title' => 'Doc Unit X', 'visibility' => 'public',
+            'slug' => 'doc-unit-x', 'title' => 'Doc Unit X', 'visibility' => 'public', 'status' => 'active',
             'file_path' => 'documents/x.pdf', 'unit' => 'Keuangan',
         ]);
         Faq::create(['slug' => 'faq-kom', 'question' => 'Tanya komunitas?', 'answer' => 'Jawab komunitas.']);

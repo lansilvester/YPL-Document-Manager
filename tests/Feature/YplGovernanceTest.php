@@ -98,6 +98,46 @@ class YplGovernanceTest extends TestCase
         $this->get(route('governance.index', ['status' => 'draft']))->assertOk();
     }
 
+    public function test_kriteria_dua_belas_opsi_a(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $anggota = User::factory()->create(['role' => 'anggota']);
+        $mk = fn ($slug, $title, $status, $vis = 'public') => Document::factory()->for($staff)->create([
+            'slug' => $slug, 'title' => $title, 'visibility' => $vis,
+            'file_path' => 'documents/'.$slug.'.pdf', 'doc_type' => 'policy', 'status' => $status,
+        ]);
+        $draft = $mk('k12-draft', 'K12 Draft Tersembunyi', 'draft');
+        $due = $mk('k12-due', 'K12 Due Terlihat', 'review_due');
+        $mk('k12-active', 'K12 Active Terlihat', 'active');
+
+        // Tamu: draf tak terlihat di mana pun; review_due tetap terlihat (opsi A).
+        $this->get(route('governance.index'))->assertOk()
+            ->assertDontSee('K12 Draft Tersembunyi')
+            ->assertSee('K12 Due Terlihat')
+            ->assertSee('K12 Active Terlihat');
+        $this->get(route('governance.index', ['status' => 'draft']))->assertOk()
+            ->assertDontSee('K12 Draft Tersembunyi');
+        $this->get(route('governance.show', $draft))->assertForbidden();
+        $this->get(route('governance.show', $due))->assertOk();
+        $this->get(route('search.index', ['q' => 'K12 Draft']))->assertOk()
+            ->assertDontSee('K12 Draft Tersembunyi');
+
+        // Anggota: draf restricted orang lain tetap tersembunyi; milik sendiri terlihat.
+        $mk('k12-restr-draft', 'K12 Restr Draft', 'draft', 'restricted');
+        $mine = Document::factory()->for($anggota)->create([
+            'slug' => 'k12-mine', 'title' => 'K12 Milik Saya', 'visibility' => 'private',
+            'file_path' => 'documents/mine.pdf', 'doc_type' => 'policy', 'status' => 'draft',
+        ]);
+        $this->actingAs($anggota)->get(route('governance.show', $draft))->assertForbidden();
+        $this->actingAs($anggota)->get(route('governance.show', $mine))->assertOk();
+
+        // Staff lifecycle utuh: draf internal tetap bisa ditelaah.
+        $this->actingAs($staff)->get(route('governance.show', $draft))->assertOk()
+            ->assertSee('K12 Draft Tersembunyi');
+        $this->actingAs($staff)->get(route('governance.index', ['status' => 'draft']))->assertOk()
+            ->assertSee('K12 Draft Tersembunyi');
+    }
+
     public function test_versi_private_ditolak_untuk_tamu(): void
     {
         $owner = User::factory()->create(['role' => 'staff']);
@@ -223,7 +263,7 @@ class YplGovernanceTest extends TestCase
             'file_path' => 'documents/gov.pdf', 'doc_type' => 'sop', 'status' => 'active',
         ]);
         $biasa = Document::factory()->for($owner)->create([
-            'slug' => 'biasa', 'title' => 'Dok Biasa', 'visibility' => 'public',
+            'slug' => 'biasa', 'title' => 'Dok Biasa', 'visibility' => 'public', 'status' => 'active',
             'file_path' => 'documents/biasa.pdf',
         ]);
 

@@ -130,7 +130,7 @@ class AskYpl
             $lines[] = '';
         }
 
-        $related = $doc->outgoingRelations()->with('related:id,title,slug,visibility,user_id')->get()
+        $related = $doc->outgoingRelations()->with('related:id,title,slug,status,visibility,user_id')->get()
             ->map(fn ($r) => $r->related)->filter(fn ($d) => $d && $d->isVisibleTo($user))
             ->take(5)->values();
         if ($related->isNotEmpty()) {

@@ -28,7 +28,7 @@ class LibraryController extends Controller
             ->get();
 
         $docs = Document::query()->with(['category', 'user', 'tags'])
-            ->where('visibility', 'public')
+            ->where('visibility', 'public')->whereIn('status', Document::LIVE_STATUSES)
             ->when($filter !== 'semua', fn ($q) => $q->whereHas('category', fn ($c) => $c->where('collection', $filter)->orWhere('slug', $filter)))
             ->latest()->paginate(12)->withQueryString();
 
@@ -43,7 +43,7 @@ class LibraryController extends Controller
     public function show(Category $category): mixed
     {
         $docs = Document::query()->with(['user', 'tags'])
-            ->where('visibility', 'public')
+            ->where('visibility', 'public')->whereIn('status', Document::LIVE_STATUSES)
             ->where('category_id', $category->id)
             ->latest()->paginate(12);
 

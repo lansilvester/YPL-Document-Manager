@@ -267,7 +267,7 @@ class YplAskTest extends TestCase
         // Tanpa audience/unit/versi/relasi: seksi kosong disembunyikan jujur.
         $bare = Document::factory()->for($owner)->create([
             'slug' => 'doc-jelas-kosong', 'title' => 'Doc Kosong',
-            'visibility' => 'public', 'status' => 'draft',
+            'visibility' => 'public', 'status' => 'active',
             'file_path' => 'documents/jk.pdf',
         ]);
         $this->post(route('ask.query'), ['doc' => 'doc-jelas-kosong', 'explain' => '1'])->assertOk()

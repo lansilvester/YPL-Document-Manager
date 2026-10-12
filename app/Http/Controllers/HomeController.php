@@ -19,7 +19,7 @@ class HomeController extends Controller
         $role = Role::for($user);
 
         $latest = Document::with(['category'])->where('visibility', 'public')
-            ->latest()->limit(3)->get();
+            ->whereIn('status', Document::LIVE_STATUSES)->latest()->limit(3)->get();
 
         // YPL Today: dokumen aktif dengan review terdekat (deadline nyata).
         $todayDocs = Document::with(['category'])->where('visibility', 'public')
@@ -49,9 +49,9 @@ class HomeController extends Controller
             'todayDocs' => $todayDocs,
             'q' => $q,
             'stats' => Cache::remember('home_public_stats', 300, fn () => [
-                'dokumen' => Document::where('visibility', 'public')->count(),
+                'dokumen' => Document::where('visibility', 'public')->whereIn('status', Document::LIVE_STATUSES)->count(),
                 'kategori' => Category::count(),
-                'views' => (int) Document::where('visibility', 'public')->sum('views_count'),
+                'views' => (int) Document::where('visibility', 'public')->whereIn('status', Document::LIVE_STATUSES)->sum('views_count'),
             ]),
         ]);
     }

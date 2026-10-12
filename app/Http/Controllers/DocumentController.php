@@ -34,7 +34,7 @@ class DocumentController extends Controller
         $cat = $request->query('kategori');
 
         $docs = Document::query()->with(['category', 'user', 'tags'])
-            ->where('visibility', 'public')
+            ->where('visibility', 'public')->whereIn('status', Document::LIVE_STATUSES)
             ->when($q, fn ($s) => $s->search($q))
             ->when($cat, fn ($s) => $s->whereHas('category', fn ($c) => $c->where('slug', $cat)))
             ->latest()->paginate(12)->withQueryString();
@@ -98,7 +98,7 @@ class DocumentController extends Controller
 
         // Dokumen populer: paling sering dibaca.
         $popular = Document::query()->with(['category', 'user', 'tags'])
-            ->where('visibility', 'public')
+            ->where('visibility', 'public')->whereIn('status', Document::LIVE_STATUSES)
             ->where('id', '!=', $document->id)
             ->orderByDesc('views_count')
             ->limit(6)
