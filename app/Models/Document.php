@@ -169,6 +169,70 @@ class Document extends Model
         ];
     }
 
+    /**
+     * Naikkan nomor versi semantik sederhana: "1.0" → "1.1" → "1.2".
+     * Segmen non-numerik atau format tak terduga diperlakukan aman (tetap versi saat ini).
+     */
+    public function nextVersion(): string
+    {
+        $current = trim((string) $this->version);
+        if ($current === '') {
+            return '1.0';
+        }
+
+        $parts = explode('.', $current);
+        $last = array_pop($parts);
+        if (! is_numeric($last)) {
+            return $current;
+        }
+
+        $parts[] = (string) ((int) $last + 1);
+
+        return implode('.', $parts);
+    }
+
+    /**
+     * Catat satu revisi baru dengan snapshot isi (audit trail BAB 13).
+     * Nomor versi harus sudah ditetapkan pada $this sebelum dipanggil.
+     *
+     * @param  array<string, mixed>|null  $snapshot
+     */
+    public function recordVersion(?string $fromStatus, ?string $changeNote = null, ?array $snapshot = null, ?int $userId = null): DocumentVersion
+    {
+        return $this->versions()->create([
+            'user_id' => $userId ?? auth()->id(),
+            'version' => $this->version,
+            'from_status' => $fromStatus,
+            'to_status' => $this->status,
+            'change_note' => $changeNote,
+            'snapshot' => $snapshot ?? $this->snapshot(),
+        ]);
+    }
+
+    /**
+     * Bandingkan dua snapshot revisi untuk "What changed?" (BAB 13).
+     *
+     * @param  array<string, mixed>|null  $from
+     * @param  array<string, mixed>|null  $to
+     * @return array<int, array{field: string, from: mixed, to: mixed}>
+     */
+    public static function snapshotDiff(?array $from, ?array $to): array
+    {
+        $from ??= [];
+        $to ??= [];
+        $diff = [];
+
+        foreach (array_keys($from + $to) as $field) {
+            $a = $from[$field] ?? null;
+            $b = $to[$field] ?? null;
+            if ($a !== $b) {
+                $diff[] = ['field' => $field, 'from' => $a, 'to' => $b];
+            }
+        }
+
+        return $diff;
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

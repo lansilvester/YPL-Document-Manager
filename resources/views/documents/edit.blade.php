@@ -18,10 +18,11 @@
       <div><label class="text-[13px] font-bold">Klasifikasi</label><select name="classification" class="field mt-1"><option value="">— Pilih —</option>@foreach(['public' => 'Public', 'internal' => 'Internal', 'confidential' => 'Confidential'] as $v => $l)<option value="{{ $v }}" {{ $document->classification === $v ? 'selected' : '' }}>{{ $l }}</option>@endforeach</select></div>
     </div>
     <div class="grid sm:grid-cols-3 gap-4">
-      <div><label class="text-[13px] font-bold">Versi</label><input name="version" value="{{ old('version', $document->version) }}" class="field mt-1"></div>
+      <div><label class="text-[13px] font-bold">Versi</label><input name="version" value="{{ old('version', $document->version) }}" class="field mt-1"><p class="text-[11px] text-slate-400 mt-1">Biarkan sama untuk naik otomatis (v{{ $document->nextVersion() }}).</p></div>
       <div><label class="text-[13px] font-bold">Berlaku</label><input type="date" name="effective_at" value="{{ old('effective_at', $document->effective_at?->format('Y-m-d')) }}" class="field mt-1"></div>
       <div><label class="text-[13px] font-bold">Review</label><input type="date" name="review_at" value="{{ old('review_at', $document->review_at?->format('Y-m-d')) }}" class="field mt-1"></div>
     </div>
+    <div><label class="text-[13px] font-bold">Catatan perubahan</label><input name="change_note" maxlength="500" value="{{ old('change_note') }}" placeholder="Apa yang berubah pada revisi ini?" class="field mt-1"></div>
     <div class="grid sm:grid-cols-2 gap-4">
       <div><label class="text-[13px] font-bold">Unit</label><input name="unit" value="{{ old('unit', $document->unit) }}" class="field mt-1"></div>
       <div><label class="text-[13px] font-bold">PIC</label><select name="pic_id" class="field mt-1"><option value="">— Pilih PIC —</option>@foreach($pics as $p)<option value="{{ $p->id }}" {{ (int) old('pic_id', $document->pic_id) === $p->id ? 'selected' : '' }}>{{ $p->name }} · {{ $p->role }}</option>@endforeach</select></div>

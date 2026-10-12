@@ -51,8 +51,12 @@ class EditorController extends Controller
                 'visibility' => $data['visibility'],
                 'source_type' => 'editor',
                 'content' => $data['content'],
+                'version' => '1.0',
             ]);
         });
+
+        $doc->refresh();
+        $doc->recordVersion(null, 'Dokumen dibuat via editor.', $doc->snapshot());
 
         ActivityLog::record(auth()->id(), $doc->id, 'upload', ['via' => 'editor']);
 
@@ -95,7 +99,10 @@ class EditorController extends Controller
                 'visibility' => $data['visibility'],
                 'content' => $data['content'],
                 'mime' => 'application/pdf',
+                'version' => $document->nextVersion(),
             ])->save();
+
+            $document->recordVersion($document->status, 'Perubahan isi dokumen via editor.');
         });
 
         ActivityLog::record(auth()->id(), $document->id, 'update', ['via' => 'editor']);

@@ -143,9 +143,17 @@ class GovernanceController extends Controller
             ->latest()
             ->paginate(20);
 
+        // Snapshot revisi tepat sebelum halaman ini, agar revisi tertua di halaman
+        // tetap bisa dibandingkan ("What changed?", BAB 13).
+        $oldest = $versions->last();
+        $baseline = $oldest
+            ? $document->versions()->where('id', '<', $oldest->id)->latest()->first()?->snapshot
+            : null;
+
         return view('governance.versions', [
             'document' => $document,
             'versions' => $versions,
+            'baseline' => $baseline,
         ]);
     }
 

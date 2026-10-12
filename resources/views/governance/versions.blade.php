@@ -32,7 +32,12 @@
         </div>
 
         <div class="divide-y divide-slate-100">
-            @foreach($versions as $v)
+            @php $items = $versions->items(); @endphp
+            @foreach($versions as $i => $v)
+                @php
+                    $previous = ($items[$i + 1] ?? null)?->snapshot ?? $baseline;
+                    $diff = \App\Models\Document::snapshotDiff($previous, $v->snapshot);
+                @endphp
                 <div class="p-5 hover:bg-slate-50/70 transition border-b border-slate-100/50 last:border-0">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div class="flex items-center gap-3">
@@ -40,7 +45,7 @@
                             <div>
                                 <div class="flex items-center gap-2 text-sm">
                                     <span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ \App\Models\Document::statusBadgeFor($v->to_status) }}">
-                                        {{ strtoupper(str_replace('_', ' ', $v->from_status)) }} → <strong>{{ strtoupper(str_replace('_', ' ', $v->to_status)) }}</strong>
+                                        {{ strtoupper(str_replace('_', ' ', $v->from_status ?? 'awal')) }} → <strong>{{ strtoupper(str_replace('_', ' ', $v->to_status)) }}</strong>
                                     </span>
                                 </div>
                                 <div class="text-xs text-slate-400 mt-1 flex items-center gap-2">
@@ -65,6 +70,28 @@
                             </div>
                         </div>
                     @endif
+
+                    @if($diff)
+                        <details class="mt-2 text-xs" open>
+                            <summary class="cursor-pointer font-bold text-[#c90018]">What changed? ({{ count($diff) }} bidang)</summary>
+                            <div class="mt-2 space-y-1.5 bg-slate-50/70 rounded-xl p-3">
+                                @foreach($diff as $d)
+                                    @php
+                                        $fmt = fn ($val) => is_array($val) ? (implode(', ', $val) ?: '—') : (($val === null || $val === '') ? '—' : $val);
+                                    @endphp
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="font-bold text-slate-400 shrink-0 min-w-28">{{ strtoupper(str_replace('_', ' ', $d['field'])) }}:</span>
+                                        <span class="text-slate-400 line-through">{{ $fmt($d['from']) }}</span>
+                                        <span class="text-slate-400">→</span>
+                                        <span class="font-semibold text-[#002f80]">{{ $fmt($d['to']) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </details>
+                    @else
+                        <p class="mt-2 text-xs text-slate-400">Tidak ada perubahan isi pada revisi ini.</p>
+                    @endif
+
                     @if(!empty($v->snapshot))
                         <details class="mt-2 text-xs">
                             <summary class="cursor-pointer font-bold text-[#002f80]">Snapshot isi revisi</summary>

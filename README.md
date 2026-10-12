@@ -5,7 +5,7 @@
 
 ![Home — desktop](presentasi/screenshots/desktop-home.png)
 
-- **Status (12 Okt 2026):** 144 tests lolos (906 assertions) · 110 routes · 59 commits · branch `main`
+- **Status (13 Okt 2026):** 149 tests lolos (930 assertions) · 110 routes · branch `main`
 - **Repo:** `lansilvester/YPL-Document-Manager`
 - **Presentasi progress:** [`presentasi/LOSNITO-Progress-Report.pptx`](presentasi/LOSNITO-Progress-Report.pptx) (18 slide, desktop + mobile)
 
@@ -29,7 +29,7 @@ Alur pakai tipikal: `Home → /perpustakaan → /baca/{slug} → /governance/{sl
 |---|---|
 | 1 Foundation (IA, taxonomy, Library Mode) | ✅ Selesai |
 | 2 Living Books (bookshelf B01–B10, book detail, Reader Mode) | ✅ Selesai |
-| 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (snapshot revisi + otomasi review-due terjadwal) |
+| 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (version control nyata: bump otomatis + revisi saat edit + "What changed?", snapshot per versi, otomasi review-due terjadwal) |
 | 4 Services (forms, workflow, My Requests) | ✅ Selesai (kurang: integrasi Odoo) |
 | 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | ✅ Fungsional — search + Ask YPL v1 + rekomendasi + graf 2-hop permission-aware + halaman **Peta Pengetahuan `/peta-pengetahuan`** |
 | 6 Ecosystem (role dashboards, analytics, Odoo) | 🔄 Berjalan — Community, Calendar, Insight sudah nyata (prioritas-1); dashboard per peran (`/dashboard`, audience-aware) selesai |
@@ -54,7 +54,7 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 
 ### Dokumen & Governance
 - **Dokumen** — unggah PDF (maks 9 MB), tulis via editor (sanitasi HTML), unduh PDF/HTML, semat (embed), suka, bagikan, Dokumen Saya, visibilitas public/restricted/private.
-- **Governance `/governance`** — Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle `draft → review → approval → active → review-due → archived`, approval workflow, View History + snapshot isi per versi, relasi Handbook→Policy→SOP→Form→PIC→System, impact map graf 2-hop, listing filter tipe/status/audience/unit, ekspor CSV (throttled). Tipe dokumen mencakup governance penuh: `policy, regulation, standard, sop, work_instruction, decision, organization, risk, compliance, quality, document_control, form, evidence, handbook, other`.
+- **Governance `/governance`** — Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle `draft → review → approval → active → review-due → archived`, approval workflow, View History + snapshot isi per versi + **"What changed?"** (diff bidang antar revisi), relasi Handbook→Policy→SOP→Form→PIC→System, impact map graf 2-hop, listing filter tipe/status/audience/unit, ekspor CSV (throttled). **Version control nyata:** nomor versi naik otomatis saat edit (bila tidak diisi eksplisit), setiap perubahan metadata/isi mencatat revisi + catatan perubahan. Tipe dokumen mencakup governance penuh: `policy, regulation, standard, sop, work_instruction, decision, organization, risk, compliance, quality, document_control, form, evidence, handbook, other`.
 
 ![Governance — desktop](presentasi/screenshots/desktop-governance.png)
 
@@ -120,7 +120,7 @@ database/migrations/  # 30 migrations (users+audience, documents+FTS, categories
                       #   relations, versions+snapshot, events, faqs, systems, units, contacts, ...)
 resources/views/      # home, library (termasuk peta-pengetahuan), reader, governance,
                       #   search, ask, portal, dashboard, systems, admin, sa, ...
-tests/Feature/        # 16 file test (±144 tests)
+tests/Feature/        # 16 file test (±149 tests)
 presentasi/           # slide progress + screenshot desktop & mobile
 ```
 
@@ -139,7 +139,7 @@ php artisan serve               # http://localhost:8000
 ```
 
 ```bash
-php artisan test --compact      # 144 tests, ~4 detik
+php artisan test --compact      # 149 tests, ~4 detik
 vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
 ```
 
@@ -158,8 +158,8 @@ Akun demo per audiens (opsional): `php artisan db:seed --class=AudienceDemoSeede
 
 ## 8. Testing & Kualitas
 
-- `php artisan test --compact` → **144 passed, 906 assertions** (12 Okt 2026).
-- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression.
+- `php artisan test --compact` → **149 passed, 930 assertions** (13 Okt 2026).
+- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control: bump otomatis + diff "What changed?"), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression.
 - Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, maupun graf.
 
 ---
@@ -193,7 +193,7 @@ Aplikasi responsif penuh — contoh Home dan Library di viewport 390px:
 ## 11. Sisa Pekerjaan / Roadmap
 
 - **Phase 5:** ✅ Selesai — visualisasi Knowledge Graph penuh (halaman Peta Pengetahuan + blok terkait & graf impact map).
-- **Phase 6:** Role Dashboards ✅ selesai (`/dashboard` audience-aware per peran) · Analytics dashboard dari `activity_logs` (sisa) · Integrasi Odoo (terakhir).
+- **Phase 6:** Role Dashboards ✅ selesai (`/dashboard` audience-aware per peran) · Analytics dashboard dari `activity_logs` ✅ selesai · Integrasi Odoo (terakhir; API akan disediakan).
 - **Hardening:** ✅ cabut key testing, hapus rute `/deploy/{secret}` (commit `caa423f`), rate limiter sensitif (`login`/`register`/`uploads`/`interactions`).
 
 ---

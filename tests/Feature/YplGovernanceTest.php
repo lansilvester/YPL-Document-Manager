@@ -10,6 +10,7 @@ use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\SystemsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class YplGovernanceTest extends TestCase
@@ -323,5 +324,95 @@ class YplGovernanceTest extends TestCase
         foreach (['organization', 'risk', 'compliance', 'quality', 'document_control'] as $tipe) {
             $this->assertDatabaseHas('documents', ['doc_type' => $tipe]);
         }
+    }
+
+    public function test_naik_versi_dan_revisi_saat_edit_dokumen(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $doc = Document::factory()->for($owner)->create([
+            'slug' => 'versi-edit', 'title' => 'Judul Awal', 'visibility' => 'public',
+            'file_path' => 'documents/versi-edit.pdf', 'status' => 'active', 'version' => '1.0',
+        ]);
+        $this->assertEquals('1.1', $doc->nextVersion());
+
+        // Edit tanpa mengubah nomor versi: otomatis naik + revisi tercatat.
+        $this->actingAs($owner)->put(route('staff.documents.update', $doc), [
+            'title' => 'Judul Revisi', 'visibility' => 'public', 'version' => '1.0',
+            'change_note' => 'Perbaikan judul.',
+        ])->assertRedirect();
+
+        $doc->refresh();
+        $this->assertEquals('1.1', $doc->version);
+        $this->assertEquals('Judul Revisi', $doc->title);
+
+        $version = $doc->versions()->latest()->firstOrFail();
+        $this->assertEquals('1.1', $version->version);
+        $this->assertEquals('Perbaikan judul.', $version->change_note);
+        $this->assertEquals('Judul Revisi', $version->snapshot['title']);
+    }
+
+    public function test_naik_versi_eksplisit_tidak_ditimpa(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $doc = Document::factory()->for($owner)->create([
+            'slug' => 'versi-eksplisit', 'title' => 'Dok', 'visibility' => 'public',
+            'file_path' => 'documents/versi-eksplisit.pdf', 'status' => 'active', 'version' => '1.0',
+        ]);
+
+        $this->actingAs($owner)->put(route('staff.documents.update', $doc), [
+            'title' => 'Dok', 'visibility' => 'public', 'version' => '2.0',
+        ])->assertRedirect();
+
+        $this->assertEquals('2.0', $doc->fresh()->version);
+    }
+
+    public function test_what_changed_menampilkan_diff_snapshot(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $doc = Document::factory()->for($owner)->create([
+            'slug' => 'what-changed', 'title' => 'Judul Lama', 'visibility' => 'public',
+            'file_path' => 'documents/what-changed.pdf', 'status' => 'active', 'version' => '1.0',
+        ]);
+        $doc->recordVersion(null, 'Revisi awal.', ['title' => 'Judul Lama', 'unit' => null]);
+
+        $this->actingAs($owner)->put(route('staff.documents.update', $doc), [
+            'title' => 'Judul Baru', 'visibility' => 'public', 'version' => '1.0',
+        ])->assertRedirect();
+
+        $this->get(route('governance.versions', $doc))->assertOk()
+            ->assertSee('What changed?')
+            ->assertSee('Judul Lama')
+            ->assertSee('Judul Baru');
+    }
+
+    public function test_snapshot_diff_helper(): void
+    {
+        $diff = Document::snapshotDiff(
+            ['title' => 'A', 'unit' => 'X', 'audience' => ['siswa']],
+            ['title' => 'B', 'unit' => 'X', 'audience' => ['siswa', 'guru']],
+        );
+
+        $this->assertCount(2, $diff);
+        $this->assertEquals('title', $diff[0]['field']);
+        $this->assertEquals('audience', $diff[1]['field']);
+        $this->assertEquals(['siswa'], $diff[1]['from']);
+        $this->assertEquals(['siswa', 'guru'], $diff[1]['to']);
+        $this->assertSame([], Document::snapshotDiff(['a' => 1], ['a' => 1]));
+    }
+
+    public function test_unggah_baru_mencatat_revisi_awal(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $pdf = UploadedFile::fake()->create('awal.pdf', 80, 'application/pdf');
+
+        $this->actingAs($staff)->post(route('staff.documents.store'), [
+            'title' => 'Dok Baru', 'visibility' => 'public', 'file' => $pdf,
+        ])->assertRedirect();
+
+        $doc = Document::where('title', 'Dok Baru')->firstOrFail();
+        $this->assertEquals('1.0', $doc->version);
+        $version = $doc->versions()->latest()->firstOrFail();
+        $this->assertEquals('Dokumen dibuat.', $version->change_note);
+        $this->assertEquals('Dok Baru', $version->snapshot['title']);
     }
 }

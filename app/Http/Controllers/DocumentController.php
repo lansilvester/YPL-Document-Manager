@@ -354,6 +354,8 @@ class DocumentController extends Controller
                 'pic_name' => $data['pic_name'] ?? null,
             ]);
             $doc->update(['doc_code' => 'YPL-'.strtoupper($doc->doc_type ?? 'DOC').'-'.$doc->id]);
+            $doc->refresh();
+            $doc->recordVersion(null, 'Dokumen dibuat.', $doc->snapshot());
 
             return $doc;
         });
@@ -404,9 +406,14 @@ class DocumentController extends Controller
             'unit' => ['nullable', 'string', 'max:60'],
             'pic_id' => ['nullable', 'exists:users,id'],
             'pic_name' => ['nullable', 'string', 'max:100'],
+            'change_note' => ['nullable', 'string', 'max:500'],
         ]);
 
         DocumentFiles::transactional(function (array &$gate) use ($request, $data, $document) {
+            // Nomor versi otomatis naik bila pengguna tidak mengisinya eksplisit (BAB 13).
+            $requested = $data['version'] ?? null;
+            $bump = $requested === null || $requested === $document->version;
+
             if ($request->hasFile('file')) {
                 [$document->file_path, $document->file_size] = DocumentFiles::replace($document->file_path, $request->file('file'), $gate);
                 $document->mime = 'application/pdf';
@@ -420,7 +427,7 @@ class DocumentController extends Controller
                 'visibility' => $data['visibility'],
                 'doc_type' => $data['doc_type'] ?? $document->doc_type,
                 'classification' => $data['classification'] ?? $document->classification,
-                'version' => $data['version'] ?? $document->version,
+                'version' => $bump ? $document->nextVersion() : $requested,
                 'effective_at' => $data['effective_at'] ?? $document->effective_at,
                 'review_at' => $data['review_at'] ?? $document->review_at,
                 'audience' => array_key_exists('audience', $data) ? $data['audience'] : $document->audience,
@@ -428,6 +435,9 @@ class DocumentController extends Controller
                 'pic_id' => array_key_exists('pic_id', $data) ? $data['pic_id'] : $document->pic_id,
                 'pic_name' => $data['pic_name'] ?? $document->pic_name,
             ])->save();
+
+            $note = $request->input('change_note') ?: 'Perubahan metadata'.($request->hasFile('file') ? ' & berkas PDF.' : '.');
+            $document->recordVersion($document->status, $note);
         });
 
         ActivityLog::record(auth()->id(), $document->id, 'update');

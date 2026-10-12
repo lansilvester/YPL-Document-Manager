@@ -1,6 +1,6 @@
 # Report — YPL Smart Digital Library (Losnito)
 
-Tanggal: 12 Oktober 2026 · Baseline terverifikasi: 144 test lolos, Pint bersih.
+Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 149 test lolos, Pint bersih.
 
 ## 1. Ringkasan Website
 
@@ -14,10 +14,10 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 |---|---|
 | 1 Foundation (IA, taxonomy, Library Mode) | ✅ Selesai |
 | 2 Living Books (bookshelf B01–B10, book detail, Reader Mode) | ✅ Selesai + fidelity visual BAB 4 |
-| 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (snapshot isi per versi + otomasi review-due selesai) |
+| 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (**version control nyata**: bump otomatis + revisi saat edit + "What changed?"; snapshot isi per versi; otomasi review-due) |
 | 4 Services (forms, workflow, My Requests) | ✅ Selesai (kurang: integrasi Odoo) |
 | 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | ✅ Fungsional — Ask YPL v1 + driver Gemini testing, Recommendations selesai, universal search selesai, **Peta Pengetahuan `/peta-pengetahuan`** + blok terkait selesai |
-| 6 Ecosystem (Odoo, role dashboard, analitik) | 🔄 Berjalan — **dashboard per peran `/dashboard` (audience-aware) selesai**; Community/Calendar/Insight nyata; sisa: analytics `activity_logs`, Odoo |
+| 6 Ecosystem (Odoo, role dashboard, analitik) | 🔄 Berjalan — **dashboard per peran `/dashboard` (audience-aware) selesai**; Community/Calendar/Insight nyata; **analytics `activity_logs` selesai**; sisa: Odoo |
 
 ## 3. Daftar Fitur
 
@@ -25,7 +25,7 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 - **Library `/perpustakaan`:** bookshelf 10 Handbook B01–B10 berbentuk buku 3D, filter koleksi (handbook/governance/academic/boarding/staff/parent/public), book detail (cover besar, TOC, Open Book, Bookmark).
 - **Reader Mode `/baca/{slug}`:** 2-halaman desktop / 1-halaman mobile, page-flip 550ms + reduced-motion, TOC drawer terang, lompat halaman + grid, search-in-book, toolbar bawah (Contents/Search/Bookmark/Aa/Ask YPL/counter/Reading %), keyboard + swipe, persist posisi & preferensi. **Panel Rekomendasi di sidebar kanan.** **Ask YPL inline** (§8/§14) — tanya & ringkas dokumen ter-scoped tanpa meninggalkan Reader; sumber dibuka tab baru.
 - **Dokumen:** unggah PDF (maks 9 MB), tulis via editor (sanitasi HTML), unduh PDF/HTML, semat (embed), suka (like), bagikan, Dokumen Saya, visibilitas public/restricted/private.
-- **Governance:** Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle draft→review→approval→active→review-due→archived + approval workflow + View History, relasi Handbook→Policy→SOP→Form→PIC→System, listing filter tipe/status/audience/unit, CRUD Handbook khusus admin. Tipe mencakup governance penuh (organization/risk/compliance/quality/document_control) dengan label rapi via `Document::typeLabel()`.
+- **Governance:** Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle draft→review→approval→active→review-due→archived + approval workflow + View History + **"What changed?"** (diff bidang antar revisi), relasi Handbook→Policy→SOP→Form→PIC→System, listing filter tipe/status/audience/unit, CRUD Handbook khusus admin. **Version control nyata:** versi naik otomatis saat edit (bila tidak diisi), tiap perubahan metadata/isi mencatat revisi + catatan perubahan. Tipe mencakup governance penuh (organization/risk/compliance/quality/document_control) dengan label rapi via `Document::typeLabel()`.
 - **Services `/layanan`:** katalog 8 layanan ("Saya ingin…"), pengajuan + Permintaan Saya, kelola + putusan staff (pending→approved/rejected→done).
 - **Systems `/sistem`:** registri 8 sistem operasional (Odoo, Akademik, Asrama, HR, Keuangan, Fleet, Maintenance, ICT) + dokumen tertaut.
 - **Community `/community`:** direktori unit, peran, dan orang (login untuk direktori orang) + **kontak PIC publik** (email/telepon) + pengetahuan komunitas (FAQ). Unit & kontak dikelola admin (`/admin/unit`, `/admin/kontak`).
@@ -65,7 +65,9 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 
 ## 5. Tabel Pendukung (ringkas)
 
-`documents` (metadata knowledge BAB 7 + FTS), `categories` (koleksi + B01–B10), `document_relations` (dokumen↔dokumen/sistem), `document_versions` (audit lifecycle), `systems`, `roles`, `units` + `contacts` (direktori unit & PIC publik, CRUD admin), `service_requests`, `role_requests` (peran sistem **atau** audiens: `requested_role`/`requested_audience`), `bookmarks`, `likes`, `reading_positions`, `reading_prefs`, `tags` (+pivot), `activity_logs`, `settings`, bawaan Laravel (`sessions`, `cache`, `jobs`, `password_reset_tokens`).
+`documents` (metadata knowledge BAB 7 + FTS), `categories` (koleksi + B01–B10), `document_relations` (dokumen↔dokumen/sistem), `document_versions` (audit lifecycle + snapshot isi per revisi + `change_note`; dibaca "What changed?" sebagai diff antar snapshot), `systems`, `roles`, `units` + `contacts` (direktori unit & PIC publik, CRUD admin), `service_requests`, `role_requests` (peran sistem **atau** audiens: `requested_role`/`requested_audience`), `bookmarks`, `likes`, `reading_positions`, `reading_prefs`, `tags` (+pivot), `activity_logs`, `settings`, bawaan Laravel (`sessions`, `cache`, `jobs`, `password_reset_tokens`).
+
+**Version control dokumen (BAB 13):** `Document::nextVersion()` menaikkan segmen terakhir nomor versi (`1.0 → 1.1`); `Document::recordVersion()` menyimpan revisi (snapshot + catatan + status); `Document::snapshotDiff()` menghitung bidang yang berubah antar revisi. Revisi tercatat saat: pembuatan dokumen (v1.0), setiap edit metadata/berkas (Document/Staff controller), dan perubahan isi (editor). Halaman `/governance/{slug}/riwayat` menampilkan **"What changed?"** per revisi.
 
 ## 6. Ask YPL — Arsitektur
 
@@ -115,8 +117,8 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 **Phase 6 Ecosystem:**
 - Penetapan audiens pengguna oleh Admin/SA + alur **pengajuan audiens** dari profil (disetujui Admin/SA) — **selesai**.
 - Seeder demo audiens opsional (`php artisan db:seed --class=AudienceDemoSeeder`).
-- Analytics dashboard dari `activity_logs` (data sudah kumpul sejak awal).
-- Odoo Integration (terakhir).
+- Analytics dashboard dari `activity_logs` — **selesai** (`/staff/analytics`).
+- Odoo Integration (terakhir; API akan disediakan).
 
 **Hardening Production:**
 - ✅ Cabut key testing, hapus rute `/deploy/{secret}` (commit `caa423f`), rate limiter sensitif aktif.
