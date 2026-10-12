@@ -6,9 +6,9 @@
 <p class="text-sm text-slate-500 mt-1">Agenda foundation, akademik, asrama, event, dan deadline penting.</p>
 
 <div class="flex flex-wrap gap-2 mt-4" role="group" aria-label="Filter kategori">
-  <a href="{{ route('calendar.index') }}" class="px-4 py-2 rounded-full text-xs font-bold {{ ! $kategori ? 'bg-[#002f80] text-white' : 'bg-white border border-[#d6d6d6] hover:border-[#002f80]' }}">Semua</a>
+  <a href="{{ route('calendar.index') }}" class="px-4 py-2 rounded-full text-xs font-bold {{ ! $category ? 'bg-[#002f80] text-white' : 'bg-white border border-[#d6d6d6] hover:border-[#002f80]' }}">Semua</a>
   @foreach($categories as $c)
-    <a href="{{ route('calendar.index', ['kategori' => $c]) }}" class="px-4 py-2 rounded-full text-xs font-bold {{ $kategori === $c ? 'bg-[#002f80] text-white' : 'bg-white border border-[#d6d6d6] hover:border-[#002f80]' }}">{{ strtoupper($c) }}</a>
+    <a href="{{ route('calendar.index', ['category' => $c]) }}" class="px-4 py-2 rounded-full text-xs font-bold {{ $category === $c ? 'bg-[#002f80] text-white' : 'bg-white border border-[#d6d6d6] hover:border-[#002f80]' }}">{{ strtoupper($c) }}</a>
   @endforeach
 </div>
 

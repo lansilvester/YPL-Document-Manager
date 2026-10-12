@@ -79,14 +79,14 @@ Route::get('/governance/{document:slug}/versi', [GovernanceController::class, 'v
 Route::get('/governance/{document:slug}/impact', [GovernanceController::class, 'impactMap'])->name('governance.impact');
 
 Route::get('/layanan', [PortalController::class, 'services'])->name('services.index');
-Route::get('/komunitas', [PortalController::class, 'community'])->name('community.index');
-Route::get('/kalender', [PortalController::class, 'calendar'])->name('calendar.index');
+Route::get('/community', [PortalController::class, 'community'])->name('community.index');
+Route::get('/calendar', [PortalController::class, 'calendar'])->name('calendar.index');
 Route::get('/tanya', [AskController::class, 'index'])->name('ask.index');
 Route::post('/tanya', [AskController::class, 'ask'])->middleware('throttle:sensitive')->name('ask.query');
-Route::get('/wawasan', [PortalController::class, 'insight'])->name('insight.index');
+Route::get('/insight', [PortalController::class, 'insight'])->name('insight.index');
 Route::get('/sistem', [SystemController::class, 'index'])->name('systems.index');
 Route::get('/sistem/{system:slug}', [SystemController::class, 'show'])->name('systems.show');
-Route::get('/kalender/{event:slug}', [EventController::class, 'show'])->name('events.show');
+Route::get('/calendar/{event:slug}', [EventController::class, 'show'])->name('events.show');
 Route::get('/faq/{faq:slug}', [FaqController::class, 'show'])->name('faqs.show');
 
 Route::get('/masuk', [AuthController::class, 'showLogin'])->name('login');

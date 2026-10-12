@@ -61,11 +61,11 @@ class PortalController extends Controller
      */
     public function calendar(Request $request): mixed
     {
-        $data = $request->validate(['kategori' => ['nullable', 'string', 'in:foundation,academic,boarding,event,deadline']]);
+        $data = $request->validate(['category' => ['nullable', 'string', 'in:foundation,academic,boarding,event,deadline']]);
         $user = auth()->user();
 
         $events = Event::query()->when(! $user, fn ($q) => $q->where('visibility', 'public'))
-            ->when($data['kategori'] ?? null, fn ($q, $cat) => $q->where('category', $cat))
+            ->when($data['category'] ?? null, fn ($q, $cat) => $q->where('category', $cat))
             ->orderBy('starts_at')->paginate(12)->withQueryString();
 
         $todayDocs = Document::with(['category'])->where('visibility', 'public')
@@ -75,7 +75,7 @@ class PortalController extends Controller
         return view('portal.calendar', [
             'events' => $events,
             'todayDocs' => $todayDocs,
-            'kategori' => $data['kategori'] ?? null,
+            'category' => $data['category'] ?? null,
             'categories' => Event::CATEGORIES,
         ]);
     }

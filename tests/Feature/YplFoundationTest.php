@@ -52,6 +52,20 @@ class YplFoundationTest extends TestCase
         }
     }
 
+    public function test_menu_community_calendar_insight_berbahasa_inggris(): void
+    {
+        // Sesuai briefing: COMMUNITY, CALENDAR, INSIGHT — URL Inggris end-to-end.
+        $this->assertSame(url('/community'), route('community.index'));
+        $this->assertSame(url('/calendar'), route('calendar.index'));
+        $this->assertSame(url('/insight'), route('insight.index'));
+
+        $event = Event::create(['slug' => 'rapat-en', 'title' => 'Rapat En', 'category' => 'event']);
+        $this->assertSame(url('/calendar/rapat-en'), route('events.show', $event));
+
+        $faq = Faq::create(['slug' => 'faq-en', 'question' => 'Q En?', 'answer' => 'A.']);
+        $this->assertSame(url('/faq/faq-en'), route('faqs.show', $faq));
+    }
+
     public function test_community_nyata_unit_peran_dan_direktori(): void
     {
         $this->seed(RoleSeeder::class);
@@ -87,7 +101,7 @@ class YplFoundationTest extends TestCase
             ->assertSee('Rapat Kalender A')
             ->assertDontSee('Rapat Internal C');
 
-        $this->get(route('calendar.index', ['kategori' => 'academic']))->assertOk()
+        $this->get(route('calendar.index', ['category' => 'academic']))->assertOk()
             ->assertSee('Apel Kalender B')
             ->assertDontSee('Rapat Kalender A');
 
