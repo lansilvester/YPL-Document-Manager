@@ -105,6 +105,23 @@
       <div id="search-meta" class="text-xs text-slate-300 mt-1.5 px-1"></div>
       <div id="search-hits" class="mt-1 space-y-1"></div>
     </div>
+    <div id="ask-panel" class="hidden mx-auto max-w-2xl mt-3 px-3">
+      <div class="bg-[#f5f1e8] text-slate-800 rounded-2xl p-4 shadow-xl">
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="text-xs font-bold tracking-widest text-[#002f80]">ASK YPL · KONTEKS DOKUMEN INI</h2>
+          <a href="{{ route('ask.index', ['doc' => $document->slug]) }}" class="text-[11px] font-bold text-slate-500 hover:text-[#002f80] shrink-0">Halaman penuh →</a>
+        </div>
+        <form id="form-ask" class="flex gap-2 mt-2">
+          <input id="in-ask" maxlength="500" placeholder="Tanya tentang dokumen ini…" class="flex-1 rounded-full bg-white border border-slate-300 px-4 py-2 text-sm outline-none min-w-0" aria-label="Pertanyaan Ask YPL">
+          <button class="shrink-0 rounded-full bg-[#002f80] text-white font-bold text-sm px-5 py-2">Tanya</button>
+        </form>
+        <div class="mt-2">
+          <button type="button" id="btn-explain" class="text-xs font-semibold bg-white border border-slate-300 rounded-full px-3 py-1.5 hover:border-[#002f80] hover:text-[#002f80] transition">Ringkas dokumen ini</button>
+        </div>
+        <p id="ask-error" class="hidden text-xs font-bold text-[#c90018] mt-2"></p>
+        <div id="ask-result" class="hidden mt-3"></div>
+      </div>
+    </div>
     <div id="aa-panel" class="hidden mx-auto max-w-2xl mt-3 px-3">
       <div class="bg-[#f5f1e8] text-slate-800 rounded-2xl p-4 shadow-xl flex flex-wrap items-center gap-4 text-sm font-semibold">
         <label class="flex items-center gap-2">Ukuran huruf
@@ -175,7 +192,7 @@
     @else
       <a href="{{ route('login') }}" class="px-3 py-2 rounded-full hover:bg-white/10 text-white/80">✎ <span class="hidden sm:inline">Catatan</span></a>
     @endauth
-    <a href="{{ route('ask.index', ['doc' => $document->slug]) }}" class="px-3 py-2 rounded-full hover:bg-white/10">✦ <span class="hidden sm:inline">Ask YPL</span></a>
+    <button id="btn-ask" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="ask-panel">✦ <span class="hidden sm:inline">Ask YPL</span></button>
     <span class="flex-1"></span>
     <button id="btn-prev" aria-label="Halaman sebelumnya" class="w-9 h-9 rounded-full grid place-items-center hover:bg-white/10 shrink-0">◀</button>
     <span class="text-sm font-bold tabular-nums px-1 shrink-0"><span id="pg-now">1</span> / <span id="pg-total">…</span></span>
@@ -192,6 +209,8 @@ const IS_AUTH = @json(auth()->check());
 const SAVE_POS_URL = @json(auth()->check() ? route('api.position', $document) : null);
 const SAVE_PREF_URL = @json(auth()->check() ? route('api.prefs') : null);
 const NOTE_SAVE_URL = @json(auth()->check() ? route('api.notes.store', $document) : null);
+const ASK_URL = @json(route('ask.query'));
+const DOC_SLUG = @json($document->slug);
 const CSRF = @json(csrf_token());
 let pdf = null, page = START_PAGE, zoom = @json((int) $pref->zoom), layout = @json($pref->layout);
 let theme = @json($pref->normalizedTheme());
@@ -313,6 +332,75 @@ btnToc.onclick = () => setToc(toc.classList.contains('hidden'));
 document.getElementById('btn-toc-close').onclick = () => setToc(false);
 const sp = document.getElementById('search-panel'), btnSearch = document.getElementById('btn-search');
 btnSearch.onclick = () => { const open = sp.classList.toggle('hidden'); btnSearch.setAttribute('aria-expanded', String(!open)); if (!open) document.getElementById('in-search').focus(); };
+const ap = document.getElementById('ask-panel'), btnAsk = document.getElementById('btn-ask');
+btnAsk.onclick = () => { const open = ap.classList.toggle('hidden'); btnAsk.setAttribute('aria-expanded', String(!open)); if (!open) document.getElementById('in-ask').focus(); };
+const askResult = document.getElementById('ask-result'), askError = document.getElementById('ask-error');
+function askSetError(msg) { askError.textContent = msg || ''; askError.classList.toggle('hidden', !msg); }
+function askSourceCard(src) {
+  const a = document.createElement('a');
+  a.href = src.url; a.target = '_blank'; a.rel = 'noopener';
+  a.className = 'block bg-white rounded-xl border border-slate-200 p-3 hover:border-[#002f80] transition';
+  const meta = document.createElement('div');
+  meta.className = 'flex flex-wrap gap-1 text-[10px] font-bold';
+  [[src.doc_type, 'bg-[#002f80]/5 text-[#002f80]'], [src.status, 'bg-slate-100 text-slate-500'], ['v' + src.version, 'bg-slate-100 text-slate-500']]
+    .concat(src.section ? [['§ ' + src.section, 'bg-emerald-50 text-emerald-700']] : [])
+    .forEach(([text, cls]) => { const s = document.createElement('span'); s.className = cls + ' px-2 py-0.5 rounded-full'; s.textContent = text; meta.appendChild(s); });
+  const title = document.createElement('div');
+  title.className = 'font-bold text-sm text-slate-900 mt-1.5 leading-snug';
+  title.textContent = src.title;
+  const quote = document.createElement('p');
+  quote.className = 'text-[12px] text-slate-500 mt-1 line-clamp-2';
+  quote.textContent = '\u201C' + src.passage + '\u201D';
+  a.append(meta, title, quote);
+  return a;
+}
+async function askYpl(question, explain) {
+  askSetError('');
+  askResult.classList.remove('hidden');
+  askResult.innerHTML = '<p class="text-xs text-slate-400">Mencari jawaban…</p>';
+  try {
+    const res = await fetch(ASK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
+      body: JSON.stringify({ question, doc: DOC_SLUG, explain: explain ? 1 : 0 }),
+    });
+    if (res.status === 419 || (res.redirected && res.url.includes('/masuk'))) { window.location.reload(); return; }
+    if (!res.ok) {
+      await res.json().catch(() => null);
+      askSetError(res.status === 429 ? 'Terlalu banyak permintaan. Coba lagi sebentar.' : 'Tidak bisa menjawab sekarang. Coba lagi.');
+      askResult.innerHTML = '';
+      return;
+    }
+    const data = await res.json();
+    askResult.innerHTML = '';
+    const head = document.createElement('div');
+    head.className = 'text-[10px] font-bold tracking-widest ' + (data.found ? 'text-[#002f80]' : 'text-amber-600');
+    head.textContent = data.found ? (data.ai ? 'JAWABAN AI BERBASIS SUMBER 🧪' : 'JAWABAN BERBASIS SUMBER') : 'SUMBER TIDAK DITEMUKAN';
+    const body = document.createElement('div');
+    body.className = 'whitespace-pre-line text-sm text-slate-700 mt-1.5';
+    body.textContent = data.answer;
+    askResult.append(head, body);
+    if (data.found && data.sources.length) {
+      const label = document.createElement('h3');
+      label.className = 'text-xs font-bold tracking-widest text-[#002f80] mt-3 mb-1.5';
+      label.textContent = 'SUMBER (' + data.sources.length + ')';
+      const list = document.createElement('div');
+      list.className = 'space-y-2';
+      data.sources.forEach((s) => list.appendChild(askSourceCard(s)));
+      askResult.append(label, list);
+    }
+  } catch (err) {
+    askSetError('Koneksi terputus. Periksa internet lalu coba lagi.');
+    askResult.innerHTML = '';
+  }
+}
+document.getElementById('form-ask').onsubmit = (e) => {
+  e.preventDefault();
+  const q = document.getElementById('in-ask').value.trim();
+  if (q.length < 3) { askSetError('Pertanyaan minimal 3 karakter.'); return; }
+  askYpl(q, false);
+};
+document.getElementById('btn-explain').onclick = () => askYpl('Ringkas dokumen ini', true);
 const aa = document.getElementById('aa-panel'), btnAa = document.getElementById('btn-aa');
 btnAa.onclick = () => { const open = aa.classList.toggle('hidden'); btnAa.setAttribute('aria-expanded', String(!open)); };
 const np = document.getElementById('notes-panel'), btnNotes = document.getElementById('btn-notes');

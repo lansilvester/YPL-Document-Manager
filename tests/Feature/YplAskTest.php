@@ -197,6 +197,53 @@ class YplAskTest extends TestCase
             ->assertSee(route('ask.index', ['doc' => 'sop-konteks']));
     }
 
+    public function test_respons_json_untuk_panel_inline(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        Document::factory()->for($owner)->create([
+            'slug' => 'sop-json', 'title' => 'SOP JSON Inline',
+            'description' => 'Prosedur JSON inline lima langkah.',
+            'visibility' => 'public', 'status' => 'active', 'version' => '3.1',
+            'content' => '<h2>Langkah Kunci</h2><p>Langkah JSON inline wajib dicatat.</p>',
+        ]);
+
+        $this->postJson(route('ask.query'), ['question' => 'langkah json inline wajib'])
+            ->assertOk()
+            ->assertJsonStructure(['answer', 'found', 'ai', 'scope', 'sources' => [['title', 'url', 'section', 'passage', 'doc_type', 'status', 'version']]])
+            ->assertJsonPath('found', true)
+            ->assertJsonPath('scope', null)
+            ->assertJsonPath('sources.0.version', '3.1');
+
+        // Tanpa bukti: tetap jujur, sumber kosong.
+        $this->postJson(route('ask.query'), ['question' => 'kebijakan perjalanan dinas ke bulan'])
+            ->assertOk()
+            ->assertJsonPath('found', false)
+            ->assertJsonPath('sources', []);
+    }
+
+    public function test_json_tidak_membocorkan_dokumen_privat(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $anggota = User::factory()->create(['role' => 'anggota']);
+        Document::factory()->for($owner)->create([
+            'slug' => 'rahasia-json', 'title' => 'Rahasia JSON Gaji',
+            'description' => 'Skala gaji JSON rahasia pokok karyawan.',
+            'visibility' => 'private', 'status' => 'active',
+        ]);
+
+        $this->actingAs($anggota)->postJson(route('ask.query'), ['question' => 'skala gaji json rahasia'])
+            ->assertOk()
+            ->assertJsonPath('found', false)
+            ->assertDontSee('Rahasia JSON Gaji');
+
+        // Admin melihatnya.
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin)->postJson(route('ask.query'), ['question' => 'skala gaji json rahasia'])
+            ->assertOk()
+            ->assertJsonPath('found', true)
+            ->assertSee('Rahasia JSON Gaji');
+    }
+
     public function test_konteks_asing_atau_tak_terlihat_ditolak(): void
     {
         $owner = User::factory()->create(['role' => 'staff']);

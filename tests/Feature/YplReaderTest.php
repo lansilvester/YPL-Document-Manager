@@ -65,13 +65,41 @@ class YplReaderTest extends TestCase
         $this->assertStringContainsString('max-width: 767px', $html);
         $this->assertStringContainsString('touchstart', $html);
         $this->assertStringContainsString('ArrowRight', $html);
-        // Bookmark + posisi tersimpan + Ask YPL tersedia.
+        // Bookmark + posisi tersimpan + Ask YPL inline tersedia.
         $this->assertStringContainsString('posisi', $html);
-        $this->assertStringContainsString('Ask YPL', $html);
+        $this->assertStringContainsString('id="ask-panel"', $html);
+        $this->assertStringContainsString('id="form-ask"', $html);
+        $this->assertStringContainsString('id="btn-ask"', $html);
         // Fidelity BAB 4: kontrol Aa + indikator Reading %.
         $this->assertStringContainsString('Aa', $html);
         $this->assertStringContainsString('reading-pct', $html);
         $this->assertStringContainsString('CONTENTS', $html);
+    }
+
+    public function test_ask_inline_reader_menjawab_ter_scoped(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $scope = Document::factory()->for($owner)->create([
+            'slug' => 'reader-ask-scope', 'title' => 'SOP Ask Inline',
+            'description' => 'Prosedur ask inline tujuh langkah unik.',
+            'visibility' => 'public', 'status' => 'active',
+            'file_path' => 'documents/uji-reader-ask.pdf',
+        ]);
+        Document::factory()->for($owner)->create([
+            'slug' => 'reader-ask-global', 'title' => 'SOP Global Lain',
+            'description' => 'Prosedur ask inline tujuh langkah unik.',
+            'visibility' => 'public', 'status' => 'active', 'file_path' => 'documents/g.pdf',
+        ]);
+
+        // Tamu menjawab lewat endpoint JSON, dibatasi ke dokumen scope.
+        $res = $this->postJson(route('ask.query'), ['question' => 'ask inline tujuh langkah', 'doc' => 'reader-ask-scope'])
+            ->assertOk()
+            ->assertJsonPath('found', true)
+            ->assertJsonPath('scope', 'reader-ask-scope');
+
+        $this->assertSame('SOP Ask Inline', $res->json('sources.0.title'));
+        $this->assertStringContainsString(route('documents.show', $scope), $res->json('sources.0.url'));
+        $this->assertArrayHasKey('section', $res->json('sources.0'));
     }
 
     public function test_reader_privat_ditolak(): void

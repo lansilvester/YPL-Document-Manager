@@ -1,6 +1,6 @@
 # Report — YPL Smart Digital Library (Losnito)
 
-Tanggal: 12 Oktober 2026 · Baseline terverifikasi: 141 test lolos, Pint bersih.
+Tanggal: 12 Oktober 2026 · Baseline terverifikasi: 144 test lolos, Pint bersih.
 
 ## 1. Ringkasan Website
 
@@ -23,7 +23,7 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 
 - **Home (BAB 5 ketat):** hero + universal search, 6 quick actions, Explore 4 koleksi, What's New, YPL Today (deadline review nyata).
 - **Library `/perpustakaan`:** bookshelf 10 Handbook B01–B10 berbentuk buku 3D, filter koleksi (handbook/governance/academic/boarding/staff/parent/public), book detail (cover besar, TOC, Open Book, Bookmark).
-- **Reader Mode `/baca/{slug}`:** 2-halaman desktop / 1-halaman mobile, page-flip 550ms + reduced-motion, TOC drawer terang, lompat halaman + grid, search-in-book, toolbar bawah (Contents/Search/Bookmark/Aa/Ask YPL/counter/Reading %), keyboard + swipe, persist posisi & preferensi. **Panel Rekomendasi di sidebar kanan.**
+- **Reader Mode `/baca/{slug}`:** 2-halaman desktop / 1-halaman mobile, page-flip 550ms + reduced-motion, TOC drawer terang, lompat halaman + grid, search-in-book, toolbar bawah (Contents/Search/Bookmark/Aa/Ask YPL/counter/Reading %), keyboard + swipe, persist posisi & preferensi. **Panel Rekomendasi di sidebar kanan.** **Ask YPL inline** (§8/§14) — tanya & ringkas dokumen ter-scoped tanpa meninggalkan Reader; sumber dibuka tab baru.
 - **Dokumen:** unggah PDF (maks 9 MB), tulis via editor (sanitasi HTML), unduh PDF/HTML, semat (embed), suka (like), bagikan, Dokumen Saya, visibilitas public/restricted/private.
 - **Governance:** Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle draft→review→approval→active→review-due→archived + approval workflow + View History, relasi Handbook→Policy→SOP→Form→PIC→System, listing filter tipe/status/audience/unit, CRUD Handbook khusus admin. Tipe mencakup governance penuh (organization/risk/compliance/quality/document_control) dengan label rapi via `Document::typeLabel()`.
 - **Services `/layanan`:** katalog 8 layanan ("Saya ingin…"), pengajuan + Permintaan Saya, kelola + putusan staff (pending→approved/rejected→done).
@@ -69,7 +69,7 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 
 ## 6. Ask YPL — Arsitektur
 
-`AskController` → `AskYpl::answer()` (retrieval `visibleTo()` + `searchAny()` OR + skor overlap + fallback jujur) → opsional `GeminiLlm::compose()` (prompt grounding + sitasi [n], `config/ask.php`: driver/key/model/timeout). Kontrak: `['answer','sources','found','ai']`. **Sitasi section-level:** `bestPassage()`/`contentSentences()` melacak heading terdekat (h1–h3), sumber membawa `section` (mis. `§ Sanksi`); tanpa heading → `section=null` (jujur, tanpa nomor halaman palsu). Audit tiap tanya ke `activity_logs`.
+`AskController` → `AskYpl::answer()` (retrieval `visibleTo()` + `searchAny()` OR + skor overlap + fallback jujur) → opsional `GeminiLlm::compose()` (prompt grounding + sitasi [n], `config/ask.php`: driver/key/model/timeout). Kontrak: `['answer','sources','found','ai']`. **Sitasi section-level:** `bestPassage()`/`contentSentences()` melacak heading terdekat (h1–h3), sumber membawa `section` (mis. `§ Sanksi`); tanpa heading → `section=null` (jujur, tanpa nomor halaman palsu). **Inline Reader:** endpoint yang sama menyajikan JSON (`sources` terstruktur: title/url/section/passage/doc_type/status/version) saat diminta klien, ter-scoped ke dokumen yang dibaca. Audit tiap tanya ke `activity_logs`.
 
 ## 7. Universal Search (`/cari`)
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Services\AskYpl;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AskController extends Controller
@@ -51,6 +52,12 @@ class AskController extends Controller
             ['q' => mb_substr($data['question'], 0, 100), 'found' => $result['found'], 'sources' => count($result['sources'])]
         );
 
+        // Respons JSON untuk panel Ask inline di Reader (BAB 8/14) — bentuk sumber
+        // terstruktur agar klien tak perlu mengurai HTML.
+        if ($request->wantsJson()) {
+            return $this->jsonResponse($result, $scope);
+        }
+
         return view('ask.index', [
             'examples' => [],
             'scope' => $scope,
@@ -60,6 +67,30 @@ class AskController extends Controller
             'sources' => $result['sources'],
             'found' => $result['found'],
             'ai' => $result['ai'],
+        ]);
+    }
+
+    /**
+     * Proyeksi sumber Ask ke bentuk JSON yang stabil untuk panel inline.
+     *
+     * @param  array{answer: string, sources: array<int, array{document: Document, passage: string, score: int, section?: ?string}>, found: bool, ai: bool}  $result
+     */
+    private function jsonResponse(array $result, ?Document $scope): JsonResponse
+    {
+        return response()->json([
+            'answer' => $result['answer'],
+            'found' => $result['found'],
+            'ai' => $result['ai'],
+            'scope' => $scope?->slug,
+            'sources' => collect($result['sources'])->map(fn (array $hit) => [
+                'title' => $hit['document']->title,
+                'url' => route('documents.show', $hit['document']),
+                'section' => $hit['section'] ?? null,
+                'passage' => $hit['passage'],
+                'doc_type' => strtoupper(str_replace('_', ' ', $hit['document']->doc_type ?? 'dokumen')),
+                'status' => strtoupper(str_replace('_', ' ', (string) $hit['document']->status)),
+                'version' => (string) $hit['document']->version,
+            ])->values(),
         ]);
     }
 }
