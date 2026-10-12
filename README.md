@@ -5,7 +5,7 @@
 
 ![Home — desktop](presentasi/screenshots/desktop-home.png)
 
-- **Status (13 Okt 2026):** 155 tests lolos (956 assertions) · 110 routes · branch `main`
+- **Status (13 Okt 2026):** 159 tests lolos (973 assertions) · 113 routes · branch `main`
 - **Repo:** `lansilvester/YPL-Document-Manager`
 - **Presentasi progress:** [`presentasi/LOSNITO-Progress-Report.pptx`](presentasi/LOSNITO-Progress-Report.pptx) (18 slide, desktop + mobile)
 
@@ -55,7 +55,7 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 ### Dokumen & Governance
 - **Design system** — token warna institusi (navy/red/blue), radius, bayangan, ring fokus, dan gerak didefinisikan sekali sebagai CSS variables (`--ypl-*`) di `layout.blade.php`; komponen kanonis (`.btn-primary`, `.btn-accent`, `.field`, `.page-title`, `.grad-navy`, `.brand-line`, dst.) mengonsumsinya sehingga perubahan tema cukup di satu tempat (BAB 16).
 - **Dokumen** — unggah PDF (maks 9 MB), tulis via editor (sanitasi HTML), unduh PDF/HTML, semat (embed), suka, bagikan, Dokumen Saya, visibilitas public/restricted/private.
-- **Governance `/governance`** — Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle `draft → review → approval → active → review-due → archived`, approval workflow, View History + snapshot isi per versi + **"What changed?"** (diff bidang antar revisi), relasi Handbook→Policy→SOP→Form→PIC→System, impact map graf 2-hop, listing filter tipe/status/audience/unit, ekspor CSV (throttled). **Version control nyata:** nomor versi naik otomatis saat edit (bila tidak diisi eksplisit), setiap perubahan metadata/isi mencatat revisi + catatan perubahan. **Archive policy (BAB 13):** dokumen `review_due` yang melewati masa retensi (default 1095 hari, diatur SA) diarsipkan otomatis via `governance:archive-stale` (dry-run tersedia). Tipe dokumen mencakup governance penuh: `policy, regulation, standard, sop, work_instruction, decision, organization, risk, compliance, quality, document_control, form, evidence, handbook, other`.
+- **Governance `/governance`** — Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle `draft → review → approval → active → review-due → archived`, approval workflow, View History + snapshot isi per versi + **"What changed?"** (diff bidang antar revisi), relasi Handbook→Policy→SOP→Form→PIC→System, impact map graf 2-hop, listing filter tipe/status/audience/unit, ekspor CSV (throttled). **Version control nyata:** nomor versi naik otomatis saat edit (bila tidak diisi eksplisit), setiap perubahan metadata/isi mencatat revisi + catatan perubahan. **Archive policy (BAB 13):** dokumen `review_due` yang melewati masa retensi (default 1095 hari, diatur SA) diarsipkan otomatis via `governance:archive-stale` (dry-run tersedia). **Notifikasi governance:** review-due & arsip otomatis mengirim notifikasi in-app (lonceng + badge di header, pusat notifikasi `/notifikasi` dengan tandai-baca per item/semua; email otomatis bila mailer produksi aktif). Tipe dokumen mencakup governance penuh: `policy, regulation, standard, sop, work_instruction, decision, organization, risk, compliance, quality, document_control, form, evidence, handbook, other`.
 
 ![Governance — desktop](presentasi/screenshots/desktop-governance.png)
 
@@ -109,19 +109,19 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 
 ```text
 app/
-  Http/Controllers/   # 25 controller: Home, Library (termasuk Peta Pengetahuan),
-                      #   Reader, Governance, Search, Ask, Document, Event, Faq, Staff,
+  Http/Controllers/   # 26 controller: Home, Library (termasuk Peta Pengetahuan),
+                      #   Reader, Governance, Notification, Search, Ask, Document, Event, Faq, Staff,
                       #   Admin, SuperAdmin, RoleDashboard, Unit, Contact, ...
   Models/             # 21 model: Document, Category, DocumentRelation,
                       #   DocumentVersion, Event, Faq, System, Role, Unit, Contact, ...
   Services/           # AskYpl, RecommendationEngine, ImpactMap, GeminiLlm,
                       #   HtmlSanitizer, DocumentFiles, WaNumber
-routes/web.php        # 110 routes: public • auth • staff/ • admin/ • sa/
-database/migrations/  # 30 migrations (users+audience, documents+FTS, categories B01–B10,
+routes/web.php        # 113 routes: public • auth • staff/ • admin/ • sa/
+database/migrations/  # 32 migrations (users+audience, documents+FTS, categories B01–B10,
                       #   relations, versions+snapshot, events, faqs, systems, units, contacts, ...)
 resources/views/      # home, library (termasuk peta-pengetahuan), reader, governance,
                       #   search, ask, portal, dashboard, systems, admin, sa, ...
-tests/Feature/        # 16 file test (±155 tests)
+tests/Feature/        # 16 file test (±159 tests)
 presentasi/           # slide progress + screenshot desktop & mobile
 ```
 
@@ -140,7 +140,7 @@ php artisan serve               # http://localhost:8000
 ```
 
 ```bash
-php artisan test --compact      # 155 tests, ~4 detik
+php artisan test --compact      # 159 tests, ~4 detik
 vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
 ```
 
@@ -159,8 +159,8 @@ Akun demo per audiens (opsional): `php artisan db:seed --class=AudienceDemoSeede
 
 ## 8. Testing & Kualitas
 
-- `php artisan test --compact` → **155 passed, 956 assertions** (13 Okt 2026).
-- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control + archive policy), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression.
+- `php artisan test --compact` → **159 passed, 973 assertions** (13 Okt 2026).
+- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control + archive policy, **notifikasi review/arsip + pusat notifikasi**), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression.
 - Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, maupun graf.
 
 ---

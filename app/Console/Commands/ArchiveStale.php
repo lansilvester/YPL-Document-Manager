@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\ActivityLog;
 use App\Models\Document;
+use App\Services\GovernanceNotifier;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 #[Description('Arsipkan dokumen review_due yang melewati masa retensi (Archive policy BAB 13)')]
 class ArchiveStale extends Command
 {
-    public function handle(): int
+    public function handle(GovernanceNotifier $notifier): int
     {
         $days = $this->option('days');
         if ($days !== null) {
@@ -33,21 +34,23 @@ class ArchiveStale extends Command
         }
 
         $count = 0;
+        $notified = 0;
 
-        $query->chunkById(200, function ($docs) use (&$count) {
+        $query->chunkById(200, function ($docs) use (&$count, &$notified, $notifier) {
             foreach ($docs as $doc) {
-                DB::transaction(function () use ($doc, &$count) {
+                DB::transaction(function () use ($doc, &$count, &$notified, $notifier) {
                     $from = $doc->status;
                     $doc->status = 'archived';
                     $doc->recordVersion($from, 'Otomatis: melewati masa retensi (archive policy).');
                     $doc->save();
+                    $notified += $notifier->notifyArchived($doc);
                     $count++;
                 });
                 ActivityLog::record(null, $doc->id, 'transition', ['from' => 'review_due', 'to' => 'archived', 'auto' => true]);
             }
         });
 
-        $this->info("Diarsipkan otomatis: {$count} dokumen.");
+        $this->info("Diarsipkan otomatis: {$count} dokumen · notifikasi terkirim: {$notified}.");
 
         return self::SUCCESS;
     }

@@ -13,6 +13,7 @@ use App\Http\Controllers\GovernanceController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PromotionController;
@@ -112,6 +113,11 @@ Route::middleware('auth')->group(function () {
 
     // Phase 6 — Role Dashboard (BAB 11): satu dashboard, konten menyesuaikan peran.
     Route::get('/dashboard', [RoleDashboardController::class, 'index'])->name('dashboard');
+
+    // Governance notifications (BAB 13) — lonceng in-app.
+    Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifikasi/{notification}/baca', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('/notifikasi/baca-semua', [NotificationController::class, 'readAll'])->name('notifications.read-all');
 
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');

@@ -8,10 +8,12 @@ use App\Models\Role;
 use App\Models\Setting;
 use App\Models\System;
 use App\Models\User;
+use App\Notifications\GovernanceNotification;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\SystemsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class YplGovernanceTest extends TestCase
@@ -473,5 +475,87 @@ class YplGovernanceTest extends TestCase
         $this->assertEquals(30, Document::retentionDays());
         $this->assertTrue(Document::archiveDue()->pluck('id')->contains($doc->id));
         $this->assertFalse(Document::archiveDue()->pluck('id')->contains($recent->id));
+    }
+
+    public function test_mark_review_due_mengirim_notifikasi_ke_pihak_terkait(): void
+    {
+        Notification::fake();
+
+        $owner = User::factory()->create(['role' => 'staff']);
+        $pic = User::factory()->create(['role' => 'staff']);
+        $doc = Document::factory()->for($owner)->create([
+            'slug' => 'notif-review', 'title' => 'Notif Review', 'visibility' => 'public',
+            'file_path' => 'documents/notif.pdf', 'status' => 'active',
+            'review_at' => now()->subDay()->format('Y-m-d'), 'pic_id' => $pic->id,
+        ]);
+
+        $this->artisan('governance:mark-review-due')
+            ->expectsOutputToContain('notifikasi terkirim: 2')
+            ->assertSuccessful();
+
+        Notification::assertSentTo([$owner, $pic], GovernanceNotification::class, function ($n) use ($doc) {
+            return $n->kind === 'review_due' && $n->document->id === $doc->id;
+        });
+        Notification::assertCount(2);
+    }
+
+    public function test_archive_stale_mengirim_notifikasi_arsip(): void
+    {
+        Notification::fake();
+
+        $owner = User::factory()->create(['role' => 'staff']);
+        $stale = Document::factory()->for($owner)->create([
+            'title' => 'Arsip Notif', 'status' => 'review_due', 'version' => '1.0',
+            'review_at' => now()->subYears(4),
+        ]);
+
+        $this->artisan('governance:archive-stale')
+            ->expectsOutputToContain('notifikasi terkirim: 1')
+            ->assertSuccessful();
+
+        Notification::assertSentTo($owner, GovernanceNotification::class, function ($n) use ($stale) {
+            return $n->kind === 'archived' && $n->document->id === $stale->id;
+        });
+    }
+
+    public function test_pusat_notifikasi_menampilkan_dan_menandai_terbaca(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $doc = Document::factory()->for($owner)->create([
+            'slug' => 'notif-ui', 'title' => 'Notif UI', 'visibility' => 'public',
+            'file_path' => 'documents/notif-ui.pdf', 'status' => 'active',
+        ]);
+
+        $owner->notify(new GovernanceNotification(
+            $doc, 'review_due', 'Dokumen perlu ditinjau: '.$doc->title,
+            'Dokumen ini telah melewati tanggal review.',
+        ));
+
+        $this->actingAs($owner)->get(route('notifications.index'))
+            ->assertOk()->assertSee('Dokumen perlu ditinjau: '.$doc->title);
+
+        $id = $owner->notifications()->firstOrFail()->id;
+        $this->actingAs($owner)->post(route('notifications.read', $id))
+            ->assertRedirect(route('governance.show', $doc));
+        $this->assertNotNull($owner->notifications()->firstOrFail()->read_at);
+
+        $owner->notify(new GovernanceNotification($doc, 'review_due', 'Kedua', 'pesan'));
+        $this->actingAs($owner)->post(route('notifications.read-all'))->assertRedirect();
+        $this->assertEquals(0, $owner->fresh()->unreadNotifications->count());
+    }
+
+    public function test_pusat_notifikasi_menolak_baca_notifikasi_orang_lain(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $lain = User::factory()->create(['role' => 'staff']);
+        $doc = Document::factory()->for($owner)->create([
+            'slug' => 'notif-privacy', 'title' => 'Notif Privasi', 'visibility' => 'public',
+            'file_path' => 'documents/notif-privacy.pdf', 'status' => 'active',
+        ]);
+        $owner->notify(new GovernanceNotification($doc, 'review_due', 'Judul', 'pesan'));
+        $id = $owner->notifications()->firstOrFail()->id;
+
+        $this->actingAs($lain)->post(route('notifications.read', $id))->assertNotFound();
+        $this->assertNull($owner->notifications()->firstOrFail()->read_at);
     }
 }

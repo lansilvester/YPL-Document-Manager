@@ -109,6 +109,13 @@
     </nav>
     <div class="flex items-center gap-2 ml-auto shrink-0">
       @auth
+        @php($unreadNotifications = auth()->user()->unreadNotifications->count())
+        <a href="{{ route('notifications.index') }}" class="relative w-10 h-10 rounded-xl grid place-items-center border border-[#d6d6d6] text-[#002f80] hover:border-[#002f80] transition shrink-0" aria-label="Notifikasi{{ $unreadNotifications ? " ({$unreadNotifications} belum dibaca)" : '' }}">
+          @include('components.icon', ['name' => 'bell', 'class' => 'w-5 h-5'])
+          @if($unreadNotifications)
+            <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#c90018] text-white text-[10px] font-extrabold grid place-items-center">{{ $unreadNotifications > 9 ? '9+' : $unreadNotifications }}</span>
+          @endif
+        </a>
         <div class="relative" id="profile-menu">
           <button type="button" id="profile-menu-btn" aria-haspopup="true" aria-expanded="false" class="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 border border-[#d6d6d6] hover:border-[#002f80] hover:shadow transition bg-white">
             <span class="w-8 h-8 rounded-full grid place-items-center text-white text-sm font-bold overflow-hidden shrink-0 grad-navy">
@@ -124,6 +131,7 @@
             </div>
             <div class="p-1.5 text-sm font-semibold">
               <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Dashboard Saya</a>
+              <a href="{{ route('notifications.index') }}" class="flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]"><span class="flex items-center gap-2.5">@include('components.icon', ['name' => 'bell', 'class' => 'w-4 h-4']) Notifikasi</span>@if($unreadNotifications)<span class="min-w-[18px] h-[18px] px-1 rounded-full bg-[#c90018] text-white text-[10px] font-extrabold grid place-items-center">{{ $unreadNotifications > 9 ? '9+' : $unreadNotifications }}</span>@endif</a>
               <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'users', 'class' => 'w-4 h-4']) Profil Saya</a>
               @if(\App\Models\Setting::feature('upload'))<a href="{{ route('documents.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'upload', 'class' => 'w-4 h-4']) Unggah PDF</a>@endif
               @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Tulis Dokumen</a>@endif
@@ -185,7 +193,7 @@
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-3 pt-1 text-[11px] font-bold tracking-widest text-slate-400">AKUN & KERJA</div>
         <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Dashboard Saya</a>
-        @if(\App\Models\Setting::feature('upload'))<a href="{{ route('documents.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'upload', 'class' => 'w-4 h-4']) Unggah PDF</a>@endif
+        <a href="{{ route('notifications.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'bell', 'class' => 'w-4 h-4']) Notifikasi</a>
         @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Tulis Dokumen</a>@endif
         <a href="{{ route('documents.my') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'folder', 'class' => 'w-4 h-4']) Dokumen Saya</a>
         <a href="{{ route('services.my') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'inbox', 'class' => 'w-4 h-4']) Permintaan Saya</a>

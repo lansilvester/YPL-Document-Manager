@@ -1,6 +1,6 @@
 # Report — YPL Smart Digital Library (Losnito)
 
-Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 155 test lolos, Pint bersih.
+Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 159 test lolos, Pint bersih.
 
 ## 1. Ringkasan Website
 
@@ -70,6 +70,8 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 **Archive policy (BAB 13):** `Document::retentionDays()` (setting `retention_days`, default 1095) + scope `Document::archiveDue()`; perintah `governance:archive-stale` (`--days`, `--dry-run`) mengarsipkan dokumen `review_due` yang melewati masa retensi, terjadwal harian 02:00. Masa retensi diatur Super Admin di Pengaturan Web.
 
 **Version control dokumen (BAB 13):** `Document::nextVersion()` menaikkan segmen terakhir nomor versi (`1.0 → 1.1`); `Document::recordVersion()` menyimpan revisi (snapshot + catatan + status); `Document::snapshotDiff()` menghitung bidang yang berubah antar revisi. Revisi tercatat saat: pembuatan dokumen (v1.0), setiap edit metadata/berkas (Document/Staff controller), dan perubahan isi (editor). Halaman `/governance/{slug}/riwayat` menampilkan **"What changed?"** per revisi.
+
+**Notifikasi governance (BAB 13):** `GovernanceNotifier` mengumpulkan penerima (`pic_id`/`approver_id`/`user_id`, dedup) dan mengirim `GovernanceNotification` (channel `database` selalu; `mail` otomatis bila mailer produksi aktif). Perintah `governance:mark-review-due`/`governance:archive-stale` mengirim notifikasi di dalam transaksi. Pusat notifikasi in-app di `/notifikasi` (lonceng di header + badge belum dibaca), dengan aksi tandai-baca per item & semua; notifikasi hanya dapat dibaca pemiliknya (teruji).
 
 ## 6. Ask YPL — Arsitektur
 
