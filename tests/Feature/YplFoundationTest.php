@@ -3,7 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Document;
+use App\Models\Event;
+use App\Models\Faq;
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Database\Seeders\YplHandbooksSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -46,6 +50,68 @@ class YplFoundationTest extends TestCase
         foreach (['governance.index', 'services.index', 'community.index', 'calendar.index', 'ask.index', 'insight.index'] as $name) {
             $this->get(route($name))->assertOk();
         }
+    }
+
+    public function test_community_nyata_unit_peran_dan_direktori(): void
+    {
+        $this->seed(RoleSeeder::class);
+        $staff = User::factory()->create(['role' => 'staff', 'name' => 'Komunitas Staff X', 'academic_info' => 'Keuangan']);
+        Document::factory()->for($staff)->create([
+            'slug' => 'doc-unit-x', 'title' => 'Doc Unit X', 'visibility' => 'public',
+            'file_path' => 'documents/x.pdf', 'unit' => 'Keuangan',
+        ]);
+        Faq::create(['slug' => 'faq-kom', 'question' => 'Tanya komunitas?', 'answer' => 'Jawab komunitas.']);
+
+        // Tamu: unit + peran + FAQ terlihat, direktori dikunci.
+        $this->get(route('community.index'))->assertOk()
+            ->assertSee('Keuangan')
+            ->assertSee('Siswa')
+            ->assertSee('Tanya komunitas?')
+            ->assertDontSee('Komunitas Staff X')
+            ->assertSee('Masuk');
+
+        // Login: direktori terlihat; kartu direktori tanpa email (tanpa mailto).
+        $this->actingAs($staff)->get(route('community.index'))->assertOk()
+            ->assertSee('Komunitas Staff X')
+            ->assertSee('Staff · Keuangan')
+            ->assertDontSee('mailto:');
+    }
+
+    public function test_calendar_nyata_filter_dan_ypl_today(): void
+    {
+        Event::create(['slug' => 'rapat-cal', 'title' => 'Rapat Kalender A', 'category' => 'foundation', 'starts_at' => '2026-11-01 09:00']);
+        Event::create(['slug' => 'apel-cal', 'title' => 'Apel Kalender B', 'category' => 'academic', 'starts_at' => '2026-10-20 07:30']);
+        Event::create(['slug' => 'rapat-internal-cal', 'title' => 'Rapat Internal C', 'category' => 'foundation', 'visibility' => 'internal']);
+
+        $this->get(route('calendar.index'))->assertOk()
+            ->assertSee('Rapat Kalender A')
+            ->assertDontSee('Rapat Internal C');
+
+        $this->get(route('calendar.index', ['kategori' => 'academic']))->assertOk()
+            ->assertSee('Apel Kalender B')
+            ->assertDontSee('Rapat Kalender A');
+
+        $staff = User::factory()->create(['role' => 'staff']);
+        $this->actingAs($staff)->get(route('calendar.index'))->assertOk()
+            ->assertSee('Rapat Internal C');
+    }
+
+    public function test_insight_etalase_publik(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        Document::factory()->for($staff)->create([
+            'slug' => 'doc-insight', 'title' => 'Doc Insight Publik', 'visibility' => 'public',
+            'file_path' => 'documents/i.pdf', 'status' => 'active',
+        ]);
+        Document::factory()->for($staff)->create([
+            'slug' => 'doc-insight-priv', 'title' => 'Doc Insight Rahasia', 'visibility' => 'private',
+            'file_path' => 'documents/j.pdf', 'status' => 'active',
+        ]);
+
+        $this->get(route('insight.index'))->assertOk()
+            ->assertSee('Doc Insight Publik')
+            ->assertDontSee('Doc Insight Rahasia')
+            ->assertSee('TERBARU UNTUK PUBLIK');
     }
 
     public function test_handbook_crud_hanya_admin(): void

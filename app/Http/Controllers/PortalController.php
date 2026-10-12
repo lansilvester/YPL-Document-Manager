@@ -3,7 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Models\Event;
+use App\Models\Faq;
+use App\Models\Role;
 use App\Models\ServiceRequest;
+use App\Models\User;
+use Illuminate\Http\Request;
 
 class PortalController extends Controller
 {
@@ -26,34 +31,70 @@ class PortalController extends Controller
         ]);
     }
 
+    /**
+     * Community nyata (BAB 3/17): direktori orang, unit, peran, FAQ komunitas.
+     * Data orang hanya untuk login (privasi, sejajar /cari).
+     */
     public function community(): mixed
     {
-        return view('portal.placeholder', [
-            'eyebrow' => 'COMMUNITY',
-            'title' => 'Komunitas YPL',
-            'desc' => 'Direktori unit, peran, dan kontak PIC. Knowledge berbasis orang (Phase 4).',
-            'actions' => [],
+        $user = auth()->user();
+
+        $units = Document::query()->visibleTo($user)
+            ->whereNotNull('unit')->where('unit', '!=', '')
+            ->selectRaw('unit, COUNT(*) as total')->groupBy('unit')->orderBy('unit')->get();
+
+        $people = $user
+            ? User::query()->select(['id', 'name', 'role', 'academic_info'])->orderBy('name')->paginate(12)
+            : null;
+
+        return view('portal.community', [
+            'units' => $units,
+            'people' => $people,
+            'roles' => Role::orderBy('priority')->get(['slug', 'name', 'description']),
+            'faqs' => Faq::query()->when(! $user, fn ($q) => $q->where('visibility', 'public'))
+                ->orderBy('sort_order')->limit(6)->get(),
         ]);
     }
 
-    public function calendar(): mixed
+    /**
+     * Calendar nyata (BAB 3/5): agenda per kategori + YPL Today (deadline review).
+     */
+    public function calendar(Request $request): mixed
     {
-        return view('portal.placeholder', [
-            'eyebrow' => 'CALENDAR',
-            'title' => 'Kalender YPL',
-            'desc' => 'Foundation, akademik, asrama, event, dan deadline penting. YPL Today tampil di beranda.',
-            'actions' => [],
+        $data = $request->validate(['kategori' => ['nullable', 'string', 'in:foundation,academic,boarding,event,deadline']]);
+        $user = auth()->user();
+
+        $events = Event::query()->when(! $user, fn ($q) => $q->where('visibility', 'public'))
+            ->when($data['kategori'] ?? null, fn ($q, $cat) => $q->where('category', $cat))
+            ->orderBy('starts_at')->paginate(12)->withQueryString();
+
+        $todayDocs = Document::with(['category'])->where('visibility', 'public')
+            ->where('status', 'active')->whereNotNull('review_at')
+            ->orderBy('review_at')->limit(5)->get();
+
+        return view('portal.calendar', [
+            'events' => $events,
+            'todayDocs' => $todayDocs,
+            'kategori' => $data['kategori'] ?? null,
+            'categories' => Event::CATEGORIES,
         ]);
     }
 
+    /**
+     * YPL Insight publik (BAB 3): etalase koleksi publik + statistik.
+     */
     public function insight(): mixed
     {
-        return view('portal.placeholder', [
-            'eyebrow' => 'PUBLIC',
-            'title' => 'YPL Insight',
-            'desc' => 'Profil institusi, program, fasilitas, prestasi, dan publikasi untuk publik.',
-            'actions' => [
-                ['label' => 'Lihat Koleksi Publik', 'href' => route('library.index', ['koleksi' => 'public']), 'primary' => true],
+        $docs = Document::with(['category'])->where('visibility', 'public')
+            ->where('status', 'active')->latest()->limit(6)->get();
+
+        return view('portal.insight', [
+            'docs' => $docs,
+            'stats' => [
+                'dokumen' => Document::where('visibility', 'public')->count(),
+                'views' => (int) Document::where('visibility', 'public')->sum('views_count'),
+                'agenda' => Event::where('visibility', 'public')->count(),
+                'faq' => Faq::where('visibility', 'public')->count(),
             ],
         ]);
     }
