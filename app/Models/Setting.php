@@ -35,6 +35,7 @@ class Setting extends Model
         'share_enabled' => '1',
         'embed_enabled' => '1',
         'reg_domains' => '',
+        'retention_days' => '1095',
     ];
 
     public const FEATURES = [

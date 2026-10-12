@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Document;
 use App\Models\DocumentRelation;
 use App\Models\Role;
+use App\Models\Setting;
 use App\Models\System;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
@@ -414,5 +415,63 @@ class YplGovernanceTest extends TestCase
         $version = $doc->versions()->latest()->firstOrFail();
         $this->assertEquals('Dokumen dibuat.', $version->change_note);
         $this->assertEquals('Dok Baru', $version->snapshot['title']);
+    }
+
+    public function test_archive_policy_mengarsipkan_dokumen_kedaluwarsa(): void
+    {
+        $fresh = Document::factory()->create([
+            'title' => 'Baru Review', 'status' => 'review_due', 'version' => '1.0',
+            'review_at' => now()->subDays(10),
+        ]);
+        $stale = Document::factory()->create([
+            'title' => 'Lama Review', 'status' => 'review_due', 'version' => '1.0',
+            'review_at' => now()->subYears(4),
+        ]);
+        $activeStale = Document::factory()->create([
+            'title' => 'Masih Aktif', 'status' => 'active', 'version' => '1.0',
+            'review_at' => now()->subYears(4),
+        ]);
+
+        $this->artisan('governance:archive-stale')
+            ->expectsOutputToContain('Diarsipkan otomatis: 1')
+            ->assertSuccessful();
+
+        $this->assertEquals('archived', $stale->fresh()->status);
+        $this->assertEquals('review_due', $fresh->fresh()->status);
+        $this->assertEquals('active', $activeStale->fresh()->status);
+
+        $version = $stale->versions()->latest()->firstOrFail();
+        $this->assertEquals('review_due', $version->from_status);
+        $this->assertEquals('archived', $version->to_status);
+        $this->assertDatabaseHas('activity_logs', ['document_id' => $stale->id, 'action' => 'transition']);
+    }
+
+    public function test_archive_policy_dry_run_tidak_mengubah(): void
+    {
+        $stale = Document::factory()->create([
+            'status' => 'review_due', 'version' => '1.0', 'review_at' => now()->subYears(4),
+        ]);
+
+        $this->artisan('governance:archive-stale', ['--dry-run' => true])
+            ->expectsOutputToContain('Kandidat arsip: 1')
+            ->assertSuccessful();
+
+        $this->assertEquals('review_due', $stale->fresh()->status);
+    }
+
+    public function test_retention_days_dapat_diatur_dan_dipakai_scope(): void
+    {
+        Setting::set('retention_days', '30');
+
+        $doc = Document::factory()->create([
+            'status' => 'review_due', 'version' => '1.0', 'review_at' => now()->subDays(40),
+        ]);
+        $recent = Document::factory()->create([
+            'status' => 'review_due', 'version' => '1.0', 'review_at' => now()->subDays(20),
+        ]);
+
+        $this->assertEquals(30, Document::retentionDays());
+        $this->assertTrue(Document::archiveDue()->pluck('id')->contains($doc->id));
+        $this->assertFalse(Document::archiveDue()->pluck('id')->contains($recent->id));
     }
 }

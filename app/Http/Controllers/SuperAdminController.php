@@ -58,11 +58,15 @@ class SuperAdminController extends Controller
             'site_name' => ['required', 'string', 'max:60'],
             'foundation_name' => ['required', 'string', 'max:80'],
             'reg_domains' => ['nullable', 'string', 'max:255'],
+            'retention_days' => ['nullable', 'integer', 'min:30', 'max:3650'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:2048'],
             'logo_reset' => ['nullable', 'boolean'],
         ], [
             'site_name.required' => 'Nama situs wajib diisi.',
             'foundation_name.required' => 'Nama yayasan wajib diisi.',
+            'retention_days.integer' => 'Masa retensi arsip harus berupa angka hari.',
+            'retention_days.min' => 'Masa retensi arsip minimal 30 hari.',
+            'retention_days.max' => 'Masa retensi arsip maksimal 3650 hari.',
             'logo.image' => 'Logo wajib berupa file gambar.',
             'logo.mimes' => 'Logo harus berformat JPG, PNG, GIF, atau WebP.',
             'logo.max' => 'Ukuran logo maksimal 2 MB.',
@@ -71,6 +75,7 @@ class SuperAdminController extends Controller
         Setting::set('site_name', $data['site_name']);
         Setting::set('foundation_name', $data['foundation_name']);
         Setting::set('reg_domains', trim($data['reg_domains'] ?? ''));
+        Setting::set('retention_days', (string) ($data['retention_days'] ?? Document::RETENTION_DEFAULT_DAYS));
 
         if ($request->boolean('logo_reset')) {
             $old = Setting::get('logo_path');

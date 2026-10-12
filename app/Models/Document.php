@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class Document extends Model
@@ -523,5 +524,43 @@ class Document extends Model
     public function isGovernance(): bool
     {
         return in_array($this->doc_type, static::GOVERNANCE_TYPES, true);
+    }
+
+    /**
+     * Default kebijakan arsip (BAB 13 — Archive policy), dalam hari.
+     * Dapat ditimpa Super Admin lewat Pengaturan Web (kunci `retention_days`).
+     */
+    public const RETENTION_DEFAULT_DAYS = 1095;
+
+    /** Ambang retensi aktif (hari) untuk dokumen berstatus review_due. */
+    public static function retentionDays(): int
+    {
+        $value = Setting::get('retention_days');
+
+        return max(30, (int) ($value ?? static::RETENTION_DEFAULT_DAYS));
+    }
+
+    /**
+     * Ambang waktu: dokumen review_due yang tanggal review-nya lebih tua dari ini
+     * sudah layak diarsipkan otomatis.
+     */
+    public static function retentionCutoff(?Carbon $asOf = null): Carbon
+    {
+        return ($asOf ?? Carbon::now())->copy()->subDays(static::retentionDays());
+    }
+
+    /**
+     * Kandidat arsip otomatis: status review_due dan sudah melewati masa retensi.
+     * review_at NULL diperlakukan sejak tanggal update terakhir agar dokumen
+     * lama tanpa jadwal review tidak menggantung selamanya.
+     */
+    public function scopeArchiveDue($query, ?Carbon $asOf = null)
+    {
+        $cutoff = static::retentionCutoff($asOf);
+
+        return $query->where('status', 'review_due')
+            ->where(fn ($w) => $w
+                ->where(fn ($q) => $q->whereNotNull('review_at')->whereDate('review_at', '<', $cutoff->toDateString()))
+                ->orWhere(fn ($q) => $q->whereNull('review_at')->where('updated_at', '<', $cutoff)));
     }
 }

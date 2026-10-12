@@ -1,6 +1,6 @@
 # Report — YPL Smart Digital Library (Losnito)
 
-Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 149 test lolos, Pint bersih.
+Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 152 test lolos, Pint bersih.
 
 ## 1. Ringkasan Website
 
@@ -14,7 +14,7 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 |---|---|
 | 1 Foundation (IA, taxonomy, Library Mode) | ✅ Selesai |
 | 2 Living Books (bookshelf B01–B10, book detail, Reader Mode) | ✅ Selesai + fidelity visual BAB 4 |
-| 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (**version control nyata**: bump otomatis + revisi saat edit + "What changed?"; snapshot isi per versi; otomasi review-due) |
+| 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (**version control nyata**: bump otomatis + revisi saat edit + "What changed?"; snapshot isi per versi; otomasi review-due + archive policy retensi otomatis) |
 | 4 Services (forms, workflow, My Requests) | ✅ Selesai (kurang: integrasi Odoo) |
 | 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | ✅ Fungsional — Ask YPL v1 + driver Gemini testing, Recommendations selesai, universal search selesai, **Peta Pengetahuan `/peta-pengetahuan`** + blok terkait selesai |
 | 6 Ecosystem (Odoo, role dashboard, analitik) | 🔄 Berjalan — **dashboard per peran `/dashboard` (audience-aware) selesai**; Community/Calendar/Insight nyata; **analytics `activity_logs` selesai**; sisa: Odoo |
@@ -66,6 +66,8 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 ## 5. Tabel Pendukung (ringkas)
 
 `documents` (metadata knowledge BAB 7 + FTS), `categories` (koleksi + B01–B10), `document_relations` (dokumen↔dokumen/sistem), `document_versions` (audit lifecycle + snapshot isi per revisi + `change_note`; dibaca "What changed?" sebagai diff antar snapshot), `systems`, `roles`, `units` + `contacts` (direktori unit & PIC publik, CRUD admin), `service_requests`, `role_requests` (peran sistem **atau** audiens: `requested_role`/`requested_audience`), `bookmarks`, `likes`, `reading_positions`, `reading_prefs`, `tags` (+pivot), `activity_logs`, `settings`, bawaan Laravel (`sessions`, `cache`, `jobs`, `password_reset_tokens`).
+
+**Archive policy (BAB 13):** `Document::retentionDays()` (setting `retention_days`, default 1095) + scope `Document::archiveDue()`; perintah `governance:archive-stale` (`--days`, `--dry-run`) mengarsipkan dokumen `review_due` yang melewati masa retensi, terjadwal harian 02:00. Masa retensi diatur Super Admin di Pengaturan Web.
 
 **Version control dokumen (BAB 13):** `Document::nextVersion()` menaikkan segmen terakhir nomor versi (`1.0 → 1.1`); `Document::recordVersion()` menyimpan revisi (snapshot + catatan + status); `Document::snapshotDiff()` menghitung bidang yang berubah antar revisi. Revisi tercatat saat: pembuatan dokumen (v1.0), setiap edit metadata/berkas (Document/Staff controller), dan perubahan isi (editor). Halaman `/governance/{slug}/riwayat` menampilkan **"What changed?"** per revisi.
 
