@@ -21,49 +21,7 @@ use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\SystemController;
-use App\Models\ActivityLog;
-use App\Models\User;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
-
-// Rute deploy sekali-pakai (tanpa SSH): /deploy/SECRET.
-// Wajib set DEPLOY_SECRET acak di .env, jalankan sekali, lalu HAPUS rute ini.
-Route::get('/deploy/{secret}', function (string $secret) {
-    $expected = (string) ($_ENV['DEPLOY_SECRET'] ?? getenv('DEPLOY_SECRET') ?? '');
-    abort_unless($expected !== '' && hash_equals($expected, $secret), 404);
-
-    Artisan::call('migrate', ['--force' => true]);
-    $out = [Artisan::output()];
-    Artisan::call('db:seed', ['--force' => true]);
-    $out[] = Artisan::output();
-
-    // Bersihkan log lama sekaligus (tanpa cron di shared hosting).
-    $pruned = ActivityLog::prune();
-    $out[] = "Activity logs pruned: {$pruned} rows deleted.";
-
-    // Promosikan SATU akun menjadi Super Admin bila diminta (sekali saja).
-    $saEmail = (string) ($_ENV['DEPLOY_SA_EMAIL'] ?? getenv('DEPLOY_SA_EMAIL') ?? '');
-    if ($email = $saEmail) {
-        $user = User::where('email', $email)->first();
-        if (! User::where('role', 'superadmin')->exists()) {
-            $password = Str::random(16);
-            if (! $user) {
-                $user = User::create([
-                    'name' => 'Developer YPL', 'email' => $email,
-                    'password' => $password, 'role' => 'superadmin', 'ypl_verified' => true,
-                ]);
-            } else {
-                $user->update(['role' => 'superadmin', 'password' => $password]);
-            }
-            $out[] = "SUPERADMIN: {$email} / {$password} (SIMPAN & GANTI SEGERA)";
-        } else {
-            $out[] = 'Super Admin sudah ada — lewati.';
-        }
-    }
-
-    return response()->json(['ok' => true, 'log' => implode("\n", $out)]);
-})->middleware('throttle:deploy');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/dokumen', [DocumentController::class, 'index'])->name('documents.index');
