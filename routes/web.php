@@ -79,6 +79,7 @@ Route::get('/governance/{document:slug}/versi', [GovernanceController::class, 'v
 Route::get('/governance/{document:slug}/impact', [GovernanceController::class, 'impactMap'])->name('governance.impact');
 
 Route::get('/layanan', [PortalController::class, 'services'])->name('services.index');
+Route::get('/help', [PortalController::class, 'help'])->name('help.index');
 Route::get('/community', [PortalController::class, 'community'])->name('community.index');
 Route::get('/calendar', [PortalController::class, 'calendar'])->name('calendar.index');
 Route::get('/tanya', [AskController::class, 'index'])->name('ask.index');

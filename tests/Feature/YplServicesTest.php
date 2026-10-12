@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Faq;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class YplServicesTest extends TestCase
@@ -68,5 +70,44 @@ class YplServicesTest extends TestCase
 
         $this->assertEquals('done', $req->fresh()->status);
         $this->assertEquals($staff->id, $req->fresh()->handler_id);
+    }
+
+    public function test_help_center_faq_berkelompok_dan_terbatas_otoritas(): void
+    {
+        Faq::create(['slug' => 'faq-help-a', 'question' => 'Tanya Bantuan A?', 'answer' => 'Jawab A.', 'category' => 'Layanan']);
+        Faq::create(['slug' => 'faq-help-b', 'question' => 'Tanya Internal B?', 'answer' => 'Jawab B.', 'category' => 'Internal', 'visibility' => 'internal']);
+
+        // Tamu: hanya publik, berkelompok, berpintu ke layanan + ask.
+        $this->get(route('help.index'))->assertOk()
+            ->assertSee('Help Center')
+            ->assertSee('LAYANAN (1)')
+            ->assertSee('Tanya Bantuan A?')
+            ->assertDontSee('Tanya Internal B?')
+            ->assertSee(route('services.index'))
+            ->assertSee(route('ask.index'));
+
+        // Login: internal terlihat.
+        $staff = User::factory()->create(['role' => 'staff']);
+        $this->actingAs($staff)->get(route('help.index'))->assertOk()
+            ->assertSee('Tanya Internal B?');
+
+        // Tautan dari halaman layanan.
+        $this->get(route('services.index'))->assertOk()
+            ->assertSee(route('help.index'));
+    }
+
+    public function test_help_center_tanpa_n_plus_satu(): void
+    {
+        for ($i = 1; $i <= 3; $i++) {
+            Faq::create(['slug' => 'faq-hc-'.$i, 'question' => 'Tanya HC '.$i.'?', 'answer' => 'Jawab.']);
+        }
+
+        DB::enableQueryLog();
+        $this->get(route('help.index'))->assertOk();
+        $total = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        // Satu query FAQ + konstanta layout; tak tumbuh per baris.
+        $this->assertLessThanOrEqual(8, $total);
     }
 }

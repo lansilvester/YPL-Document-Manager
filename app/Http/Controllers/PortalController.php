@@ -32,6 +32,23 @@ class PortalController extends Controller
     }
 
     /**
+     * Help Center (BAB 17): FAQ per kategori + pintu ke layanan dan Ask YPL.
+     * Satu query tanpa relasi — tanpa N+1.
+     */
+    public function help(): mixed
+    {
+        $user = auth()->user();
+
+        $faqs = Faq::query()->when(! $user, fn ($q) => $q->where('visibility', 'public'))
+            ->orderBy('sort_order')
+            ->get(['id', 'slug', 'question', 'answer', 'category']);
+
+        return view('portal.help', [
+            'groups' => $faqs->groupBy(fn ($f) => $f->category ?? 'Umum'),
+        ]);
+    }
+
+    /**
      * Community nyata (BAB 3/17): direktori orang, unit, peran, FAQ komunitas.
      * Data orang hanya untuk login (privasi, sejajar /cari).
      */
