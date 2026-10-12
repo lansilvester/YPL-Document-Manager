@@ -33,27 +33,43 @@
 @endsection
 @section('content')
 
-{{-- Saya ingin... (BAB 5: Handbook, Policy, SOP, Formulir, Calendar, Ask YPL) --}}
+{{-- Saya ingin... (urutan mengikuti peran, BAB 11/20) --}}
 <div class="mt-6">
   <h2 class="section-label">SAYA INGIN…</h2>
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-2">
-    <a href="{{ route('library.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Handbook</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
-    <a href="{{ route('governance.index', ['tipe' => 'policy']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Policy</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
-    <a href="{{ route('governance.index', ['tipe' => 'sop']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">SOP</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
-    <a href="{{ route('governance.index', ['tipe' => 'form']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Formulir</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
-    <a href="{{ route('calendar.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Calendar</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
-    <a href="{{ route('ask.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">Ask YPL</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
+    @foreach($role->orderedQuick() as $key)
+      @php($meta = \App\Models\Role::QUICK_META[$key])
+      <a href="{{ route($meta['route'], $meta['params'] ?? []) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block"><div class="font-bold text-sm text-slate-900">{{ $meta['label'] }}</div><div class="text-xs text-slate-500 mt-1">Explore →</div></a>
+    @endforeach
   </div>
 </div>
 
-{{-- Explore the Knowledge --}}
+{{-- Untuk Anda: personalisasi peran dalam satu templat (tanpa situs terpisah) --}}
+@if(auth()->check() && (($forYou['pendingServices'] ?? 0) > 0 || ($forYou['events'] ?? collect())->isNotEmpty() || ($forYou['dueReviews'] ?? collect())->isNotEmpty()))
+<div class="mt-8 bg-white rounded-2xl border border-[#d6d6d6] p-5">
+  <h2 class="font-extrabold tracking-tight text-[#002f80]">UNTUK ANDA <span class="ml-1 text-[10px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full">{{ $role->name }}</span></h2>
+  <div class="grid sm:grid-cols-3 gap-3 mt-3 text-sm">
+    @if(($forYou['pendingServices'] ?? 0) > 0)
+      <a href="{{ route('services.my') }}" class="rounded-xl bg-amber-50 border border-amber-200 p-4 block hover:shadow-md transition"><div class="font-extrabold text-amber-800 text-2xl tabular-nums">{{ $forYou['pendingServices'] }}</div><div class="text-xs font-bold text-amber-700 mt-0.5">pengajuan menunggu →</div></a>
+    @endif
+    @foreach(($forYou['events'] ?? collect()) as $e)
+      <a href="{{ route('events.show', $e) }}" class="rounded-xl bg-violet-50 border border-violet-200 p-4 block hover:shadow-md transition"><div class="text-[10px] font-bold text-violet-600">{{ strtoupper($e->category) }} · {{ $e->starts_at->format('d M Y') }}</div><div class="font-bold text-slate-900 leading-snug mt-0.5 line-clamp-2">{{ $e->title }}</div></a>
+    @endforeach
+    @foreach(($forYou['dueReviews'] ?? collect()) as $d)
+      <a href="{{ route('governance.show', $d) }}" class="rounded-xl bg-red-50 border border-red-200 p-4 block hover:shadow-md transition"><div class="text-[10px] font-bold text-[#c90018]">TINJAU SEBELUM {{ $d->review_at->format('d M Y') }}</div><div class="font-bold text-slate-900 leading-snug mt-0.5 line-clamp-2">{{ $d->title }}</div></a>
+    @endforeach
+  </div>
+</div>
+@endif
+
+{{-- Explore the Knowledge (kartu di luar scope peran disembunyikan) --}}
 <div class="mt-8">
   <h2 class="text-xl font-extrabold tracking-tight text-[#002f80]">EXPLORE THE KNOWLEDGE</h2>
   <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
-    <a href="{{ route('library.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-5 block"><div class="font-extrabold text-slate-900">YPL Handbooks</div><div class="text-[13px] text-slate-500 mt-1">10 living digital books</div></a>
-    <a href="{{ route('governance.index') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-5 block"><div class="font-extrabold text-slate-900">Governance Library</div><div class="text-[13px] text-slate-500 mt-1">Policy • Regulation • SOP</div></a>
-    <a href="{{ route('library.index', ['koleksi' => 'academic']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-5 block"><div class="font-extrabold text-slate-900">Learning Library</div><div class="text-[13px] text-slate-500 mt-1">Academic resources</div></a>
-    <a href="{{ route('library.index', ['koleksi' => 'boarding']) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-5 block"><div class="font-extrabold text-slate-900">Boarding Library</div><div class="text-[13px] text-slate-500 mt-1">Student life & residential knowledge</div></a>
+    @foreach($role->scopedExplore() as $key)
+      @php($meta = \App\Models\Role::EXPLORE_META[$key])
+      <a href="{{ route($meta['route'], $meta['params'] ?? []) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-5 block"><div class="font-extrabold text-slate-900">{{ $meta['title'] }}</div><div class="text-[13px] text-slate-500 mt-1">{{ $meta['desc'] }}</div></a>
+    @endforeach
   </div>
 </div>
 
