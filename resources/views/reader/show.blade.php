@@ -172,7 +172,7 @@
     @else
       <a href="{{ route('login') }}" class="px-3 py-2 rounded-full hover:bg-white/10 text-white/80">✎ <span class="hidden sm:inline">Catatan</span></a>
     @endauth
-    <a href="{{ route('ask.index') }}" class="px-3 py-2 rounded-full hover:bg-white/10">✦ <span class="hidden sm:inline">Ask YPL</span></a>
+    <a href="{{ route('ask.index', ['doc' => $document->slug]) }}" class="px-3 py-2 rounded-full hover:bg-white/10">✦ <span class="hidden sm:inline">Ask YPL</span></a>
     <span class="flex-1"></span>
     <button id="btn-prev" aria-label="Halaman sebelumnya" class="w-9 h-9 rounded-full grid place-items-center hover:bg-white/10 shrink-0">◀</button>
     <span class="text-sm font-bold tabular-nums px-1 shrink-0"><span id="pg-now">1</span> / <span id="pg-total">…</span></span>

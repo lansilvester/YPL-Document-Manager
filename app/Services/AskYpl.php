@@ -22,15 +22,18 @@ class AskYpl
     /**
      * @return array{answer: string, sources: array<int, array{document: Document, passage: string, score: int}>, found: bool, ai: bool}
      */
-    public function answer(string $question, ?User $user): array
+    public function answer(string $question, ?User $user, ?Document $scope = null): array
     {
         $keywords = $this->keywords($question);
 
-        $candidates = Document::query()->with(['category'])
-            ->visibleTo($user)
-            ->searchAny($question)
-            ->limit($this->maxSources * 3)
-            ->get();
+        // Scope per-dokumen (BAB 14): tanpa query pencarian — kandidat tunggal.
+        $candidates = $scope !== null && $scope->isVisibleTo($user)
+            ? collect([$scope])
+            : Document::query()->with(['category'])
+                ->visibleTo($user)
+                ->searchAny($question)
+                ->limit($this->maxSources * 3)
+                ->get();
 
         $scored = $candidates
             ->map(fn (Document $doc) => $this->bestPassage($doc, $keywords))

@@ -5,7 +5,16 @@
 <h1 class="page-title">Tanya knowledge YPL</h1>
 <p class="text-sm text-slate-500 mt-1">Dijawab dari dokumen resmi sesuai otoritas Anda — selalu dengan sitasi sumber.</p>
 
+@if(!empty($scope))
+  <div class="mt-4 flex items-center gap-2 bg-[#002f80]/5 border border-[#002f80]/15 rounded-2xl px-4 py-3 text-sm">
+    <span class="text-[10px] font-bold bg-[#002f80] text-white px-2 py-1 rounded-full shrink-0">KONTEKS</span>
+    <a href="{{ route('documents.show', $scope) }}" class="font-bold text-[#002f80] truncate flex-1 hover:underline">{{ $scope->title }}</a>
+    <a href="{{ route('ask.index') }}" class="text-slate-400 hover:text-[#c90018] font-bold shrink-0" aria-label="Hapus konteks">✕</a>
+  </div>
+@endif
+
 <form action="{{ route('ask.query') }}" method="post" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg border border-[#d6d6d6]">@csrf
+  @if(!empty($doc) || !empty($scope))<input type="hidden" name="doc" value="{{ $doc ?? $scope->slug }}">@endif
   <input name="question" value="{{ $question ?? '' }}" required minlength="3" maxlength="500" placeholder="cth: Bagaimana cara mengajukan purchase request?" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
   <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110" style="background:linear-gradient(135deg,#002f80,#0046c0)">Tanya</button>
 </form>
@@ -13,7 +22,7 @@
 @if(!empty($examples))
   <div class="flex flex-wrap gap-2 mt-3">
     @foreach($examples as $ex)
-      <form action="{{ route('ask.query') }}" method="post" class="inline">@csrf<input type="hidden" name="question" value="{{ $ex }}"><button class="text-xs font-semibold bg-white border border-[#d6d6d6] rounded-full px-3 py-1.5 hover:border-[#002f80] hover:text-[#002f80] transition">{{ $ex }}</button></form>
+      <form action="{{ route('ask.query') }}" method="post" class="inline">@csrf @if(!empty($scope))<input type="hidden" name="doc" value="{{ $scope->slug }}">@endif<input type="hidden" name="question" value="{{ $ex }}"><button class="text-xs font-semibold bg-white border border-[#d6d6d6] rounded-full px-3 py-1.5 hover:border-[#002f80] hover:text-[#002f80] transition">{{ $ex }}</button></form>
     @endforeach
   </div>
 @endif

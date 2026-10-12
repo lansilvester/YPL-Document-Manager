@@ -165,4 +165,59 @@ class YplAskTest extends TestCase
         $this->post(route('ask.query'), ['question' => 'Berapa hari cuti?'])->assertOk();
         Http::assertNothingSent();
     }
+
+    public function test_tanya_dengan_konteks_dokumen(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $scope = Document::factory()->for($owner)->create([
+            'slug' => 'sop-konteks', 'title' => 'SOP Konteks Unik',
+            'description' => 'Prosedur konteks unik tujuh langkah.',
+            'visibility' => 'public', 'status' => 'active',
+            'file_path' => 'documents/konteks.pdf',
+        ]);
+        Document::factory()->for($owner)->create([
+            'slug' => 'sop-lain', 'title' => 'SOP Lain',
+            'description' => 'Prosedur konteks unik tujuh langkah.',
+            'visibility' => 'public', 'status' => 'active',
+        ]);
+
+        // Banner konteks + jawaban hanya dari dokumen scope.
+        $this->get(route('ask.index', ['doc' => 'sop-konteks']))->assertOk()
+            ->assertSee('KONTEKS')
+            ->assertSee('SOP Konteks Unik');
+        $this->post(route('ask.query'), ['question' => 'konteks unik', 'doc' => 'sop-konteks'])->assertOk()
+            ->assertSee('SOP Konteks Unik')
+            ->assertDontSee('SOP Lain');
+
+        // Link Reader membawa konteks.
+        $this->get(route('reader.show', $scope))->assertOk()
+            ->assertSee(route('ask.index', ['doc' => 'sop-konteks']));
+    }
+
+    public function test_konteks_asing_atau_tak_terlihat_ditolak(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $other = User::factory()->create(['role' => 'staff']);
+        $priv = Document::factory()->for($owner)->create([
+            'slug' => 'sop-priv-konteks', 'title' => 'SOP Privat Konteks',
+            'description' => 'Rahasia konteks.',
+            'visibility' => 'private', 'status' => 'active',
+        ]);
+
+        // Slug ngawur → 404.
+        $this->actingAs($other)->post(route('ask.query'), ['question' => 'apa isinya?', 'doc' => 'tak-ada'])->assertNotFound();
+
+        // Privat milik orang lain → 404, tanpa bocor isi.
+        $this->actingAs($other)->post(route('ask.query'), ['question' => 'rahasia konteks', 'doc' => 'sop-priv-konteks'])
+            ->assertNotFound()
+            ->assertDontSee('Rahasia konteks.');
+
+        // Pemilik boleh bertanya dalam konteks privatnya.
+        $this->actingAs($owner)->post(route('ask.query'), ['question' => 'rahasia konteks', 'doc' => 'sop-priv-konteks'])->assertOk()
+            ->assertSee('SOP Privat Konteks');
+
+        // GET dengan slug asing: anggun, tanpa banner (fallback global).
+        $this->get(route('ask.index', ['doc' => 'tak-ada']))->assertOk()
+            ->assertDontSee('KONTEKS');
+    }
 }
