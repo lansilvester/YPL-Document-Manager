@@ -1,18 +1,9 @@
 @extends('layout')
 @section('title', 'Beranda')
 @section('hero')
-{{-- Hero Library Mode: Everything YPL. One digital home. --}}
-<section class="w-full overflow-hidden text-white relative shadow-xl shadow-[#002f80]/25" style="background:linear-gradient(115deg,#001233 5%,#002f80 55%,#0a4fc4 100%)">
-  <div class="absolute inset-y-0 right-0 w-1/2 opacity-20 hidden md:block" aria-hidden="true">
-    <svg class="h-full w-full" viewBox="0 0 400 300" fill="none" preserveAspectRatio="xMidYMid slice">
-      <rect x="60" y="40" width="120" height="220" rx="10" fill="white" opacity=".25"/>
-      <rect x="200" y="70" width="120" height="190" rx="10" fill="white" opacity=".18"/>
-      <rect x="120" y="110" width="150" height="150" rx="10" fill="#c90018" opacity=".55"/>
-      <path d="M140 150h110M140 170h80M140 190h95" stroke="white" stroke-width="8" stroke-linecap="round" opacity=".9"/>
-      <circle cx="320" cy="70" r="26" fill="white" opacity=".25"/>
-      <rect x="286" y="200" width="70" height="14" rx="7" fill="white" opacity=".35"/>
-    </svg>
-  </div>
+{{-- Hero Library Mode: Everything YPL. One digital home. (foto gedung YPL) --}}
+<section class="w-full overflow-hidden text-white relative shadow-xl shadow-[#002f80]/25 bg-cover bg-center" style="background-attachment: fixed; background-image:url('{{ asset('images/hero-losnito.jpeg') }}')">
+  <div class="absolute inset-0" style="background:linear-gradient(100deg,rgba(0,18,51,.88) 5%,rgba(0,47,128,.72) 45%,rgba(10,79,196,.35) 75%,rgba(0,18,51,.25) 100%)" aria-hidden="true"></div>
   <div class="absolute top-0 right-0 w-40 h-40 rounded-full opacity-25" style="background:radial-gradient(circle,#c90018 0%,transparent 70%)" aria-hidden="true"></div>
   <div class="relative max-w-6xl mx-auto px-4 py-10 sm:py-14">
    <div class="max-w-2xl">
