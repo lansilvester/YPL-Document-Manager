@@ -53,6 +53,7 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 ![Reader — desktop](presentasi/screenshots/desktop-reader.png)
 
 ### Dokumen & Governance
+- **Design system** — token warna institusi (navy/red/blue), radius, bayangan, ring fokus, dan gerak didefinisikan sekali sebagai CSS variables (`--ypl-*`) di `layout.blade.php`; komponen kanonis (`.btn-primary`, `.btn-accent`, `.field`, `.page-title`, `.grad-navy`, `.brand-line`, dst.) mengonsumsinya sehingga perubahan tema cukup di satu tempat (BAB 16).
 - **Dokumen** — unggah PDF (maks 9 MB), tulis via editor (sanitasi HTML), unduh PDF/HTML, semat (embed), suka, bagikan, Dokumen Saya, visibilitas public/restricted/private.
 - **Governance `/governance`** — Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle `draft → review → approval → active → review-due → archived`, approval workflow, View History + snapshot isi per versi + **"What changed?"** (diff bidang antar revisi), relasi Handbook→Policy→SOP→Form→PIC→System, impact map graf 2-hop, listing filter tipe/status/audience/unit, ekspor CSV (throttled). **Version control nyata:** nomor versi naik otomatis saat edit (bila tidak diisi eksplisit), setiap perubahan metadata/isi mencatat revisi + catatan perubahan. **Archive policy (BAB 13):** dokumen `review_due` yang melewati masa retensi (default 1095 hari, diatur SA) diarsipkan otomatis via `governance:archive-stale` (dry-run tersedia). Tipe dokumen mencakup governance penuh: `policy, regulation, standard, sop, work_instruction, decision, organization, risk, compliance, quality, document_control, form, evidence, handbook, other`.
 
@@ -95,7 +96,7 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 | Lapisan | Teknologi |
 |---|---|
 | Backend | Laravel 13.33, PHP ^8.3 (berjalan 8.5.8), Blade + Eloquent, queue `sync` |
-| Frontend | Tailwind CSS 4 + Vite 8, Blade components |
+| Frontend | Tailwind CSS 4 + Vite 8, Blade components, **design tokens** (CSS variables `--ypl-*`: warna, radius, shadow, ring fokus, motion) |
 | Database | SQLite (lokal/testing) / MySQL (production), FTS triggers |
 | Library | `barryvdh/laravel-dompdf` (ekspor PDF), `ezyang/htmlpurifier` (sanitasi HTML) |
 | AI | `GeminiLlm` (`gemini-3.8-flash`, testing) + fallback ekstraktif bersitasi |

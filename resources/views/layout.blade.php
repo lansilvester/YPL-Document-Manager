@@ -11,7 +11,48 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 @layer components {
-  :root { --ypl-navy: #002f80; --ypl-red: #c90018; --ypl-gray: #d6d6d6; --ypl-blue: #2f6BFF; --ypl-paper: #faf7f0; }
+  /* ============================================================
+     Design tokens BAB 16 — sumber tunggal warna, radius, bayangan,
+     ruang dan gerak. Komponen di bawah memakai var(--…) agar
+     perubahan tema cukup di satu tempat.
+     ============================================================ */
+  :root {
+    /* Warna institusi */
+    --ypl-navy: #002f80;
+    --ypl-navy-600: #0046c0;
+    --ypl-navy-900: #000f2e;
+    --ypl-red: #c90018;
+    --ypl-red-600: #a30014;
+    --ypl-blue: #2f6BFF;
+    --ypl-gray: #d6d6d6;
+    --ypl-paper: #faf7f0;
+    --ypl-bg: #eef1f4;
+    --ypl-ink: #0f172a;
+    --ypl-muted: #64748b;
+
+    /* Gradien khas */
+    --ypl-grad-navy: linear-gradient(135deg, var(--ypl-navy), var(--ypl-navy-600));
+    --ypl-grad-red: linear-gradient(135deg, var(--ypl-red-600), var(--ypl-red));
+
+    /* Radius */
+    --ypl-radius-sm: .5rem;
+    --ypl-radius-md: .8rem;
+    --ypl-radius-lg: 1rem;
+    --ypl-radius-xl: 1.5rem;
+    --ypl-radius-pill: 9999px;
+
+    /* Bayangan */
+    --ypl-shadow-sm: 0 2px 20px -12px rgba(0, 30, 80, .45);
+    --ypl-shadow-navy: 0 8px 20px -8px rgba(0, 47, 128, .55);
+    --ypl-shadow-navy-lg: 0 12px 24px -8px rgba(0, 47, 128, .6);
+    --ypl-shadow-red: 0 8px 20px -8px rgba(201, 0, 24, .55);
+
+    /* Fokus (aksesibilitas) */
+    --ypl-ring: 0 0 0 3px rgba(0, 47, 128, .15);
+
+    /* Gerak */
+    --ypl-transition: .2s;
+  }
   body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
   .font-reading { font-family: Georgia, 'Times New Roman', serif; }
   html, body { overflow-x: clip; }
@@ -22,24 +63,24 @@
   .prose p { margin: .6em 0; } .prose h2 { font-size: 1.25em; font-weight: 700; margin: .8em 0 .4em; }
   .prose h3 { font-size: 1.1em; font-weight: 700; margin: .7em 0 .3em; }
   .prose ul { list-style: disc; margin-left: 1.4em; } .prose ol { list-style: decimal; margin-left: 1.4em; }
-  .field { width: 100%; border-radius: .8rem; border: 1px solid #d6d6d6; padding: .6rem .9rem; font-size: .9rem; background: #fff; }
-  .field:focus { outline: none; border-color: #002f80; box-shadow: 0 0 0 3px rgba(0,47,128,.15); }
+  .field { width: 100%; border-radius: var(--ypl-radius-md); border: 1px solid var(--ypl-gray); padding: .6rem .9rem; font-size: .9rem; background: #fff; }
+  .field:focus { outline: none; border-color: var(--ypl-navy); box-shadow: var(--ypl-ring); }
   /* Skala tipografi kanonis BAB 15: judul halaman, eyebrow, label seksi */
-  .page-title { font-size: 1.5rem; line-height: 2rem; font-weight: 800; letter-spacing: -0.025em; color: #002f80; }
+  .page-title { font-size: 1.5rem; line-height: 2rem; font-weight: 800; letter-spacing: -0.025em; color: var(--ypl-navy); }
   @media (min-width: 640px) { .page-title { font-size: 1.875rem; line-height: 2.25rem; } }
   .page-eyebrow { font-size: .75rem; font-weight: 700; letter-spacing: .1em; }
-  .page-sub { font-size: .875rem; color: #64748b; margin-top: .25rem; }
-  .section-label { font-size: .875rem; font-weight: 800; letter-spacing: .1em; color: #002f80; }
-  .btn-primary { background: linear-gradient(135deg, #002f80, #0046c0); color: #fff; border-radius: 9999px; padding: .6rem 1.4rem; font-weight: 700; font-size: .875rem; box-shadow: 0 8px 20px -8px rgba(0,47,128,.55); transition: .2s; display: inline-flex; align-items: center; gap: .45rem; justify-content: center; }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 24px -8px rgba(0,47,128,.6); }
-  .btn-accent { background: linear-gradient(135deg, #a30014, #c90018); color: #fff; border-radius: 9999px; padding: .6rem 1.4rem; font-weight: 700; font-size: .875rem; box-shadow: 0 8px 20px -8px rgba(201,0,24,.55); transition: .2s; display: inline-flex; align-items: center; gap: .45rem; justify-content: center; }
+  .page-sub { font-size: .875rem; color: var(--ypl-muted); margin-top: .25rem; }
+  .section-label { font-size: .875rem; font-weight: 800; letter-spacing: .1em; color: var(--ypl-navy); }
+  .btn-primary { background: var(--ypl-grad-navy); color: #fff; border-radius: var(--ypl-radius-pill); padding: .6rem 1.4rem; font-weight: 700; font-size: .875rem; box-shadow: var(--ypl-shadow-navy); transition: var(--ypl-transition); display: inline-flex; align-items: center; gap: .45rem; justify-content: center; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--ypl-shadow-navy-lg); }
+  .btn-accent { background: var(--ypl-grad-red); color: #fff; border-radius: var(--ypl-radius-pill); padding: .6rem 1.4rem; font-weight: 700; font-size: .875rem; box-shadow: var(--ypl-shadow-red); transition: var(--ypl-transition); display: inline-flex; align-items: center; gap: .45rem; justify-content: center; }
   .btn-accent:hover { transform: translateY(-1px); }
-  .btn-ghost { border: 1px solid #d6d6d6; background: #fff; border-radius: 9999px; padding: .55rem 1.2rem; font-weight: 600; font-size: .875rem; transition: .2s; display: inline-flex; align-items: center; gap: .45rem; justify-content: center; }
-  .btn-ghost:hover { border-color: #002f80; color: #002f80; }
+  .btn-ghost { border: 1px solid var(--ypl-gray); background: #fff; border-radius: var(--ypl-radius-pill); padding: .55rem 1.2rem; font-weight: 600; font-size: .875rem; transition: var(--ypl-transition); display: inline-flex; align-items: center; gap: .45rem; justify-content: center; }
+  .btn-ghost:hover { border-color: var(--ypl-navy); color: var(--ypl-navy); }
   /* Gradien khas BAB 15 — satu sumber, tanpa inline berulang */
-  .grad-navy { background: linear-gradient(135deg, #002f80, #0046c0); }
-  .grad-red { background: linear-gradient(135deg, #a30014, #c90018); }
-  .brand-line { background: linear-gradient(90deg, #002f80 60%, #c90018 60%); }
+  .grad-navy { background: var(--ypl-grad-navy); }
+  .grad-red { background: var(--ypl-grad-red); }
+  .brand-line { background: linear-gradient(90deg, var(--ypl-navy) 60%, var(--ypl-red) 60%); }
   .card-hover { transition: transform .25s ease, box-shadow .25s ease; }
   .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -18px rgba(0,30,80,.35); }
 }
