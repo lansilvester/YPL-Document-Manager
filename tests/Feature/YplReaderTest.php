@@ -190,6 +190,25 @@ class YplReaderTest extends TestCase
         $this->assertDatabaseMissing('reading_notes', ['id' => $noteId]);
     }
 
+    public function test_reader_default_two_page_di_desktop(): void
+    {
+        $user = User::factory()->create();
+        $doc = Document::factory()->for($user)->create([
+            'slug' => 'reader-default-two', 'title' => 'Default Two', 'visibility' => 'public',
+            'file_path' => 'documents/uji-reader-default-two.pdf',
+        ]);
+
+        // Tanpa preferensi tersimpan, layout default two-page (BAB 20).
+        ReadingPref::where('user_id', $user->id)->delete();
+
+        $html = $this->actingAs($user)->get(route('reader.show', $doc))->getContent();
+
+        $this->assertStringContainsString('layout = "double"', $html);
+        $this->assertStringContainsString('value="double" selected', preg_replace('/\s+/', ' ', $html));
+        // Mobile tetap diturunkan ke single via breakpoint adaptif.
+        $this->assertStringContainsString('max-width: 767px', $html);
+    }
+
     public function test_tema_paper_tersimpan_dan_terrender(): void
     {
         $user = User::factory()->create();

@@ -25,7 +25,7 @@ class ReaderController extends Controller
         $document->load(['category', 'tags', 'user']);
 
         $user = auth()->user();
-        $pref = $user?->readingPref ?? new ReadingPref(['theme' => 'light', 'zoom' => 100, 'layout' => 'single']);
+        $pref = $user?->readingPref ?? new ReadingPref(['theme' => 'light', 'zoom' => 100, 'layout' => 'double']);
         $position = $user
             ? ReadingPosition::firstOrNew(
                 ['user_id' => $user->id, 'document_id' => $document->id],
