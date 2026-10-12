@@ -30,7 +30,7 @@ class AskYpl
         // Scope tak terlihat → tidak ditemukan (tanpa fallback global diam-diam).
         $candidates = $scope !== null
             ? ($scope->isVisibleTo($user) ? collect([$scope]) : collect())
-            : Document::query()->with(['category'])
+            : Document::query()
                 ->visibleTo($user)
                 ->searchAny($question)
                 ->limit($this->maxSources * 3)
@@ -142,7 +142,7 @@ class AskYpl
 
         return [
             'answer' => implode("\n", $lines),
-            'sources' => [['document' => $doc, 'passage' => $summary, 'score' => 1]],
+            'sources' => [['document' => $doc, 'passage' => $summary !== '' ? $summary : $doc->title, 'score' => 1]],
             'found' => true,
             'ai' => false,
         ];
