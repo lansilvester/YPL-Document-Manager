@@ -45,6 +45,9 @@
             <span class="bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $hit['document']->doc_type ?? 'dokumen')) }}</span>
             <span class="{{ \App\Models\Document::statusBadgeFor($hit['document']->status) }} px-2 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $hit['document']->status)) }}</span>
             <span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-full">v{{ $hit['document']->version }}</span>
+            @if(!empty($hit['section']))
+              <span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full">§ {{ $hit['section'] }}</span>
+            @endif
           </div>
           <div class="font-bold text-sm text-slate-900 mt-2 leading-snug">{{ $hit['document']->title }}</div>
           <p class="text-[13px] text-slate-500 mt-1 line-clamp-2">“{{ $hit['passage'] }}”</p>

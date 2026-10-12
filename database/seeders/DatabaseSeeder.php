@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SystemsSeeder::class);
         $this->call(YplGovernanceSeeder::class);
         $this->call(EventFaqSeeder::class);
+        $this->call(CommunitySeeder::class);
         $this->call(RoleSeeder::class);
 
         $samples = [

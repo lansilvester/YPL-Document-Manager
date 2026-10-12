@@ -18,7 +18,7 @@
       <div class="prose font-reading max-w-none mt-2 text-slate-700 whitespace-pre-line">{{ $ai['answer'] }}</div>
       <div class="flex flex-wrap gap-2 mt-3">
         @foreach($ai['sources'] as $hit)
-          <a href="{{ route('documents.show', $hit['document']) }}" class="text-xs font-bold bg-[#002f80]/5 text-[#002f80] rounded-full px-3 py-1.5 hover:bg-[#002f80] hover:text-white transition">[{{ $loop->iteration }}] {{ \Illuminate\Support\Str::limit($hit['document']->title, 40) }}</a>
+          <a href="{{ route('documents.show', $hit['document']) }}" class="text-xs font-bold bg-[#002f80]/5 text-[#002f80] rounded-full px-3 py-1.5 hover:bg-[#002f80] hover:text-white transition">[{{ $loop->iteration }}] {{ \Illuminate\Support\Str::limit($hit['document']->title, 40) }}@if(!empty($hit['section'])) · § {{ \Illuminate\Support\Str::limit($hit['section'], 30) }}@endif</a>
         @endforeach
       </div>
     </div>
@@ -50,6 +50,23 @@
         @endforeach
       </div>
     @endforeach
+  @endif
+
+  @if($contacts->isNotEmpty())
+    <h2 class="section-label mt-6 mb-2">PIC / KONTAK ({{ $contacts->count() }})</h2>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      @foreach($contacts as $c)
+        <div class="bg-white rounded-2xl border border-[#d6d6d6] p-4">
+          <div class="font-bold text-sm text-slate-900">{{ $c->name }}</div>
+          @if($c->position)<div class="text-[11px] text-slate-400 mt-0.5">{{ $c->position }}</div>@endif
+          @if($c->unit)<div class="text-[11px] font-bold text-[#002f80] mt-1">{{ $c->unit->name }}</div>@endif
+          <div class="mt-1.5 flex flex-col gap-0.5 text-[13px]">
+            @if($c->email)<a href="mailto:{{ $c->email }}" class="text-slate-600 hover:text-[#002f80]">✉ {{ $c->email }}</a>@endif
+            @if($c->phone)<a href="tel:{{ preg_replace('/[^0-9+]/', '', $c->phone) }}" class="text-slate-600 hover:text-[#002f80]">☎ {{ $c->phone }}</a>@endif
+          </div>
+        </div>
+      @endforeach
+    </div>
   @endif
 
   @if($faqs->isNotEmpty())
@@ -90,7 +107,7 @@
     @endif
   @endif
 
-  @if($grouped->isEmpty() && $services->isEmpty() && $faqs->isEmpty() && $events->isEmpty() && (!$ai || !$ai['found']))
+  @if($grouped->isEmpty() && $services->isEmpty() && $contacts->isEmpty() && $faqs->isEmpty() && $events->isEmpty() && (!$ai || !$ai['found']))
     <div class="bg-white rounded-2xl border border-dashed border-[#d6d6d6] p-8 text-center mt-5">
       <p class="font-bold text-slate-700">Tidak ada hasil untuk “{{ $q }}”</p>
       <p class="text-sm text-slate-500 mt-1">Coba kata kunci lain, atau <a href="{{ route('ask.index') }}" class="text-[#002f80] font-bold underline">tanya Ask YPL</a>.</p>

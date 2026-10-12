@@ -64,7 +64,8 @@ class AskYpl
         foreach ($scored as $i => $hit) {
             /** @var Document $doc */
             $doc = $hit['document'];
-            $lines[] = ($i + 1).'. '.$doc->title.' — "'.$hit['passage'].'"';
+            $label = $hit['section'] ? $doc->title.' § '.$hit['section'] : $doc->title;
+            $lines[] = ($i + 1).'. '.$label.' — "'.$hit['passage'].'"';
         }
         $lines[] = '';
         $lines[] = 'Buka sumber untuk konteks lengkapnya.';

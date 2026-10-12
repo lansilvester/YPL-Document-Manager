@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contact;
 use App\Models\Document;
 use App\Models\Event;
 use App\Models\Faq;
@@ -33,6 +34,7 @@ class SearchController extends Controller
         $grouped = collect();
         $services = collect();
         $people = collect();
+        $contacts = collect();
         $faqs = collect();
         $events = collect();
         $ai = null;
@@ -63,6 +65,15 @@ class SearchController extends Controller
                 ->where(fn ($w) => $w->where('title', 'like', $like)->orWhere('description', 'like', $like))
                 ->orderBy('starts_at')->limit(5)->get();
 
+            // Kontak PIC & unit bersifat publik (BAB 3/9) — tanpa gerbang login.
+            $contacts = Contact::query()->with('unit:id,name,slug')
+                ->where(function ($w) use ($like) {
+                    $w->where('name', 'like', $like)
+                        ->orWhere('position', 'like', $like)
+                        ->orWhereHas('unit', fn ($u) => $u->where('name', 'like', $like));
+                })
+                ->orderBy('sort_order')->orderBy('name')->limit(6)->get();
+
             if ($user) {
                 $people = User::query()
                     ->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('academic_info', 'like', $like))
@@ -75,6 +86,7 @@ class SearchController extends Controller
             'grouped' => $grouped,
             'services' => $services,
             'people' => $people,
+            'contacts' => $contacts,
             'faqs' => $faqs,
             'events' => $events,
             'ai' => $ai,

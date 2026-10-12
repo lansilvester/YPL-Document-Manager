@@ -22,6 +22,7 @@ class EventFaqSeeder extends Seeder
             ['Asesmen Tengah Semester', 'academic', 'Jadwal asesmen tengah semester seluruh unit sekolah.', '2026-10-20 07:30', 'Masing-masing unit'],
             ['Pemeriksaan Asrama Bulanan', 'boarding', 'Pemeriksaan fasilitas dan kedisiplinan asrama putra dan putri.', '2026-10-25 08:00', 'Kompleks Asrama'],
             ['Batas Pengajuan Purchase Request', 'deadline', 'Batas akhir pengajuan purchase request triwulan IV.', '2026-10-31 16:00', 'Direktorat Keuangan'],
+            ['Open House YPL', 'event', 'Open house tahunan untuk orang tua dan calon siswa mengenal unit dan layanan YPL.', '2026-11-14 08:00', 'Kampus YPL Lokon'],
         ];
         foreach ($events as [$title, $category, $desc, $starts, $loc]) {
             Event::firstOrCreate(['slug' => Str::slug($title)], [

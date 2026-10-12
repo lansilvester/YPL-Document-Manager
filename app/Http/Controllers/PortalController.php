@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contact;
 use App\Models\Document;
 use App\Models\Event;
 use App\Models\Faq;
 use App\Models\Role;
 use App\Models\ServiceRequest;
+use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -51,16 +53,18 @@ class PortalController extends Controller
     }
 
     /**
-     * Community nyata (BAB 3/17): direktori orang, unit, peran, FAQ komunitas.
-     * Data orang hanya untuk login (privasi, sejajar /cari).
+     * Community nyata (BAB 3/17): direktori orang, unit, kontak PIC, peran, FAQ.
+     * Unit & kontak bersifat publik; direktori orang hanya untuk login (privasi).
      */
     public function community(): mixed
     {
         $user = auth()->user();
 
-        $units = Document::query()->visibleTo($user)
-            ->whereNotNull('unit')->where('unit', '!=', '')
-            ->selectRaw('unit, COUNT(*) as total')->groupBy('unit')->orderBy('unit')->get();
+        $units = Unit::query()->withCount('contacts')
+            ->orderBy('sort_order')->orderBy('name')->get();
+
+        $contacts = Contact::query()->with('unit:id,name,slug')
+            ->orderBy('sort_order')->orderBy('name')->get();
 
         $people = $user
             ? User::query()->select(['id', 'name', 'role', 'academic_info'])->orderBy('name')->paginate(12)
@@ -68,6 +72,7 @@ class PortalController extends Controller
 
         return view('portal.community', [
             'units' => $units,
+            'contacts' => $contacts,
             'people' => $people,
             'roles' => Role::orderBy('priority')->get(['slug', 'name', 'description']),
             'faqs' => Faq::query()->when(! $user, fn ($q) => $q->where('visibility', 'public'))

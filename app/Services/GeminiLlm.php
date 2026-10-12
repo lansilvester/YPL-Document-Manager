@@ -45,7 +45,8 @@ class GeminiLlm
         $context = '';
         foreach ($sources as $i => $hit) {
             $doc = $hit['document'];
-            $context .= '['.($i + 1).'] '.$doc->title.' ('.str_replace('_', ' ', $doc->doc_type ?? 'dokumen').' v'.$doc->version.', '.str_replace('_', ' ', $doc->status).'): '.$hit['passage']."\n";
+            $section = ! empty($hit['section']) ? ' § '.$hit['section'] : '';
+            $context .= '['.($i + 1).'] '.$doc->title.$section.' ('.str_replace('_', ' ', $doc->doc_type ?? 'dokumen').' v'.$doc->version.', '.str_replace('_', ' ', $doc->status).'): '.$hit['passage']."\n";
         }
 
         try {

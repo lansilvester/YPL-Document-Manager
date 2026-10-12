@@ -277,4 +277,32 @@ class YplAskTest extends TestCase
         // Explain butuh konteks dokumen.
         $this->post(route('ask.query'), ['explain' => '1'])->assertStatus(422);
     }
+
+    public function test_sitasi_section_level_dari_heading(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $doc = Document::factory()->for($owner)->create([
+            'slug' => 'sop-pengadaan-section', 'title' => 'SOP Pengadaan',
+            'description' => 'Alur pengadaan barang dilakukan bertahap.',
+            'visibility' => 'public', 'status' => 'active',
+            'content' => '<h2>Alur Persetujuan</h2><p>Purchase request disetujui kepala unit sebelum pembelian barang.</p>',
+        ]);
+
+        $result = (new AskYpl)->answer('pengadaan barang disetujui kepala unit pembelian', null);
+
+        $this->assertTrue($result['found']);
+        $hit = $result['sources'][0];
+        $this->assertSame($doc->id, $hit['document']->id);
+        $this->assertSame('Alur Persetujuan', $hit['section']);
+
+        // Tanpa heading di konten → section null (fallback jujur, tanpa rekaan).
+        Document::factory()->for($owner)->create([
+            'slug' => 'sop-tanpa-heading', 'title' => 'SOP Tanpa Heading',
+            'description' => 'Dokumen ringkas tanpa bagian khusus.',
+            'visibility' => 'public', 'status' => 'active',
+            'content' => '<p>Langkah khusus unik pertama wajib dilakukan segera.</p>',
+        ]);
+        $result = (new AskYpl)->answer('langkah khusus unik pertama dilakukan', null);
+        $this->assertNull($result['sources'][0]['section']);
+    }
 }

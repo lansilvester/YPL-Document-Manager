@@ -1,6 +1,6 @@
 # Report — YPL Smart Digital Library (Losnito)
 
-Tanggal: 12 Oktober 2026 · Baseline terverifikasi: 131 test lolos, Pint bersih.
+Tanggal: 12 Oktober 2026 · Baseline terverifikasi: 141 test lolos, Pint bersih.
 
 ## 1. Ringkasan Website
 
@@ -25,14 +25,15 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 - **Library `/perpustakaan`:** bookshelf 10 Handbook B01–B10 berbentuk buku 3D, filter koleksi (handbook/governance/academic/boarding/staff/parent/public), book detail (cover besar, TOC, Open Book, Bookmark).
 - **Reader Mode `/baca/{slug}`:** 2-halaman desktop / 1-halaman mobile, page-flip 550ms + reduced-motion, TOC drawer terang, lompat halaman + grid, search-in-book, toolbar bawah (Contents/Search/Bookmark/Aa/Ask YPL/counter/Reading %), keyboard + swipe, persist posisi & preferensi. **Panel Rekomendasi di sidebar kanan.**
 - **Dokumen:** unggah PDF (maks 9 MB), tulis via editor (sanitasi HTML), unduh PDF/HTML, semat (embed), suka (like), bagikan, Dokumen Saya, visibilitas public/restricted/private.
-- **Governance:** Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle draft→review→approval→active→review-due→archived + approval workflow + View History, relasi Handbook→Policy→SOP→Form→PIC→System, listing filter tipe/status/audience/unit, CRUD Handbook khusus admin.
+- **Governance:** Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle draft→review→approval→active→review-due→archived + approval workflow + View History, relasi Handbook→Policy→SOP→Form→PIC→System, listing filter tipe/status/audience/unit, CRUD Handbook khusus admin. Tipe mencakup governance penuh (organization/risk/compliance/quality/document_control) dengan label rapi via `Document::typeLabel()`.
 - **Services `/layanan`:** katalog 8 layanan ("Saya ingin…"), pengajuan + Permintaan Saya, kelola + putusan staff (pending→approved/rejected→done).
 - **Systems `/sistem`:** registri 8 sistem operasional (Odoo, Akademik, Asrama, HR, Keuangan, Fleet, Maintenance, ICT) + dokumen tertaut.
-- **Ask YPL `/tanya`:** jawaban ekstraktif bersitasi dari knowledge sesuai otoritas user; driver Gemini (`gemini-3.8-flash`) untuk testing — gagal/timeout otomatis fallback ekstraktif. Tamu→publik; anggota→+restricted+milik sendiri; admin→semua.
+- **Community `/community`:** direktori unit, peran, dan orang (login untuk direktori orang) + **kontak PIC publik** (email/telepon) + pengetahuan komunitas (FAQ). Unit & kontak dikelola admin (`/admin/unit`, `/admin/kontak`).
+- **Ask YPL `/tanya`:** jawaban ekstraktif **bersitasi section-level** (§ heading) dari knowledge sesuai otoritas user; driver Gemini (`gemini-3.8-flash`) untuk testing — gagal/timeout otomatis fallback ekstraktif. Tamu→publik; anggota→+restricted+milik sendiri; admin→semua.
 - **Akun & peran:** registrasi/login, reset password, profil + avatar + ganti password, pengajuan kenaikan peran, panel staff/admin/superadmin, CRUD definisi peran role-aware (superadmin).
 - **Admin:** dashboard, kelola kategori/handbook, pengguna, riwayat aktivitas, persetujuan peran. **Superadmin:** kelola pengguna, pengaturan web + sakelar fitur, definisi peran.
 - **Recommendations:** rekomendasi dokumen terkait (detail & Reader) + personal (riwayat baca/bookmark) — skor berbobot 6 sinyal, **N+1 eliminated, query O(1)**.
-- **Universal Search `/cari`:** dokumen (kelompok per tipe) + layanan + orang + Ask YPL panel.
+- **Universal Search `/cari`:** dokumen (kelompok per tipe) + layanan + orang + **PIC/kontak publik** + Ask YPL panel.
 - **Peta Pengetahuan `/peta-pengetahuan`:** halaman eksplorasi graf knowledge lintas koleksi (BAB 12) — pilih dokumen pusat, render graf node-link 2-hop (dokumen/sistem/agenda/FAQ/PIC) + legenda warna + fallback daftar aksesibel; permission-aware. Blok **"Terkait dengan topik ini"** di detail dokumen & governance.
 - **Dashboard Saya `/dashboard`:** satu templat role-aware; seksi per audiens (`users.audience`) — ringkasan, agenda, koleksi, formulir, review jatuh tempo, persetujuan (staff/admin), layanan menunggu, permintaan saya, rekomendasi.
 
@@ -64,11 +65,11 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 
 ## 5. Tabel Pendukung (ringkas)
 
-`documents` (metadata knowledge BAB 7 + FTS), `categories` (koleksi + B01–B10), `document_relations` (dokumen↔dokumen/sistem), `document_versions` (audit lifecycle), `systems`, `roles`, `service_requests`, `role_requests` (peran sistem **atau** audiens: `requested_role`/`requested_audience`), `bookmarks`, `likes`, `reading_positions`, `reading_prefs`, `tags` (+pivot), `activity_logs`, `settings`, bawaan Laravel (`sessions`, `cache`, `jobs`, `password_reset_tokens`).
+`documents` (metadata knowledge BAB 7 + FTS), `categories` (koleksi + B01–B10), `document_relations` (dokumen↔dokumen/sistem), `document_versions` (audit lifecycle), `systems`, `roles`, `units` + `contacts` (direktori unit & PIC publik, CRUD admin), `service_requests`, `role_requests` (peran sistem **atau** audiens: `requested_role`/`requested_audience`), `bookmarks`, `likes`, `reading_positions`, `reading_prefs`, `tags` (+pivot), `activity_logs`, `settings`, bawaan Laravel (`sessions`, `cache`, `jobs`, `password_reset_tokens`).
 
 ## 6. Ask YPL — Arsitektur
 
-`AskController` → `AskYpl::answer()` (retrieval `visibleTo()` + `searchAny()` OR + skor overlap + fallback jujur) → opsional `GeminiLlm::compose()` (prompt grounding + sitasi [n], `config/ask.php`: driver/key/model/timeout). Kontrak: `['answer','sources','found','ai']`. Audit tiap tanya ke `activity_logs`.
+`AskController` → `AskYpl::answer()` (retrieval `visibleTo()` + `searchAny()` OR + skor overlap + fallback jujur) → opsional `GeminiLlm::compose()` (prompt grounding + sitasi [n], `config/ask.php`: driver/key/model/timeout). Kontrak: `['answer','sources','found','ai']`. **Sitasi section-level:** `bestPassage()`/`contentSentences()` melacak heading terdekat (h1–h3), sumber membawa `section` (mis. `§ Sanksi`); tanpa heading → `section=null` (jujur, tanpa nomor halaman palsu). Audit tiap tanya ke `activity_logs`.
 
 ## 7. Universal Search (`/cari`)
 
@@ -77,6 +78,7 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 - Dokumen dikelompokkan per tipe (SOP/FORM/…) dengan badge versi-status, hormati `visibleTo()` — private orang lain tak bocor (teruji)
 - Layanan & Aksi — pencocokan kata kunci ke 8 tipe `ServiceRequest`, tombol `Start →` (acceptance *"search mengembalikan dokumen dan action/service"* kini terpenuhi)
 - Orang (hanya login, tanpa email) — tamu tak melihat seksi ini
+- **PIC / Kontak publik** — nama/jabatan/unit/email/telepon tampil tanpa login (direktori PIC unit)
 - Kosong yang jujur + validasi panjang kueri; hero beranda kini mengarah ke `/cari` (daftar dokumen tetap utuh)
 
 ## 8. Recommendation Engine — Arsitektur & Optimasi

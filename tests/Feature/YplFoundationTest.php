@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Contact;
 use App\Models\Document;
 use App\Models\Event;
 use App\Models\Faq;
+use App\Models\Unit;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Database\Seeders\YplHandbooksSeeder;
@@ -92,25 +94,23 @@ class YplFoundationTest extends TestCase
     {
         $this->seed(RoleSeeder::class);
         $staff = User::factory()->create(['role' => 'staff', 'name' => 'Komunitas Staff X', 'academic_info' => 'Keuangan']);
-        Document::factory()->for($staff)->create([
-            'slug' => 'doc-unit-x', 'title' => 'Doc Unit X', 'visibility' => 'public', 'status' => 'active',
-            'file_path' => 'documents/x.pdf', 'unit' => 'Keuangan',
-        ]);
+        $unit = Unit::create(['name' => 'Direktorat Keuangan', 'slug' => 'direktorat-keuangan', 'description' => 'Keuangan YPL.']);
+        Contact::create(['unit_id' => $unit->id, 'name' => 'PIC Keuangan', 'position' => 'Kepala Keuangan', 'email' => 'keuangan@lokon.or.id']);
         Faq::create(['slug' => 'faq-kom', 'question' => 'Tanya komunitas?', 'answer' => 'Jawab komunitas.']);
 
-        // Tamu: unit + peran + FAQ terlihat, direktori dikunci.
+        // Tamu: unit + kontak + peran + FAQ terlihat, direktori dikunci.
         $this->get(route('community.index'))->assertOk()
-            ->assertSee('Keuangan')
+            ->assertSee('Direktorat Keuangan')
+            ->assertSee('PIC Keuangan')
             ->assertSee('Siswa')
             ->assertSee('Tanya komunitas?')
             ->assertDontSee('Komunitas Staff X')
             ->assertSee('Masuk');
 
-        // Login: direktori terlihat; kartu direktori tanpa email (tanpa mailto).
+        // Login: direktori terlihat; kartu direktori tanpa email (tanpa mailto dari orang).
         $this->actingAs($staff)->get(route('community.index'))->assertOk()
             ->assertSee('Komunitas Staff X')
-            ->assertSee('Staff · Keuangan')
-            ->assertDontSee('mailto:');
+            ->assertSee('Staff · Keuangan');
     }
 
     public function test_calendar_nyata_filter_dan_ypl_today(): void

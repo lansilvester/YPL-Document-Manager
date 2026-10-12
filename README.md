@@ -5,7 +5,7 @@
 
 ![Home — desktop](presentasi/screenshots/desktop-home.png)
 
-- **Status (12 Okt 2026):** 131 tests lolos (794 assertions) · 101 routes · 59 commits · branch `main`
+- **Status (12 Okt 2026):** 141 tests lolos (872 assertions) · 110 routes · 59 commits · branch `main`
 - **Repo:** `lansilvester/YPL-Document-Manager`
 - **Presentasi progress:** [`presentasi/LOSNITO-Progress-Report.pptx`](presentasi/LOSNITO-Progress-Report.pptx) (18 slide, desktop + mobile)
 
@@ -36,7 +36,7 @@ Alur pakai tipikal: `Home → /perpustakaan → /baca/{slug} → /governance/{sl
 
 Update terbaru (8–12 Okt): Event + FAQ jadi first-class knowledge · graf node-link 2-hop permission-aware di impact map ·
 halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik ini"** di detail dokumen · dashboard per peran
-**`/dashboard`** audience-aware (`users.audience`) · penetapan audiens oleh Admin/SA + **pengajuan audiens** dari profil (disetujui Admin/SA, kolom `role_requests.requested_audience`) · seeder demo audiens opsional (`--class=AudienceDemoSeeder`) · Community/Calendar/Insight nyata · thumbnails lazy + catatan pembaca per halaman di Reader · eliminasi N+1 doc-card.
+**`/dashboard`** audience-aware (`users.audience`) · penetapan audiens oleh Admin/SA + **pengajuan audiens** dari profil (disetujui Admin/SA, kolom `role_requests.requested_audience`) · seeder demo audiens opsional (`--class=AudienceDemoSeeder`) · Community/Calendar/Insight nyata · **tipe governance penuh** (organization/risk/compliance/quality/document_control) · **sitasi Ask YPL section-level** (§ heading) · **Unit & Kontak PIC** dengan CRUD admin + **PIC publik di pencarian** · thumbnails lazy + catatan pembaca per halaman di Reader · eliminasi N+1 doc-card.
 
 ---
 
@@ -54,14 +54,14 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 
 ### Dokumen & Governance
 - **Dokumen** — unggah PDF (maks 9 MB), tulis via editor (sanitasi HTML), unduh PDF/HTML, semat (embed), suka, bagikan, Dokumen Saya, visibilitas public/restricted/private.
-- **Governance `/governance`** — Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle `draft → review → approval → active → review-due → archived`, approval workflow, View History + snapshot isi per versi, relasi Handbook→Policy→SOP→Form→PIC→System, impact map graf 2-hop, listing filter tipe/status/audience/unit, ekspor CSV (throttled).
+- **Governance `/governance`** — Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle `draft → review → approval → active → review-due → archived`, approval workflow, View History + snapshot isi per versi, relasi Handbook→Policy→SOP→Form→PIC→System, impact map graf 2-hop, listing filter tipe/status/audience/unit, ekspor CSV (throttled). Tipe dokumen mencakup governance penuh: `policy, regulation, standard, sop, work_instruction, decision, organization, risk, compliance, quality, document_control, form, evidence, handbook, other`.
 
 ![Governance — desktop](presentasi/screenshots/desktop-governance.png)
 
 ### Services, Systems, Community
 - **Services `/layanan`** — katalog 8 layanan ("Saya ingin…"), pengajuan + Permintaan Saya, kelola + putusan staff (`pending → approved/rejected → done`).
 - **Systems `/sistem`** — registri 8 sistem operasional (Odoo, Akademik, Asrama, HR, Keuangan, Fleet, Maintenance, ICT) + dokumen tertaut.
-- **Community `/community`** — direktori unit/peran/orang (login untuk direktori orang) + pengetahuan komunitas (FAQ).
+- **Community `/community`** — direktori unit/peran/orang (login untuk direktori orang) + **kontak PIC publik** (email/telepon) + pengetahuan komunitas (FAQ).
 
 ![Community — desktop](presentasi/screenshots/desktop-community.png)
 
@@ -71,13 +71,13 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 ![Insight — desktop](presentasi/screenshots/desktop-insight.png)
 
 ### Intelligence
-- **Universal Search `/cari`** — dokumen dikelompokkan per tipe + badge versi-status, layanan/aksi (`Start →`), orang (login, tanpa email), FAQ & agenda, panel Ask YPL di atas hasil. Selalu hormati `visibleTo()`.
+- **Universal Search `/cari`** — dokumen dikelompokkan per tipe + badge versi-status, layanan/aksi (`Start →`), orang (login, tanpa email), **PIC/kontak publik**, FAQ & agenda, panel Ask YPL di atas hasil. Selalu hormati `visibleTo()`.
 
 ![Search — desktop](presentasi/screenshots/desktop-search-query.png)
 
 - **Peta Pengetahuan `/peta-pengetahuan`** — halaman eksplorasi graf knowledge lintas koleksi (BAB 12): pilih dokumen pusat, render graf node-link 2-hop (dokumen, sistem, agenda, FAQ, PIC) dengan legenda warna, fallback daftar teks untuk aksesibilitas. Permission-aware: simpul privat tidak pernah tampil untuk tamu. Blok **"Terkait dengan topik ini"** muncul di detail dokumen biasa & governance dengan tautan langsung ke peta.
 
-- **Ask YPL `/tanya`** — jawaban ekstraktif bersitasi dari knowledge sesuai otoritas user; driver Gemini untuk testing — gagal/timeout otomatis fallback ekstraktif. Tamu → publik; anggota → +restricted + milik sendiri; admin → semua. Tiap pertanyaan diaudit ke `activity_logs`.
+- **Ask YPL `/tanya`** — jawaban ekstraktif **bersitasi section-level** (§ heading) dari knowledge sesuai otoritas user; driver Gemini untuk testing — gagal/timeout otomatis fallback ekstraktif. Tamu → publik; anggota → +restricted + milik sendiri; admin → semua. Tiap pertanyaan diaudit ke `activity_logs`.
 
 ![Ask YPL — desktop](presentasi/screenshots/desktop-ask.png)
 
@@ -108,19 +108,19 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 
 ```text
 app/
-  Http/Controllers/   # 23 controller: Home, Library (termasuk Peta Pengetahuan),
+  Http/Controllers/   # 25 controller: Home, Library (termasuk Peta Pengetahuan),
                       #   Reader, Governance, Search, Ask, Document, Event, Faq, Staff,
-                      #   Admin, SuperAdmin, RoleDashboard, ...
-  Models/             # 19 model: Document, Category, DocumentRelation,
-                      #   DocumentVersion, Event, Faq, System, Role, ...
+                      #   Admin, SuperAdmin, RoleDashboard, Unit, Contact, ...
+  Models/             # 21 model: Document, Category, DocumentRelation,
+                      #   DocumentVersion, Event, Faq, System, Role, Unit, Contact, ...
   Services/           # AskYpl, RecommendationEngine, ImpactMap, GeminiLlm,
                       #   HtmlSanitizer, DocumentFiles, WaNumber
-routes/web.php        # 101 routes: public • auth • staff/ • admin/ • sa/
-database/migrations/  # 28 migrations (users+audience, documents+FTS, categories B01–B10,
-                      #   relations, versions+snapshot, events, faqs, systems, ...)
+routes/web.php        # 110 routes: public • auth • staff/ • admin/ • sa/
+database/migrations/  # 30 migrations (users+audience, documents+FTS, categories B01–B10,
+                      #   relations, versions+snapshot, events, faqs, systems, units, contacts, ...)
 resources/views/      # home, library (termasuk peta-pengetahuan), reader, governance,
                       #   search, ask, portal, dashboard, systems, admin, sa, ...
-tests/Feature/        # 14 file test (±131 tests)
+tests/Feature/        # 16 file test (±141 tests)
 presentasi/           # slide progress + screenshot desktop & mobile
 ```
 
@@ -139,7 +139,7 @@ php artisan serve               # http://localhost:8000
 ```
 
 ```bash
-php artisan test --compact      # 131 tests, ~3 detik
+php artisan test --compact      # 141 tests, ~3 detik
 vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
 ```
 
@@ -158,7 +158,7 @@ Akun demo per audiens (opsional): `php artisan db:seed --class=AudienceDemoSeede
 
 ## 8. Testing & Kualitas
 
-- `php artisan test --compact` → **131 passed, 794 assertions** (12 Okt 2026).
+- `php artisan test --compact` → **141 passed, 872 assertions** (12 Okt 2026).
 - Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression.
 - Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, maupun graf.
 

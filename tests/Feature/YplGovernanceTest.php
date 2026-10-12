@@ -7,8 +7,8 @@ use App\Models\DocumentRelation;
 use App\Models\Role;
 use App\Models\System;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\SystemsSeeder;
-use Database\Seeders\YplGovernanceSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -318,7 +318,7 @@ class YplGovernanceTest extends TestCase
 
     public function test_seeder_governance_ypl_mengisi_tipe_baru(): void
     {
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
 
         foreach (['organization', 'risk', 'compliance', 'quality', 'document_control'] as $tipe) {
             $this->assertDatabaseHas('documents', ['doc_type' => $tipe]);

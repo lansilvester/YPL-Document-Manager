@@ -8,9 +8,26 @@
 <h2 class="section-label mt-6 mb-2">UNIT ({{ $units->count() }})</h2>
 <div class="flex flex-wrap gap-2">
   @forelse($units as $u)
-    <a href="{{ route('governance.index', ['unit' => $u->unit]) }}" class="bg-white rounded-full border border-[#d6d6d6] px-4 py-2 text-sm font-bold hover:border-[#002f80] hover:text-[#002f80] transition">{{ $u->unit }} <span class="text-slate-400 font-semibold">· {{ $u->total }}</span></a>
+    <a href="{{ route('governance.index', ['unit' => $u->name]) }}" class="bg-white rounded-full border border-[#d6d6d6] px-4 py-2 text-sm font-bold hover:border-[#002f80] hover:text-[#002f80] transition" title="{{ $u->description }}">{{ $u->name }} <span class="text-slate-400 font-semibold">· {{ $u->contacts_count }}</span></a>
   @empty
-    <p class="text-sm text-slate-400">Belum ada unit tercatat pada dokumen.</p>
+    <p class="text-sm text-slate-400">Belum ada unit tercatat.</p>
+  @endforelse
+</div>
+
+<h2 class="section-label mt-6 mb-2">KONTAK PIC ({{ $contacts->count() }})</h2>
+<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  @forelse($contacts as $c)
+    <div class="bg-white rounded-2xl border border-[#d6d6d6] p-4">
+      <div class="font-bold text-sm text-slate-900">{{ $c->name }}</div>
+      @if($c->position)<div class="text-xs text-slate-500 mt-0.5">{{ $c->position }}</div>@endif
+      @if($c->unit)<div class="text-[11px] font-bold text-[#002f80] mt-1">{{ $c->unit->name }}</div>@endif
+      <div class="mt-2 flex flex-col gap-0.5 text-[13px]">
+        @if($c->email)<a href="mailto:{{ $c->email }}" class="text-slate-600 hover:text-[#002f80]">✉ {{ $c->email }}</a>@endif
+        @if($c->phone)<a href="tel:{{ preg_replace('/[^0-9+]/', '', $c->phone) }}" class="text-slate-600 hover:text-[#002f80]">☎ {{ $c->phone }}</a>@endif
+      </div>
+    </div>
+  @empty
+    <p class="text-sm text-slate-400">Belum ada kontak publik.</p>
   @endforelse
 </div>
 

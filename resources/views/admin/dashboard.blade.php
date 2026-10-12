@@ -15,6 +15,8 @@
   <a href="{{ route('admin.logs') }}" class="btn-ghost">Riwayat Aktivitas</a>
   <a href="{{ route('admin.approvals') }}" class="btn-ghost">Persetujuan Peran @if($pendingApprovals)<span class="bg-[#c90018] text-white text-[11px] rounded-full px-2 py-0.5">{{ $pendingApprovals }}</span>@endif</a>
   <a href="{{ route('admin.users') }}" class="btn-ghost">Kelola Pengguna</a>
+  <a href="{{ route('admin.units') }}" class="btn-ghost">Unit</a>
+  <a href="{{ route('admin.contacts') }}" class="btn-ghost">Kontak PIC</a>
   @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.users') }}" class="btn-ghost">Panel Super Admin</a>@endif
   @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.settings') }}" class="btn-ghost">Pengaturan Web</a>@endif
 </div>
