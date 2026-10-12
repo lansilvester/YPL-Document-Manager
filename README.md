@@ -5,7 +5,7 @@
 
 ![Home — desktop](presentasi/screenshots/desktop-home.png)
 
-- **Status (12 Okt 2026):** 95 tests lolos (607 assertions) · 94 routes · 41 commits · branch `main`
+- **Status (12 Okt 2026):** 99 tests lolos (633 assertions) · 94 routes · 42 commits · branch `main`
 - **Repo:** `lansilvester/YPL-Document-Manager`
 - **Presentasi progress:** [`presentasi/LOSNITO-Progress-Report.pptx`](presentasi/LOSNITO-Progress-Report.pptx) (18 slide, desktop + mobile)
 
@@ -32,7 +32,7 @@ Alur pakai tipikal: `Home → /perpustakaan → /baca/{slug} → /governance/{sl
 | 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (snapshot revisi + otomasi review-due terjadwal) |
 | 4 Services (forms, workflow, My Requests) | ✅ Selesai (kurang: integrasi Odoo) |
 | 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | ✅ Fungsional — search + Ask YPL v1 + rekomendasi + graf 2-hop permission-aware |
-| 6 Ecosystem (role dashboards, analytics, Odoo) | 🔄 Berjalan — Community, Calendar, Insight sudah nyata (prioritas-1) |
+| 6 Ecosystem (role dashboards, analytics, Odoo) | 🔄 Berjalan — Community, Calendar, Insight sudah nyata (prioritas-1); beranda role-aware + blok Untuk Anda selesai |
 
 Update terbaru (8–12 Okt): Event + FAQ jadi first-class knowledge · graf node-link 2-hop permission-aware di impact map ·
 Community/Calendar/Insight nyata · thumbnails lazy + catatan pembaca per halaman di Reader · eliminasi N+1 doc-card.
@@ -42,7 +42,7 @@ Community/Calendar/Insight nyata · thumbnails lazy + catatan pembaca per halama
 ## 3. Fitur Utama
 
 ### Library & Reader
-- **Home `/`** — hero + universal search, 6 quick actions, Explore 4 koleksi, What's New, YPL Today (deadline review nyata).
+- **Home `/`** — hero + universal search, quick actions **role-aware** (urutan + scope per peran, `Role::orderedQuick()`), kartu Explore tersaring scope koleksi (`scopedExplore()`), blok **"Untuk Anda"**, What's New, YPL Today (deadline review nyata; pantauan review & layanan hanya untuk peran operasional).
 - **Library `/perpustakaan`** — bookshelf 10 Handbook B01–B10 (buku 3D), filter koleksi, book detail (cover besar, TOC, Open Book, Bookmark).
 
 ![Library — desktop](presentasi/screenshots/desktop-library.png)
@@ -151,8 +151,8 @@ vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
 
 ## 8. Testing & Kualitas
 
-- `php artisan test --compact` → **95 passed, 607 assertions** (12 Okt 2026).
-- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles, doc-card N+1 regression.
+- `php artisan test --compact` → **99 passed, 633 assertions** (12 Okt 2026).
+- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), doc-card N+1 regression.
 - Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, maupun graf.
 
 ---
@@ -186,7 +186,7 @@ Aplikasi responsif penuh — contoh Home dan Library di viewport 390px:
 ## 11. Sisa Pekerjaan / Roadmap
 
 - **Phase 5 (sisa):** visualisasi Knowledge Graph penuh (relasi + data sudah ada).
-- **Phase 6:** Role Dashboards (Siswa, Orang Tua, Guru, Karyawan, Pimpinan) · Analytics dashboard dari `activity_logs` · Integrasi Odoo (terakhir).
+- **Phase 6:** Role Dashboards — fondasi beranda role-aware selesai (quick actions + explore tersaring scope + blok Untuk Anda); lanjutkan dashboard per peran (Siswa, Orang Tua, Guru, Karyawan, Pimpinan) · Analytics dashboard dari `activity_logs` · Integrasi Odoo (terakhir).
 - **Hardening:** cabut key testing, hapus rute `/deploy/{secret}` pasca-deploy.
 
 ---
