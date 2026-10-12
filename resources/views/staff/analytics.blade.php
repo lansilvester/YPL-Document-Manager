@@ -54,7 +54,7 @@
 
 <div class="grid lg:grid-cols-2 gap-4 mt-4">
   <div class="bg-white rounded-2xl border border-[#d6d6d6] p-5">
-    <h2 class="font-extrabold text-[#002f80]">DOKUMEN TERATAS</h2>
+    <h2 class="font-extrabold text-[#002f80]">DOKUMEN TERATAS <span class="text-[10px] font-bold text-slate-400">SEPANJANG WAKTU</span></h2>
     <div class="mt-2 divide-y divide-slate-100">
       @forelse($topDocs as $d)
         <a href="{{ route('documents.show', $d) }}" class="flex items-center gap-3 py-2 group">

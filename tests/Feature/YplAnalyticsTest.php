@@ -22,7 +22,8 @@ class YplAnalyticsTest extends TestCase
 
         $staff = User::factory()->create(['role' => 'staff']);
         $this->actingAs($staff)->get(route('staff.analytics'))->assertOk()
-            ->assertSee('Analytics Operasional');
+            ->assertSee('Analytics Operasional')
+            ->assertSee('SEPANJANG WAKTU');
     }
 
     public function test_metrik_mencerminkan_aktivitas(): void
