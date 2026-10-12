@@ -10,7 +10,7 @@ class FaqController extends Controller
     {
         abort_unless($faq->isVisibleTo(auth()->user()), 404);
 
-        $docs = $faq->documents()->with(['category', 'user'])
+        $docs = $faq->documents()->with(['category', 'user', 'tags'])
             ->visibleTo(auth()->user())->latest()->paginate(12);
 
         return view('faqs.show', compact('faq', 'docs'));

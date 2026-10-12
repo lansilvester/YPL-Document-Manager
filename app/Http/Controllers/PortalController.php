@@ -85,7 +85,7 @@ class PortalController extends Controller
      */
     public function insight(): mixed
     {
-        $docs = Document::with(['category'])->where('visibility', 'public')
+        $docs = Document::with(['category', 'user', 'tags'])->where('visibility', 'public')
             ->where('status', 'active')->latest()->limit(6)->get();
 
         return view('portal.insight', [

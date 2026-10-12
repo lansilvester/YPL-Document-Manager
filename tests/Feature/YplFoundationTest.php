@@ -10,6 +10,7 @@ use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Database\Seeders\YplHandbooksSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class YplFoundationTest extends TestCase
@@ -126,6 +127,27 @@ class YplFoundationTest extends TestCase
             ->assertSee('Doc Insight Publik')
             ->assertDontSee('Doc Insight Rahasia')
             ->assertSee('TERBARU UNTUK PUBLIK');
+    }
+
+    public function test_insight_tanpa_n_plus_satu(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        for ($i = 1; $i <= 3; $i++) {
+            Document::factory()->for($staff)->create([
+                'slug' => 'doc-n1-'.$i, 'title' => 'Doc N1 '.$i, 'visibility' => 'public',
+                'file_path' => 'documents/n'.$i.'.pdf', 'status' => 'active',
+            ]);
+        }
+
+        DB::enableQueryLog();
+        $this->get(route('insight.index'))->assertOk();
+        $userQueries = collect(DB::getQueryLog())
+            ->filter(fn ($q) => str_contains($q['query'], '"users"'))
+            ->count();
+        DB::disableQueryLog();
+
+        // Eager load: maksimal 1 query users untuk semua kartu.
+        $this->assertLessThanOrEqual(1, $userQueries);
     }
 
     public function test_handbook_crud_hanya_admin(): void

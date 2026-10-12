@@ -10,7 +10,7 @@ class EventController extends Controller
     {
         abort_unless($event->isVisibleTo(auth()->user()), 404);
 
-        $docs = $event->documents()->with(['category', 'user'])
+        $docs = $event->documents()->with(['category', 'user', 'tags'])
             ->visibleTo(auth()->user())->latest()->paginate(12);
 
         return view('events.show', compact('event', 'docs'));

@@ -15,7 +15,7 @@ class SystemController extends Controller
 
     public function show(System $system): mixed
     {
-        $docs = $system->documents()->with(['category', 'user'])
+        $docs = $system->documents()->with(['category', 'user', 'tags'])
             ->where('visibility', 'public')->latest()->paginate(12);
 
         return view('systems.show', compact('system', 'docs'));
