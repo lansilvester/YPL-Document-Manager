@@ -100,6 +100,8 @@ class GovernanceController extends Controller
             'tags',
             'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
             'outgoingRelations.system:id,name,slug',
+            'outgoingRelations.event:id,title,slug,visibility',
+            'outgoingRelations.faq:id,question,slug,visibility',
             'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
         ]);
 
@@ -162,6 +164,8 @@ class GovernanceController extends Controller
         $document->load([
             'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
             'outgoingRelations.system:id,name,slug',
+            'outgoingRelations.event:id,title,slug,visibility',
+            'outgoingRelations.faq:id,question,slug,visibility',
             'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
         ]);
 

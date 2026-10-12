@@ -5,12 +5,12 @@
 <h1 class="page-title">Cari knowledge YPL</h1>
 
 <form action="{{ route('search.index') }}" method="get" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg border border-[#d6d6d6] max-w-xl">
-  <input name="q" value="{{ $q }}" maxlength="200" placeholder="Dokumen, layanan, atau orang…" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
+  <input name="q" value="{{ $q }}" maxlength="200" placeholder="Dokumen, layanan, FAQ, agenda, atau orang…" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
   <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110" style="background:linear-gradient(135deg,#002f80,#0046c0)">Cari</button>
 </form>
 
 @if($q === '')
-  <p class="text-sm text-slate-500 mt-6">Ketik kata kunci untuk mencari di dokumen, layanan, dan direktori orang — sesuai otoritas Anda.</p>
+  <p class="text-sm text-slate-500 mt-6">Ketik kata kunci untuk mencari di dokumen, layanan, FAQ, agenda, dan direktori orang — sesuai otoritas Anda.</p>
 @else
   @if($ai && $ai['found'])
     <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 mt-5">
@@ -52,6 +52,30 @@
     @endforeach
   @endif
 
+  @if($faqs->isNotEmpty())
+    <h2 class="section-label mt-6 mb-2">FAQ ({{ $faqs->count() }})</h2>
+    <div class="grid sm:grid-cols-2 gap-3">
+      @foreach($faqs as $f)
+        <a href="{{ route('faqs.show', $f) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block group">
+          <div class="font-bold text-sm text-slate-900 leading-snug group-hover:text-[#002f80]">{{ $f->question }}</div>
+          <div class="text-[13px] text-slate-500 mt-1 line-clamp-2">{{ \Illuminate\Support\Str::limit($f->answer, 120) }}</div>
+        </a>
+      @endforeach
+    </div>
+  @endif
+
+  @if($events->isNotEmpty())
+    <h2 class="section-label mt-6 mb-2">AGENDA ({{ $events->count() }})</h2>
+    <div class="grid sm:grid-cols-2 gap-3">
+      @foreach($events as $e)
+        <a href="{{ route('events.show', $e) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block group">
+          <div class="font-bold text-sm text-slate-900 leading-snug group-hover:text-[#002f80]">{{ $e->title }}</div>
+          <div class="text-[11px] text-slate-400 mt-1">{{ strtoupper($e->category) }}{{ $e->starts_at ? ' · '.$e->starts_at->format('d M Y') : '' }}{{ $e->location ? ' · '.$e->location : '' }}</div>
+        </a>
+      @endforeach
+    </div>
+  @endif
+
   @if(auth()->check())
     @if($people->isNotEmpty())
       <h2 class="section-label mt-6 mb-2">ORANG ({{ $people->count() }})</h2>
@@ -66,7 +90,7 @@
     @endif
   @endif
 
-  @if($grouped->isEmpty() && $services->isEmpty() && (!$ai || !$ai['found']))
+  @if($grouped->isEmpty() && $services->isEmpty() && $faqs->isEmpty() && $events->isEmpty() && (!$ai || !$ai['found']))
     <div class="bg-white rounded-2xl border border-dashed border-[#d6d6d6] p-8 text-center mt-5">
       <p class="font-bold text-slate-700">Tidak ada hasil untuk “{{ $q }}”</p>
       <p class="text-sm text-slate-500 mt-1">Coba kata kunci lain, atau <a href="{{ route('ask.index') }}" class="text-[#002f80] font-bold underline">tanya Ask YPL</a>.</p>

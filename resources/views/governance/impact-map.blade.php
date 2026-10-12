@@ -38,7 +38,7 @@
                     <a href="{{ route('governance.impact', ['document' => $document->slug, 'kedalaman' => 2]) }}" class="px-3 py-1.5 rounded-full {{ $depth === 2 ? 'bg-[#002f80] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">2</a>
                 </div>
             </div>
-            <p class="text-sm text-slate-500 mb-4">Simpul = dokumen, sistem, dan PIC yang tertaut langsung maupun dua langkah dari dokumen ini. Klik simpul untuk membuka. Hanya konten yang terlihat oleh Anda yang tampil.</p>
+            <p class="text-sm text-slate-500 mb-4">Simpul = dokumen, sistem, agenda, FAQ, dan PIC yang tertaut langsung maupun dua langkah dari dokumen ini. Klik simpul untuk membuka. Hanya konten yang terlihat oleh Anda yang tampil.</p>
             <div class="rounded-xl border border-[#d6d6d6] bg-slate-50/50 overflow-x-auto">
                 <svg id="kg-graph" viewBox="0 0 900 600" class="w-full min-w-[640px] h-auto select-none" role="img" aria-label="Graf relasi dokumen"></svg>
             </div>
@@ -109,10 +109,18 @@
         {{-- Legend --}}
         <div class="mt-6 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-4">
             <h3 class="font-extrabold text-[#002f80] mb-3">Legenda</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-sm">
                 <div class="flex items-center gap-2 p-2 bg-green-50 rounded-xl">
                     <span class="w-3 h-3 rounded-full bg-green-500 shrink-0"></span>
                     <span class="text-green-700 font-semibold">System</span>
+                </div>
+                <div class="flex items-center gap-2 p-2 bg-violet-50 rounded-xl">
+                    <span class="w-3 h-3 rounded-full bg-violet-600 shrink-0"></span>
+                    <span class="text-violet-700 font-semibold">Agenda</span>
+                </div>
+                <div class="flex items-center gap-2 p-2 bg-sky-50 rounded-xl">
+                    <span class="w-3 h-3 rounded-full bg-sky-600 shrink-0"></span>
+                    <span class="text-sky-700 font-semibold">FAQ</span>
                 </div>
                 <div class="flex items-center gap-2 p-2 bg-slate-100 rounded-xl">
                     <span class="w-3 h-3 rounded-full bg-slate-500 shrink-0"></span>
@@ -150,6 +158,8 @@
   function color(n) {
     if (n.kind === 'system') return '#16a34a';
     if (n.kind === 'person') return '#64748b';
+    if (n.kind === 'event') return '#7c3aed';
+    if (n.kind === 'faq') return '#0284c7';
     var t = (n.subtitle || '').toLowerCase();
     if (['policy', 'regulation', 'standard', 'decision'].indexOf(t) !== -1) return '#002f80';
     if (['sop', 'work_instruction'].indexOf(t) !== -1) return '#d97706';

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Models\Event;
+use App\Models\Faq;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Services\AskYpl;
@@ -31,6 +33,8 @@ class SearchController extends Controller
         $grouped = collect();
         $services = collect();
         $people = collect();
+        $faqs = collect();
+        $events = collect();
         $ai = null;
 
         if ($q !== '') {
@@ -44,8 +48,17 @@ class SearchController extends Controller
             $services = $this->matchServices($q);
             $ai = (new AskYpl(3))->answer($q, $user);
 
+            $like = Document::likePattern($q);
+            $faqs = Faq::query()
+                ->when(! $user, fn ($w) => $w->where('visibility', 'public'))
+                ->where(fn ($w) => $w->where('question', 'like', $like)->orWhere('answer', 'like', $like))
+                ->orderBy('sort_order')->limit(5)->get();
+            $events = Event::query()
+                ->when(! $user, fn ($w) => $w->where('visibility', 'public'))
+                ->where(fn ($w) => $w->where('title', 'like', $like)->orWhere('description', 'like', $like))
+                ->orderBy('starts_at')->limit(5)->get();
+
             if ($user) {
-                $like = Document::likePattern($q);
                 $people = User::query()
                     ->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('academic_info', 'like', $like))
                     ->orderBy('name')->limit(5)->get(['id', 'name', 'role', 'academic_info']);
@@ -57,6 +70,8 @@ class SearchController extends Controller
             'grouped' => $grouped,
             'services' => $services,
             'people' => $people,
+            'faqs' => $faqs,
+            'events' => $events,
             'ai' => $ai,
         ]);
     }

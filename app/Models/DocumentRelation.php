@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DocumentRelation extends Model
 {
-    protected $fillable = ['document_id', 'related_id', 'system_id', 'relation_type'];
+    protected $fillable = ['document_id', 'related_id', 'system_id', 'event_id', 'faq_id', 'relation_type'];
 
-    public const TYPES = ['handbook', 'policy', 'regulation', 'standard', 'sop', 'wi', 'form', 'system', 'pic', 'related'];
+    public const TYPES = ['handbook', 'policy', 'regulation', 'standard', 'sop', 'wi', 'form', 'system', 'calendar', 'faq', 'pic', 'related'];
 
     public function document(): BelongsTo
     {
@@ -24,5 +24,15 @@ class DocumentRelation extends Model
     public function system(): BelongsTo
     {
         return $this->belongsTo(System::class);
+    }
+
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
+    }
+
+    public function faq(): BelongsTo
+    {
+        return $this->belongsTo(Faq::class);
     }
 }

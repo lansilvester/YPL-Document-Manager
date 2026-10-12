@@ -177,7 +177,7 @@
           </div>
         @endif
       @empty
-        <p class="text-[13px] text-slate-400">Belum ada relasi eksplisit. Tambahkan Handbook → Policy → SOP → Form di bawah.</p>
+        <p class="text-[13px] text-slate-400">Belum ada relasi eksplisit. Tambahkan Handbook → Policy → SOP → Form → Agenda → FAQ di bawah.</p>
       @endforelse
     </div>
     @can('relate', $document)
@@ -189,6 +189,14 @@
       <form method="post" action="{{ route('documents.relations.store', $document) }}" class="flex gap-2 mt-2">@csrf
         <select name="system_slug" class="field !text-xs flex-1" aria-label="Sistem terkait"><option value="">— Pilih sistem —</option>@foreach(\App\Models\System::orderBy('name')->get() as $s)<option value="{{ $s->slug }}">{{ $s->name }}</option>@endforeach</select>
         <button class="btn-ghost !py-2 !text-xs shrink-0">Tautkan Sistem</button>
+      </form>
+      <form method="post" action="{{ route('documents.relations.store', $document) }}" class="flex gap-2 mt-2">@csrf
+        <select name="event_slug" class="field !text-xs flex-1" aria-label="Agenda terkait"><option value="">— Pilih agenda —</option>@foreach(\App\Models\Event::orderBy('starts_at')->get() as $e)<option value="{{ $e->slug }}">{{ $e->title }}</option>@endforeach</select>
+        <button class="btn-ghost !py-2 !text-xs shrink-0">Tautkan Agenda</button>
+      </form>
+      <form method="post" action="{{ route('documents.relations.store', $document) }}" class="flex gap-2 mt-2">@csrf
+        <select name="faq_slug" class="field !text-xs flex-1" aria-label="FAQ terkait"><option value="">— Pilih FAQ —</option>@foreach(\App\Models\Faq::orderBy('sort_order')->get() as $f)<option value="{{ $f->slug }}">{{ \Illuminate\Support\Str::limit($f->question, 60) }}</option>@endforeach</select>
+        <button class="btn-ghost !py-2 !text-xs shrink-0">Tautkan FAQ</button>
       </form>
     @endcan
     @if($document->versions->isNotEmpty())

@@ -5,6 +5,8 @@ use App\Http\Controllers\AskController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EditorController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\GovernanceController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InteractionController;
@@ -84,6 +86,8 @@ Route::post('/tanya', [AskController::class, 'ask'])->middleware('throttle:sensi
 Route::get('/wawasan', [PortalController::class, 'insight'])->name('insight.index');
 Route::get('/sistem', [SystemController::class, 'index'])->name('systems.index');
 Route::get('/sistem/{system:slug}', [SystemController::class, 'show'])->name('systems.show');
+Route::get('/kalender/{event:slug}', [EventController::class, 'show'])->name('events.show');
+Route::get('/faq/{faq:slug}', [FaqController::class, 'show'])->name('faqs.show');
 
 Route::get('/masuk', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/masuk', [AuthController::class, 'login'])->middleware('throttle:login');

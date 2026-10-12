@@ -8,6 +8,8 @@ use App\Models\Category;
 use App\Models\Document;
 use App\Models\DocumentRelation;
 use App\Models\DocumentVersion;
+use App\Models\Event;
+use App\Models\Faq;
 use App\Models\Like;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
@@ -54,6 +56,8 @@ class DocumentController extends Controller
             'tags',
             'outgoingRelations.related:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
             'outgoingRelations.system:id,name,slug',
+            'outgoingRelations.event:id,title,slug,visibility',
+            'outgoingRelations.faq:id,question,slug,visibility',
             'incomingRelations.document:id,title,slug,doc_type,version,status,doc_code,visibility,user_id',
             'versions.user:id,name',
         ]);
@@ -158,26 +162,46 @@ class DocumentController extends Controller
         $this->authorize('relate', $document);
 
         $data = $request->validate([
-            'related_slug' => ['nullable', 'string', 'max:255', 'required_without:system_slug', 'exists:documents,slug'],
-            'system_slug' => ['nullable', 'string', 'max:60', 'required_without:related_slug', 'exists:systems,slug'],
+            'related_slug' => ['nullable', 'string', 'max:255', 'required_without_all:system_slug,event_slug,faq_slug', 'exists:documents,slug'],
+            'system_slug' => ['nullable', 'string', 'max:60', 'required_without_all:related_slug,event_slug,faq_slug', 'exists:systems,slug'],
+            'event_slug' => ['nullable', 'string', 'max:120', 'required_without_all:related_slug,system_slug,faq_slug', 'exists:events,slug'],
+            'faq_slug' => ['nullable', 'string', 'max:120', 'required_without_all:related_slug,system_slug,event_slug', 'exists:faqs,slug'],
             'relation_type' => ['nullable', 'string', 'in:'.implode(',', DocumentRelation::TYPES)],
         ]);
         $data['relation_type'] ??= 'related';
+
+        // Tepat satu target per relasi (BAB 7: relasi first-class yang valid).
+        $targets = array_filter([$data['related_slug'] ?? null, $data['system_slug'] ?? null, $data['event_slug'] ?? null, $data['faq_slug'] ?? null]);
+        abort_if(count($targets) !== 1, 422, 'Pilih tepat satu target relasi.');
 
         if (! empty($data['related_slug'])) {
             $related = Document::where('slug', $data['related_slug'])->firstOrFail();
             abort_if($related->id === $document->id, 422, 'Dokumen tidak dapat direlasikan ke dirinya sendiri.');
 
             DocumentRelation::firstOrCreate(
-                ['document_id' => $document->id, 'related_id' => $related->id, 'system_id' => null],
+                ['document_id' => $document->id, 'related_id' => $related->id, 'system_id' => null, 'event_id' => null, 'faq_id' => null],
                 ['relation_type' => $data['relation_type']]
             );
-        } else {
+        } elseif (! empty($data['system_slug'])) {
             $system = System::where('slug', $data['system_slug'])->firstOrFail();
 
             DocumentRelation::firstOrCreate(
-                ['document_id' => $document->id, 'related_id' => null, 'system_id' => $system->id],
+                ['document_id' => $document->id, 'related_id' => null, 'system_id' => $system->id, 'event_id' => null, 'faq_id' => null],
                 ['relation_type' => 'system']
+            );
+        } elseif (! empty($data['event_slug'])) {
+            $event = Event::where('slug', $data['event_slug'])->firstOrFail();
+
+            DocumentRelation::firstOrCreate(
+                ['document_id' => $document->id, 'related_id' => null, 'system_id' => null, 'event_id' => $event->id, 'faq_id' => null],
+                ['relation_type' => 'calendar']
+            );
+        } else {
+            $faq = Faq::where('slug', $data['faq_slug'])->firstOrFail();
+
+            DocumentRelation::firstOrCreate(
+                ['document_id' => $document->id, 'related_id' => null, 'system_id' => null, 'event_id' => null, 'faq_id' => $faq->id],
+                ['relation_type' => 'faq']
             );
         }
 

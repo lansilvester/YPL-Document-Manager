@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Document;
 use App\Models\DocumentRelation;
+use App\Models\Event;
+use App\Models\Faq;
 use App\Models\System;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -20,13 +22,19 @@ class ImpactMap
     {
         return [
             'references' => $document->outgoingRelations
-                ->filter(fn ($r) => $r->system || ($r->related && $r->related->isVisibleTo($user)))
+                ->filter(fn ($r) => $r->system
+                    || ($r->event && $r->event->isVisibleTo($user))
+                    || ($r->faq && $r->faq->isVisibleTo($user))
+                    || ($r->related && $r->related->isVisibleTo($user)))
                 ->map(fn ($r) => [
                     'type' => $r->relation_type,
-                    'target_type' => $r->system ? 'system' : 'document',
-                    'title' => $r->system?->name ?? $r->related?->title,
-                    'slug' => $r->system?->slug ?? $r->related?->slug,
-                    'route' => $r->system ? route('systems.show', $r->system) : route('documents.show', $r->related),
+                    'target_type' => $r->system ? 'system' : ($r->event ? 'event' : ($r->faq ? 'faq' : 'document')),
+                    'title' => $r->system?->name ?? $r->event?->title ?? $r->faq?->question ?? $r->related?->title,
+                    'slug' => $r->system?->slug ?? $r->event?->slug ?? $r->faq?->slug ?? $r->related?->slug,
+                    'route' => $r->system ? route('systems.show', $r->system)
+                        : ($r->event ? route('events.show', $r->event)
+                        : ($r->faq ? route('faqs.show', $r->faq)
+                        : route('documents.show', $r->related))),
                 ])->values(),
             'referenced_by' => $document->incomingRelations
                 ->filter(fn ($r) => $r->document && $r->document->isVisibleTo($user))
@@ -52,6 +60,8 @@ class ImpactMap
         $edges = [];
         $seenDocs = [];
         $seenSystems = [];
+        $seenEvents = [];
+        $seenFaqs = [];
         $seenUsers = [];
         $truncated = 0;
 
@@ -92,6 +102,42 @@ class ImpactMap
             return $key;
         };
 
+        $addEvent = function (Event $event, int $ring) use (&$nodes, &$seenEvents): ?string {
+            $key = 'e'.$event->id;
+            if (isset($seenEvents[$key])) {
+                return $key;
+            }
+            if ($ring > 0 && count(array_filter($seenEvents, fn ($r) => $r === $ring)) >= 24) {
+                return null;
+            }
+            $seenEvents[$key] = $ring;
+            $nodes[] = [
+                'id' => $key, 'kind' => 'event', 'ring' => $ring,
+                'title' => $event->title, 'subtitle' => 'Agenda',
+                'url' => route('events.show', $event->slug),
+            ];
+
+            return $key;
+        };
+
+        $addFaq = function (Faq $faq, int $ring) use (&$nodes, &$seenFaqs): ?string {
+            $key = 'f'.$faq->id;
+            if (isset($seenFaqs[$key])) {
+                return $key;
+            }
+            if ($ring > 0 && count(array_filter($seenFaqs, fn ($r) => $r === $ring)) >= 24) {
+                return null;
+            }
+            $seenFaqs[$key] = $ring;
+            $nodes[] = [
+                'id' => $key, 'kind' => 'faq', 'ring' => $ring,
+                'title' => $faq->question, 'subtitle' => 'FAQ',
+                'url' => route('faqs.show', $faq->slug),
+            ];
+
+            return $key;
+        };
+
         $addPerson = function (int $userId, string $name, int $ring) use (&$nodes, &$seenUsers): ?string {
             $key = 'u'.$userId;
             if (isset($seenUsers[$key])) {
@@ -127,7 +173,7 @@ class ImpactMap
         for ($ring = 1; $ring <= $depth; $ring++) {
             $relations = DocumentRelation::query()
                 ->where(fn ($q) => $q->whereIn('document_id', $frontier)->orWhereIn('related_id', $frontier))
-                ->with(['system:id,name,slug'])
+                ->with(['system:id,name,slug', 'event:id,title,slug,visibility', 'faq:id,question,slug,visibility'])
                 ->get();
 
             $candidateIds = $relations->map(fn ($r) => in_array($r->document_id, $frontier, true) ? $r->related_id : $r->document_id)
@@ -156,6 +202,18 @@ class ImpactMap
                         continue;
                     }
                     $edges[] = ['from' => $forward ? $sourceKey : $targetKey, 'to' => $forward ? $targetKey : $sourceKey, 'label' => $rel->relation_type, 'dir' => $forward ? 'out' : 'in'];
+
+                    continue;
+                }
+
+                if (($rel->event && $rel->event->isVisibleTo($user)) || ($rel->faq && $rel->faq->isVisibleTo($user))) {
+                    $targetKey = $rel->event ? $addEvent($rel->event, $ring) : $addFaq($rel->faq, $ring);
+                    if (! $targetKey) {
+                        $truncated++;
+
+                        continue;
+                    }
+                    $edges[] = ['from' => $sourceKey, 'to' => $targetKey, 'label' => $rel->relation_type, 'dir' => $forward ? 'out' : 'in'];
 
                     continue;
                 }
