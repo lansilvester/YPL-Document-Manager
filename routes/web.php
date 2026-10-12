@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AskController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
@@ -156,6 +157,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/badge/{tag}', [StaffController::class, 'destroyTag'])->name('tags.destroy');
         Route::get('/permintaan', [ServiceRequestController::class, 'manage'])->name('requests');
         Route::post('/permintaan/{serviceRequest}/putus', [ServiceRequestController::class, 'decide'])->middleware('throttle:sensitive')->name('requests.decide');
+        Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     });
 
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

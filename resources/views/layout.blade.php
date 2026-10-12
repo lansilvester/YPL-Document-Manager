@@ -92,6 +92,7 @@
                 <div class="mt-1 pt-1 border-t border-slate-100">
                   <div class="px-3 pt-1 text-[11px] font-bold tracking-widest text-slate-400">KELOLA</div>
                   <a href="{{ route('staff.documents') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'tool', 'class' => 'w-4 h-4']) Ruang Staff</a>
+                  <a href="{{ route('staff.analytics') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'chart', 'class' => 'w-4 h-4']) Analytics</a>
                   @if(auth()->user()->isAdmin())
                     <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Dasbor Admin</a>
                   @endif
