@@ -29,8 +29,9 @@ class AskController extends Controller
     public function ask(Request $request, AskYpl $ask): mixed
     {
         $data = $request->validate([
-            'question' => ['required', 'string', 'min:3', 'max:500'],
+            'question' => ['nullable', 'string', 'min:3', 'max:500', 'required_without:explain'],
             'doc' => ['nullable', 'string', 'max:255'],
+            'explain' => ['nullable', 'boolean'],
         ]);
 
         // Scope per-dokumen: slug asing/tak terlihat → 404, tanpa fallback diam-diam.
@@ -38,7 +39,13 @@ class AskController extends Controller
             ? Document::query()->visibleTo($request->user())->where('slug', $data['doc'])->firstOrFail()
             : null;
 
-        $result = $ask->answer($data['question'], $request->user(), $scope);
+        if (! empty($data['explain'])) {
+            abort_unless($scope, 422, 'Mode ringkas membutuhkan konteks dokumen.');
+            $result = $ask->explain($scope, $request->user());
+            $data['question'] = 'Ringkas dokumen ini';
+        } else {
+            $result = $ask->answer($data['question'], $request->user(), $scope);
+        }
         ActivityLog::record(
             $request->user()?->id, $scope?->id, 'ask',
             ['q' => mb_substr($data['question'], 0, 100), 'found' => $result['found'], 'sources' => count($result['sources'])]

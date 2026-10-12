@@ -9,6 +9,7 @@
   <div class="mt-4 flex items-center gap-2 bg-[#002f80]/5 border border-[#002f80]/15 rounded-2xl px-4 py-3 text-sm">
     <span class="text-[10px] font-bold bg-[#002f80] text-white px-2 py-1 rounded-full shrink-0">KONTEKS</span>
     <a href="{{ route('documents.show', $scope) }}" class="font-bold text-[#002f80] truncate flex-1 hover:underline">{{ $scope->title }}</a>
+    <form action="{{ route('ask.query') }}" method="post" class="inline shrink-0">@csrf <input type="hidden" name="doc" value="{{ $scope->slug }}"><input type="hidden" name="explain" value="1"><button class="text-xs font-bold text-[#002f80] underline hover:no-underline">Ringkas dokumen ini</button></form>
     <a href="{{ route('ask.index') }}" class="text-slate-400 hover:text-[#c90018] font-bold shrink-0" aria-label="Hapus konteks">✕</a>
   </div>
 @endif

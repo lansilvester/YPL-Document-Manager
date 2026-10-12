@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Document;
+use App\Models\DocumentRelation;
+use App\Models\DocumentVersion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -219,5 +221,56 @@ class YplAskTest extends TestCase
         // GET dengan slug asing: anggun, tanpa banner (fallback global).
         $this->get(route('ask.index', ['doc' => 'tak-ada']))->assertOk()
             ->assertDontSee('KONTEKS');
+    }
+
+    public function test_jelaskan_dokumen_terstruktur(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $doc = Document::factory()->for($owner)->create([
+            'slug' => 'sop-jelas', 'title' => 'SOP Kejelasan',
+            'description' => 'Prosedur kejelasan tiga langkah.',
+            'visibility' => 'public', 'status' => 'active', 'version' => '2.0',
+            'audience' => ['siswa', 'guru'], 'unit' => 'Asrama',
+            'effective_at' => '2026-01-05', 'review_at' => '2026-12-05',
+            'file_path' => 'documents/j.pdf',
+        ]);
+        $rel = Document::factory()->for($owner)->create([
+            'slug' => 'sop-jelas-terkait', 'title' => 'SOP Terkait Jelas',
+            'visibility' => 'public', 'status' => 'active',
+            'file_path' => 'documents/jt.pdf',
+        ]);
+        DocumentRelation::create(['document_id' => $doc->id, 'related_id' => $rel->id, 'relation_type' => 'related']);
+        DocumentVersion::create([
+            'document_id' => $doc->id, 'user_id' => $owner->id,
+            'version' => '2.0', 'from_status' => 'review', 'to_status' => 'active',
+            'change_note' => 'Penyesuaian jadwal.',
+        ]);
+
+        // Banner scope menawarkan mode ringkas.
+        $this->get(route('ask.index', ['doc' => 'sop-jelas']))->assertOk()
+            ->assertSee('Ringkas dokumen ini');
+
+        $this->post(route('ask.query'), ['doc' => 'sop-jelas', 'explain' => '1'])->assertOk()
+            ->assertSee('RINGKASAN SOP Kejelasan')
+            ->assertSee('Prosedur kejelasan tiga langkah.')
+            ->assertSee('WAJIB MENGIKUTI: SISWA, GURU, UNIT Asrama')
+            ->assertSee('BERLAKU: v2.0 · ACTIVE')
+            ->assertSee('berlaku 05 Jan 2026')
+            ->assertSee('PERUBAHAN TERAKHIR: v2.0 (review → active')
+            ->assertSee('Penyesuaian jadwal.')
+            ->assertSee('TERKAIT: SOP Terkait Jelas');
+
+        // Tanpa audience/unit/versi/relasi: seksi kosong disembunyikan jujur.
+        $bare = Document::factory()->for($owner)->create([
+            'slug' => 'doc-jelas-kosong', 'title' => 'Doc Kosong',
+            'visibility' => 'public', 'status' => 'draft',
+            'file_path' => 'documents/jk.pdf',
+        ]);
+        $this->post(route('ask.query'), ['doc' => 'doc-jelas-kosong', 'explain' => '1'])->assertOk()
+            ->assertDontSee('WAJIB MENGIKUTI')
+            ->assertDontSee('TERKAIT:');
+
+        // Explain butuh konteks dokumen.
+        $this->post(route('ask.query'), ['explain' => '1'])->assertStatus(422);
     }
 }

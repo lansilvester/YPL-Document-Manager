@@ -77,6 +77,77 @@ class AskYpl
     }
 
     /**
+     * Explain-document terstruktur (BAB 14): ringkasan, audience, berlaku,
+     * perubahan terakhir, dan dokumen terkait — murni dari metadata +
+     * kutipan dokumen, tanpa LLM dan tanpa filler.
+     *
+     * @return array{answer: string, sources: array<int, array{document: Document, passage: string, score: int}>, found: bool, ai: bool}
+     */
+    public function explain(Document $doc, ?User $user): array
+    {
+        if (! $doc->isVisibleTo($user)) {
+            return ['answer' => '', 'sources' => [], 'found' => false, 'ai' => false];
+        }
+
+        $lines = ['RINGKASAN '.$doc->title, ''];
+        $summary = trim((string) ($doc->description ?? ''));
+        if ($summary === '' && $doc->content) {
+            $summary = implode(' ', array_slice($this->sentences($this->plainText($doc->content)), 0, 3));
+        }
+        $lines[] = $summary !== '' ? $summary : 'Belum ada ringkasan tertulis untuk dokumen ini.';
+        $lines[] = '';
+
+        $audience = collect((array) ($doc->audience ?? []))
+            ->map(fn ($a) => strtoupper(str_replace('_', ' ', (string) $a)))
+            ->filter()->values();
+        if ($doc->unit) {
+            $audience->push('UNIT '.$doc->unit);
+        }
+        if ($audience->isNotEmpty()) {
+            $lines[] = 'WAJIB MENGIKUTI: '.$audience->implode(', ');
+            $lines[] = '';
+        }
+
+        $meta = array_filter([
+            $doc->version ? 'v'.$doc->version : null,
+            $doc->status ? strtoupper(str_replace('_', ' ', $doc->status)) : null,
+            $doc->effective_at ? 'berlaku '.$doc->effective_at->format('d M Y') : null,
+            $doc->review_at ? 'tinjau sebelum '.$doc->review_at->format('d M Y') : null,
+        ]);
+        if ($meta !== []) {
+            $lines[] = 'BERLAKU: '.implode(' · ', $meta);
+            $lines[] = '';
+        }
+
+        $last = $doc->versions()->latest()->first();
+        if ($last) {
+            $change = 'v'.$last->version.' ('.($last->from_status ?? 'awal').' → '.$last->to_status.', '.$last->created_at->format('d M Y').')';
+            if ($last->change_note) {
+                $change .= ' — '.$last->change_note;
+            }
+            $lines[] = 'PERUBAHAN TERAKHIR: '.$change;
+            $lines[] = '';
+        }
+
+        $related = $doc->outgoingRelations()->with('related:id,title,slug,visibility,user_id')->get()
+            ->map(fn ($r) => $r->related)->filter(fn ($d) => $d && $d->isVisibleTo($user))
+            ->take(5)->values();
+        if ($related->isNotEmpty()) {
+            $lines[] = 'TERKAIT: '.$related->map->title->implode('; ');
+            $lines[] = '';
+        }
+
+        $lines[] = 'Buka halaman dokumen untuk konteks lengkap dan riwayat versinya.';
+
+        return [
+            'answer' => implode("\n", $lines),
+            'sources' => [['document' => $doc, 'passage' => $summary, 'score' => 1]],
+            'found' => true,
+            'ai' => false,
+        ];
+    }
+
+    /**
      * @return array{document: Document, passage: string, score: int}
      */
     private function bestPassage(Document $doc, Collection $keywords): array
