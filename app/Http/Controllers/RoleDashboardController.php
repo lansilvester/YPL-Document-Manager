@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contact;
 use App\Models\Document;
 use App\Models\Event;
 use App\Models\Role;
@@ -31,6 +32,8 @@ class RoleDashboardController extends Controller
             'guru' => $this->teacherSections($user, $role),
             'karyawan' => $this->employeeSections($user, $role),
             'pimpinan' => $this->leaderSections($user, $role),
+            'mitra' => $this->partnerSections($user),
+            'publik' => $this->publicSections($user),
             default => $this->generalSections($user, $role),
         };
 
@@ -115,6 +118,34 @@ class RoleDashboardController extends Controller
         ]));
     }
 
+    /**
+     * Mitra: buku panduan mitra, kontak, informasi kolaborasi, resource publik (BAB 11).
+     */
+    private function partnerSections(User $user): array
+    {
+        return array_values(array_filter([
+            $this->collectionSection('handbook', 'Panduan Institusi Mitra', 'book'),
+            $this->contactsSection(),
+            $this->collectionSection('governance', 'Kebijakan Publik', 'shield'),
+            $this->collectionSection('public', 'Resource Publik', 'globe'),
+            $this->agendaSection(),
+        ]));
+    }
+
+    /**
+     * Publik: profil institusi, pendidikan, program, capaian, publikasi (BAB 11).
+     */
+    private function publicSections(User $user): array
+    {
+        return array_values(array_filter([
+            $this->collectionSection('public', 'Profil & Publikasi Institusi', 'globe'),
+            $this->collectionSection('handbook', 'Panduan & Informasi YPL', 'book'),
+            $this->collectionSection('academic', 'Pendidikan & Program', 'cap'),
+            $this->collectionSection('parent', 'Informasi untuk Keluarga', 'users'),
+            $this->agendaSection(),
+        ]));
+    }
+
     // ==================== GENERIC SECTIONS ====================
 
     private function overviewSection(): ?array
@@ -192,8 +223,7 @@ class RoleDashboardController extends Controller
     private function formsSection(): ?array
     {
         $docs = $this->docBase(auth()->user())
-            ->where('doc_type', 'form')
-            ->latest()->limit(self::DOC_LIMIT)->get();
+            ->where('doc_type', 'form')->latest()->limit(self::DOC_LIMIT)->get();
 
         if ($docs->isEmpty()) {
             return null;
@@ -204,6 +234,28 @@ class RoleDashboardController extends Controller
             $this->docItems($docs),
             null,
             route('governance.index', ['tipe' => 'form'])
+        );
+    }
+
+    private function contactsSection(): ?array
+    {
+        $contacts = Contact::query()->with('unit:id,name')
+            ->orderBy('sort_order')->orderBy('name')->limit(self::DOC_LIMIT)->get();
+
+        if ($contacts->isEmpty()) {
+            return null;
+        }
+
+        return $this->section(
+            'contacts', 'Kontak & Kolaborasi', 'users',
+            $contacts->map(fn (Contact $c) => [
+                'title' => $c->name,
+                'meta' => trim(($c->position ?? '').($c->unit ? ' · '.$c->unit->name : ''), ' ·') ?: 'Kontak YPL',
+                'badge' => null,
+                'url' => route('community.index'),
+            ]),
+            null,
+            route('community.index')
         );
     }
 
