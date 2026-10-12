@@ -22,11 +22,11 @@
   @media (prefers-reduced-motion: reduce) {
     #pages.flipping { animation: none; }
   }
-  #reader-dark #pages canvas { filter: invert(0.92) hue-rotate(180deg); }
+  #reader-dark #pages canvas, [data-theme="dark"] #pages canvas { filter: invert(0.92) hue-rotate(180deg); }
   .pg-grid button:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #2f6bff; outline-offset: 2px; }
 </style>
 </head>
-<body id="reader-root" class="{{ $pref->theme === 'dark' ? 'bg-[#141920] text-stone-100' : 'bg-[#10182e] text-white' }} min-h-screen flex flex-col">
+<body id="reader-root" data-theme="{{ $pref->normalizedTheme() }}" class="{{ \App\Models\ReadingPref::bodyClass($pref->theme) }} min-h-screen flex flex-col">
 <div class="h-1 shrink-0" style="background:linear-gradient(90deg,#002f80 60%,#c90018 60%)"></div>
 
 {{-- Top slim bar: kembali + kode/judul + menu --}}
@@ -41,7 +41,7 @@
     <div class="relative shrink-0">
       <button id="btn-menu" class="w-9 h-9 rounded-full grid place-items-center hover:bg-white/10 font-bold" aria-haspopup="true" aria-expanded="false" aria-label="Menu pembaca">…</button>
       <div id="menu-panel" class="hidden absolute right-0 mt-1 w-52 rounded-2xl bg-white text-slate-800 shadow-xl overflow-hidden z-50 text-sm font-semibold">
-        <button id="btn-theme" class="w-full text-left px-4 py-2.5 hover:bg-slate-100">{{ $pref->theme === 'dark' ? '☀ Tema Terang' : '☾ Tema Gelap' }}</button>
+        <button id="btn-theme" class="w-full text-left px-4 py-2.5 hover:bg-slate-100">Tema: {{ ucfirst($pref->normalizedTheme()) }} →</button>
         <button id="btn-full" class="w-full text-left px-4 py-2.5 hover:bg-slate-100">⛶ Layar Penuh</button>
         <a href="{{ route('documents.show', $document) }}" class="block px-4 py-2.5 hover:bg-slate-100">Lihat halaman detail →</a>
       </div>
@@ -191,7 +191,17 @@ const SAVE_PREF_URL = @json(auth()->check() ? route('api.prefs') : null);
 const NOTE_SAVE_URL = @json(auth()->check() ? route('api.notes.store', $document) : null);
 const CSRF = @json(csrf_token());
 let pdf = null, page = START_PAGE, zoom = @json((int) $pref->zoom), layout = @json($pref->layout);
-let theme = @json($pref->theme);
+let theme = @json($pref->normalizedTheme());
+const THEME_ORDER = @json(\App\Models\ReadingPref::THEMES);
+const THEME_LABEL = { light: 'Terang', paper: 'Paper', dark: 'Gelap' };
+function applyTheme(next) {
+  theme = next;
+  const root = document.getElementById('reader-root');
+  const cls = theme === 'dark' ? 'bg-[#141920] text-stone-100' : (theme === 'paper' ? 'bg-[#faf6ec] text-slate-800' : 'bg-[#10182e] text-white');
+  root.className = cls + ' min-h-screen flex flex-col';
+  root.dataset.theme = theme;
+  document.getElementById('btn-theme').textContent = 'Tema: ' + (THEME_LABEL[theme] || theme) + ' →';
+}
 if (window.matchMedia('(max-width: 767px)').matches && layout === 'double') layout = 'single';
 let saveTimer = null, pageTexts = {};
 
@@ -364,8 +374,7 @@ const menu = document.getElementById('menu-panel'), btnMenu = document.getElemen
 btnMenu.onclick = (e) => { e.stopPropagation(); const open = menu.classList.toggle('hidden'); btnMenu.setAttribute('aria-expanded', String(!open)); };
 document.addEventListener('click', (e) => { if (!menu.classList.contains('hidden') && !menu.contains(e.target)) menu.classList.add('hidden'); });
 document.getElementById('btn-theme').onclick = () => {
-  theme = theme === 'dark' ? 'light' : 'dark';
-  document.getElementById('reader-root').className = (theme === 'dark' ? 'bg-[#141920] text-stone-100' : 'bg-[#10182e] text-white') + ' min-h-screen flex flex-col';
+  applyTheme(THEME_ORDER[(THEME_ORDER.indexOf(theme) + 1) % THEME_ORDER.length]);
   savePrefs(); render(false);
 };
 document.getElementById('btn-full').onclick = () => {

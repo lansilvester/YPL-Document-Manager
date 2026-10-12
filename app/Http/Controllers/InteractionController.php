@@ -128,7 +128,7 @@ class InteractionController extends Controller
     public function savePrefs(Request $request)
     {
         $data = $request->validate([
-            'theme' => ['required', 'in:light,dark'],
+            'theme' => ['required', 'in:'.implode(',', ReadingPref::THEMES)],
             'zoom' => ['required', 'integer', 'min:50', 'max:250'],
             'layout' => ['required', 'in:single,double'],
         ]);

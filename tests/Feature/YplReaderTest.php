@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Document;
+use App\Models\ReadingPref;
 use App\Models\User;
 use Database\Seeders\YplHandbooksSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -159,5 +160,39 @@ class YplReaderTest extends TestCase
         $this->actingAs($owner)->deleteJson(route('api.notes.destroy', [$doc, $noteId]))
             ->assertOk()->assertJsonPath('ok', true);
         $this->assertDatabaseMissing('reading_notes', ['id' => $noteId]);
+    }
+
+    public function test_tema_paper_tersimpan_dan_terrender(): void
+    {
+        $user = User::factory()->create();
+        $doc = Document::factory()->for($user)->create([
+            'slug' => 'reader-paper', 'title' => 'Paper Book', 'visibility' => 'public',
+            'file_path' => 'documents/uji-reader-paper.pdf',
+        ]);
+
+        // Preferensi menerima paper, menolak nilai asing.
+        $this->actingAs($user)->postJson(route('api.prefs'), ['theme' => 'paper', 'zoom' => 100, 'layout' => 'single'])->assertOk();
+        $this->assertEquals('paper', $user->refresh()->readingPref->theme);
+        $this->actingAs($user)->postJson(route('api.prefs'), ['theme' => 'neon', 'zoom' => 100, 'layout' => 'single'])->assertStatus(422);
+
+        // Render memakai kelas paper + penanda tema + label tombol.
+        $this->actingAs($user)->get(route('reader.show', $doc))->assertOk()
+            ->assertSee('bg-[#faf6ec]', false)
+            ->assertSee('data-theme="paper"', false)
+            ->assertSee('Tema: Paper');
+    }
+
+    public function test_tema_lawas_fallback_aman(): void
+    {
+        $user = User::factory()->create();
+        $doc = Document::factory()->for($user)->create([
+            'slug' => 'reader-legacy', 'title' => 'Legacy Book', 'visibility' => 'public',
+            'file_path' => 'documents/uji-reader-legacy.pdf',
+        ]);
+        ReadingPref::updateOrCreate(['user_id' => $user->id], ['theme' => 'sepia', 'zoom' => 100, 'layout' => 'single']);
+
+        $this->actingAs($user)->get(route('reader.show', $doc))->assertOk()
+            ->assertSee('bg-[#10182e]', false)
+            ->assertSee('data-theme="light"', false);
     }
 }
