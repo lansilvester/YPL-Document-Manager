@@ -26,7 +26,9 @@
         <select name="status" class="field !w-auto !rounded-full" onchange="this.form.submit()">
             <option value="">Semua Status</option>
             @foreach(\App\Models\Document::STATUSES as $s)
+                @if(isset($statusCounts[$s]) || (auth()->check() && auth()->user()->isStaff()))
                 <option value="{{ $s }}" {{ ($filters['status'] ?? '') === $s ? 'selected' : '' }}>{{ strtoupper(str_replace('_', ' ', $s)) }}{{ isset($statusCounts[$s]) ? ' · '.$statusCounts[$s] : '' }}</option>
+                @endif
             @endforeach
         </select>
 
@@ -103,6 +105,8 @@
             ['Archived', $statusCounts['archived'] ?? 0, 'archive', 'archived'],
             ['Overdue', $overdueCount, 'alert-triangle', null],
         ] as [$label, $count, $icon, $statusLink])
+            {{-- Status internal tanpa isi disembunyikan dari non-staff (kriteria 12). --}}
+            @if($count > 0 || ! $statusLink || (auth()->check() && auth()->user()->isStaff()))
             @if($statusLink)
                 <a href="{{ route('governance.index', ['status' => $statusLink]) }}" class="bg-slate-50/70 rounded-xl p-3 hover:border-[#002f80] border border-transparent transition block">
             @else
@@ -114,6 +118,7 @@
                 </a>
             @else
                 </div>
+            @endif
             @endif
         @endforeach
     </div>

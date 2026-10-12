@@ -14,10 +14,6 @@
       <input name="q" value="{{ $q }}" placeholder="Apa yang ingin Anda ketahui atau lakukan?" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
       <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110 inline-flex items-center gap-2 grad-red">Search</button>
     </form>
-    <p class="text-slate-200 mt-2 text-xs sm:text-sm">Jelajahi {{ number_format($stats['dokumen']) }} dokumen · {{ $stats['kategori'] }} kategori · {{ number_format($stats['views']) }} kali dibaca komunitas.</p>
-    @guest
-      @if(\App\Models\Setting::feature('reg'))<p class="mt-3 text-xs text-slate-300">Punya materi untuk dibagikan? <a href="{{ route('register') }}" class="underline font-bold text-white">Daftar dengan email YPL</a> — gratis.</p>@endif
-    @endguest
    </div>
   </div>
 </section>

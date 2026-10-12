@@ -114,7 +114,11 @@ class YplGovernanceTest extends TestCase
         $this->get(route('governance.index'))->assertOk()
             ->assertDontSee('K12 Draft Tersembunyi')
             ->assertSee('K12 Due Terlihat')
-            ->assertSee('K12 Active Terlihat');
+            ->assertSee('K12 Active Terlihat')
+            ->assertDontSee('>DRAFT<', false)
+            ->assertDontSee('>REVIEW<', false)
+            ->assertDontSee('>APPROVAL<', false)
+            ->assertSee('>ACTIVE<', false);
         $this->get(route('governance.index', ['status' => 'draft']))->assertOk()
             ->assertDontSee('K12 Draft Tersembunyi');
         $this->get(route('governance.show', $draft))->assertForbidden();
