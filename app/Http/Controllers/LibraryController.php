@@ -27,7 +27,7 @@ class LibraryController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $docs = Document::query()->with(['category', 'user', 'tags'])
+        $docs = Document::query()->forCard()
             ->where('visibility', 'public')->whereIn('status', Document::LIVE_STATUSES)
             ->when($filter !== 'semua', fn ($q) => $q->whereHas('category', fn ($c) => $c->where('collection', $filter)->orWhere('slug', $filter)))
             ->latest()->paginate(12)->withQueryString();

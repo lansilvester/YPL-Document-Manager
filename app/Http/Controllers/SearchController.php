@@ -41,6 +41,11 @@ class SearchController extends Controller
             $docs = Document::query()->with(['category'])
                 ->visibleTo($user)
                 ->searchAny($q)
+                ->select([
+                    'documents.id', 'documents.title', 'documents.slug',
+                    'documents.category_id', 'documents.doc_type', 'documents.version',
+                    'documents.status', 'documents.description',
+                ])
                 ->limit(12)
                 ->get();
             $grouped = $docs->groupBy(fn (Document $d) => $d->doc_type ?? 'dokumen');

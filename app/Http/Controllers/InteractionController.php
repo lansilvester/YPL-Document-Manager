@@ -57,8 +57,11 @@ class InteractionController extends Controller
     public function bookmarks()
     {
         abort_unless(Setting::feature('bookmark'), 404, 'Fitur bookmark dinonaktifkan.');
-        $docs = Document::whereIn('id', Bookmark::where('user_id', auth()->id())->pluck('document_id'))
-            ->with(['category', 'user', 'tags'])->latest()->paginate(12);
+        $docs = Document::query()
+            ->forCard()
+            ->whereHas('bookmarks', fn ($query) => $query->where('user_id', auth()->id()))
+            ->latest()
+            ->paginate(12);
 
         return view('documents.bookmarks', compact('docs'));
     }

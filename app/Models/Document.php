@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -144,6 +145,11 @@ class Document extends Model
         return $this->hasMany(Bookmark::class);
     }
 
+    public function readingPositions(): HasMany
+    {
+        return $this->hasMany(ReadingPosition::class);
+    }
+
     public function likes(): HasMany
     {
         return $this->hasMany(Like::class);
@@ -152,6 +158,27 @@ class Document extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
+    }
+
+    /**
+     * Load only the fields and relations rendered by document cards.
+     *
+     * @param  Builder<Document>  $query
+     * @return Builder<Document>
+     */
+    public function scopeForCard(Builder $query): Builder
+    {
+        return $query
+            ->select([
+                'documents.id', 'documents.title', 'documents.slug',
+                'documents.category_id', 'documents.user_id',
+                'documents.source_type', 'documents.description', 'documents.views_count',
+            ])
+            ->with([
+                'category:id,name',
+                'user:id,name',
+                'tags:id,name',
+            ]);
     }
 
     /**

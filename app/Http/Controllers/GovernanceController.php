@@ -22,10 +22,6 @@ class GovernanceController extends Controller
         $query = (clone $base)
             ->with([
                 'category:id,name,collection',
-                'user:id,name',
-                'approver:id,name',
-                'pic:id,name',
-                'tags:id,name',
             ])
             ->when($filters['tipe'] ?? null, fn ($q, $v) => $q->where('doc_type', $v))
             ->when($filters['status'] ?? null, fn ($q, $v) => $q->where('status', $v))

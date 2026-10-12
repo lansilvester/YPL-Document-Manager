@@ -17,15 +17,26 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
 
-        $myDocs = Document::where('user_id', $user->id)->with('category')->latest()->limit(8)->get();
+        $myDocs = Document::query()
+            ->where('user_id', $user->id)
+            ->select(['id', 'title', 'slug', 'category_id', 'views_count', 'updated_at'])
+            ->with('category:id,name')
+            ->latest()->limit(8)->get();
 
-        $viewed = ActivityLog::with('document.category')
+        $viewed = ActivityLog::query()
             ->where('user_id', $user->id)->where('action', 'view')
+            ->select(['id', 'user_id', 'document_id', 'action', 'created_at'])
+            ->with('document:id,title,slug')
             ->latest()->limit(40)->get()
             ->unique('document_id')->take(8);
 
-        $markDocs = Document::whereIn('id', Bookmark::where('user_id', $user->id)->pluck('document_id'))
-            ->with('category')->latest()->limit(4)->get();
+        $markDocs = Document::query()
+            ->whereHas('bookmarks', fn ($query) => $query->where('user_id', $user->id))
+            ->select(['id', 'title', 'slug', 'category_id'])
+            ->with('category:id,name')
+            ->latest()
+            ->limit(4)
+            ->get();
 
         return view('profile.edit', [
             'user' => $user,

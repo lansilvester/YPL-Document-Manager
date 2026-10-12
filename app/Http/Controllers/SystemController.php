@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Document;
 use App\Models\System;
 
 class SystemController extends Controller
@@ -15,7 +16,8 @@ class SystemController extends Controller
 
     public function show(System $system): mixed
     {
-        $docs = $system->documents()->with(['category', 'user', 'tags'])
+        $docs = Document::query()->forCard()
+            ->whereIn('documents.id', $system->documents()->select('documents.id'))
             ->where('visibility', 'public')->latest()->paginate(12);
 
         return view('systems.show', compact('system', 'docs'));

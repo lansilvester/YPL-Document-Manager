@@ -33,10 +33,11 @@ class DocumentController extends Controller
         $q = trim((string) $request->query('q', ''));
         $cat = $request->query('kategori');
 
-        $docs = Document::query()->with(['category', 'user', 'tags'])
+        $docs = Document::query()
             ->where('visibility', 'public')->whereIn('status', Document::LIVE_STATUSES)
             ->when($q, fn ($s) => $s->search($q))
             ->when($cat, fn ($s) => $s->whereHas('category', fn ($c) => $c->where('slug', $cat)))
+            ->forCard()
             ->latest()->paginate(12)->withQueryString();
 
         return view('documents.index', [
@@ -97,7 +98,7 @@ class DocumentController extends Controller
         $recommendations = (new RecommendationEngine(6))->forDocument($document, auth()->user());
 
         // Dokumen populer: paling sering dibaca.
-        $popular = Document::query()->with(['category', 'user', 'tags'])
+        $popular = Document::query()->forCard()
             ->where('visibility', 'public')->whereIn('status', Document::LIVE_STATUSES)
             ->where('id', '!=', $document->id)
             ->orderByDesc('views_count')

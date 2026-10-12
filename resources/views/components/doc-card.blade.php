@@ -20,7 +20,7 @@ $g = $grads[$d->id % count($grads)];
   </div>
   <div class="p-4 flex flex-col flex-1">
     <h2 class="font-bold text-slate-900 leading-snug line-clamp-2">{{ $d->title }}</h2>
-    @if($d->relationLoaded('tags') ? $d->tags->isNotEmpty() : $d->tags()->exists())
+    @if($d->tags->isNotEmpty())
       <div class="flex flex-wrap gap-1 mt-2">@include('components.tag-badges', ['tags' => $d->tags->take(3)])</div>
     @endif
     <p class="text-[13px] text-slate-500 line-clamp-2 mt-1 flex-1">{{ $d->description }}</p>

@@ -18,12 +18,16 @@ class HomeController extends Controller
         $user = $request->user();
         $role = Role::for($user);
 
-        $latest = Document::with(['category'])->where('visibility', 'public')
-            ->whereIn('status', Document::LIVE_STATUSES)->latest()->limit(3)->get();
+        $latest = Document::query()->where('visibility', 'public')
+            ->whereIn('status', Document::LIVE_STATUSES)
+            ->select(['id', 'title', 'slug', 'version', 'category_id', 'created_at'])
+            ->with('category:id,name')
+            ->latest()->limit(3)->get();
 
         // YPL Today: dokumen aktif dengan review terdekat (deadline nyata).
-        $todayDocs = Document::with(['category'])->where('visibility', 'public')
+        $todayDocs = Document::query()->where('visibility', 'public')
             ->where('status', 'active')->whereNotNull('review_at')
+            ->select(['id', 'title', 'slug', 'review_at'])
             ->orderBy('review_at')->limit(3)->get();
 
         // UNTUK ANDA: agenda terdekat + (login) pengajuan + (operasional) review jatuh tempo.
@@ -36,9 +40,10 @@ class HomeController extends Controller
                 ->where('status', 'pending')->count();
         }
         if ($role->isOperational()) {
-            $forYou['dueReviews'] = Document::with(['category'])->where('visibility', 'public')
+            $forYou['dueReviews'] = Document::query()->where('visibility', 'public')
                 ->where('status', 'active')->whereNotNull('review_at')
                 ->where('review_at', '<=', now()->addDays(30))
+                ->select(['id', 'title', 'slug', 'review_at'])
                 ->orderBy('review_at')->limit(3)->get();
         }
 

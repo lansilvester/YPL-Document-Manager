@@ -2,14 +2,18 @@
 
 namespace Tests\Feature;
 
+use App\Models\Bookmark;
 use App\Models\Category;
 use App\Models\Document;
+use App\Models\DocumentRelation;
 use App\Models\ReadingPosition;
 use App\Models\User;
 use App\Services\RecommendationEngine;
 use Database\Seeders\YplGovernanceSeeder;
 use Database\Seeders\YplHandbooksSeeder;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -81,5 +85,74 @@ class YplRecommendationTest extends TestCase
 
         $titles = $recs->pluck('document.title')->toArray();
         $this->assertNotContains('Dokumen Privat', $titles);
+    }
+
+    public function test_personal_recommendation_query_count_stays_bounded_with_many_seeds(): void
+    {
+        $user = User::factory()->create(['role' => 'anggota']);
+        $owner = User::factory()->create(['role' => 'staff']);
+        $category = Category::create(['name' => 'Seed Category', 'slug' => 'seed-category']);
+
+        $seeds = collect(range(1, 10))->map(fn (int $number) => Document::factory()
+            ->for($owner)
+            ->create([
+                'slug' => 'seed-'.$number,
+                'category_id' => $category->id,
+                'visibility' => 'public',
+                'status' => 'active',
+            ]));
+        $candidate = Document::factory()->for($owner)->create([
+            'slug' => 'candidate-from-seed',
+            'category_id' => $category->id,
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        foreach ($seeds as $seed) {
+            ReadingPosition::create([
+                'user_id' => $user->id,
+                'document_id' => $seed->id,
+                'page' => 1,
+                'percent' => 20,
+            ]);
+        }
+
+        Bookmark::create(['user_id' => $user->id, 'document_id' => $seeds->first()->id]);
+        DocumentRelation::create([
+            'document_id' => $seeds->first()->id,
+            'related_id' => $candidate->id,
+            'relation_type' => 'related',
+        ]);
+
+        $queryCount = 0;
+        DB::listen(function (QueryExecuted $query) use (&$queryCount): void {
+            $queryCount++;
+        });
+
+        $recommendations = (new RecommendationEngine(5))->forUser($user);
+
+        $this->assertLessThanOrEqual(14, $queryCount);
+        $candidateRecommendation = $recommendations->first(
+            fn (array $recommendation) => $recommendation['document']->is($candidate)
+        );
+        $this->assertNotNull($candidateRecommendation);
+        $this->assertContains('Relasi eksplisit', $candidateRecommendation['reasons']);
+        $this->assertArrayNotHasKey('content', $candidateRecommendation['document']->getAttributes());
+    }
+
+    public function test_document_card_scope_loads_required_relations_without_document_content(): void
+    {
+        $owner = User::factory()->create(['role' => 'staff']);
+        $document = Document::factory()->for($owner)->create([
+            'visibility' => 'public',
+            'status' => 'active',
+        ]);
+
+        $cardDocument = Document::query()->forCard()->findOrFail($document->id);
+
+        $this->assertArrayNotHasKey('content', $cardDocument->getAttributes());
+        $this->assertTrue($cardDocument->relationLoaded('category'));
+        $this->assertTrue($cardDocument->relationLoaded('user'));
+        $this->assertTrue($cardDocument->relationLoaded('tags'));
     }
 }

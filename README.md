@@ -78,7 +78,7 @@ Community/Calendar/Insight nyata · thumbnails lazy + catatan pembaca per halama
 
 ![Ask YPL — desktop](presentasi/screenshots/desktop-ask.png)
 
-- **Recommendations** — skor berbobot 6 sinyal (relasi 30, kategori 20, tag 20, penulis/co-read/sistem @10), mode `forDocument()` (~6 query fixed) & `forUser()` (~12 query), N+1 eliminated, tampil di detail dokumen + drawer Reader.
+- **Recommendations** — skor berbobot 6 sinyal (relasi 30, kategori 20, tag 20, penulis/co-read/sistem @10), query batch tanpa query per kandidat atau seed, maksimal 10 dokumen baca + 10 bookmark terbaru sebagai seed dan 200 kandidat. Daftar dokumen memakai scope `forCard()` agar hanya kolom/relasi yang dirender yang diambil; rekomendasi tampil di detail dokumen + drawer Reader.
 
 ### Akun & Peran
 - Registrasi/login, reset password, profil + avatar + ganti password, pengajuan kenaikan peran, panel staff/admin/superadmin.

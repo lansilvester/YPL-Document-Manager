@@ -107,7 +107,7 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 - Pre-compute maps: `buildRelationMaps()`, `buildCoreaderMap()`, `buildCoreaderMapMultiple()` — **1 query per tipe** untuk semua kandidat sekaligus
 - Eager load semua relasi di query awal (`with(['category','tags','user','outgoingRelations.related','outgoingRelations.system'])`)
 - Scoring di memori, zero query tambahan per kandidat
-- **Query count:** dari ~600+ (N+1) → **~6 query fixed** untuk `forDocument()`, **~12 query** untuk `forUser()`
+- **Query count:** query relasi dibatch dan tidak tumbuh per seed/kandidat. `forUser()` membatasi seed pada 10 bacaan + 10 bookmark terbaru dan kandidat pada 200 dokumen aktif; daftar kartu hanya mengambil kolom/relasi yang dirender.
 
 **UI Integration:**
 - Detail dokumen: panel **REKOMENDASI UNTUK ANDA** (ganti "Dokumen Sejenis" dengan badge alasan + views)

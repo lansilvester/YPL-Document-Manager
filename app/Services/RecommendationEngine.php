@@ -6,6 +6,7 @@ use App\Models\Bookmark;
 use App\Models\Document;
 use App\Models\ReadingPosition;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -18,6 +19,10 @@ use Illuminate\Support\Collection;
  */
 class RecommendationEngine
 {
+    private const MAX_SEED_DOCUMENTS = 10;
+
+    private const MAX_CANDIDATES = 200;
+
     public function __construct(
         private int $maxResults = 6,
         private array $weights = [
@@ -35,37 +40,32 @@ class RecommendationEngine
      */
     public function forDocument(Document $document, ?User $user = null): Collection
     {
-        // 1 query: ambil kandidat + semua relasi yang dibutuhkan
-        $candidates = Document::query()
-            ->with([
-                'category',
-                'tags',
-                'user',
-                'outgoingRelations.related' => fn ($q) => $q->with(['category', 'user']),
-                'outgoingRelations.system',
-            ])
-            ->visibleTo($user)
+        $document->loadMissing([
+            'tags:id,name',
+            'outgoingRelations:id,document_id,related_id,system_id',
+        ]);
+
+        $candidates = $this->candidateQuery($user)
             ->where('id', '!=', $document->id)
-            ->where('status', 'active')
-            ->limit(200)
+            ->limit(self::MAX_CANDIDATES)
             ->get();
 
         if ($candidates->isEmpty()) {
             return collect();
         }
 
-        // Pre-compute maps sekali saja (bukan per kandidat)
         $sourceRelations = $this->buildRelationMaps($document, $candidates);
-        $sourceTags = $document->tags->pluck('id')->toArray();
-        $sourceSystems = $document->outgoingRelations()->whereNotNull('system_id')->pluck('system_id')->toArray();
-
-        // Pre-compute coreaders sekali untuk semua kandidat
+        $sourceTags = $document->tags->pluck('id')->all();
+        $sourceSystems = $document->outgoingRelations
+            ->whereNotNull('system_id')
+            ->pluck('system_id')
+            ->all();
         $coreaderMap = $user ? $this->buildCoreaderMap($document, $candidates, $user) : [];
 
-        $scored = $candidates
-            ->map(fn (Document $c) => $this->scoreOptimized(
+        return $candidates
+            ->map(fn (Document $candidate) => $this->scoreOptimized(
                 $document,
-                $c,
+                $candidate,
                 $user,
                 $sourceRelations,
                 $sourceTags,
@@ -76,8 +76,6 @@ class RecommendationEngine
             ->sortByDesc('score')
             ->take($this->maxResults)
             ->values();
-
-        return $scored;
     }
 
     /**
@@ -85,67 +83,72 @@ class RecommendationEngine
      */
     public function forUser(User $user): Collection
     {
-        $readDocIds = ReadingPosition::where('user_id', $user->id)
+        $readDocumentIds = ReadingPosition::query()
+            ->where('user_id', $user->id)
             ->where('percent', '>=', 10)
-            ->pluck('document_id')->toArray();
+            ->orderByDesc('updated_at')
+            ->limit(self::MAX_SEED_DOCUMENTS)
+            ->pluck('document_id');
 
-        $bookmarkDocIds = Bookmark::where('user_id', $user->id)
-            ->pluck('document_id')->toArray();
+        $bookmarkedDocumentIds = Bookmark::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->limit(self::MAX_SEED_DOCUMENTS)
+            ->pluck('document_id');
 
-        $seedIds = array_unique(array_merge($readDocIds, $bookmarkDocIds));
+        $seedIds = $readDocumentIds
+            ->merge($bookmarkedDocumentIds)
+            ->unique()
+            ->values();
 
-        if (empty($seedIds)) {
+        if ($seedIds->isEmpty()) {
             return collect();
         }
 
-        // Seed docs dengan relasi lengkap
         $seedDocs = Document::query()
             ->visibleTo($user)
-            ->with([
-                'category', 'tags', 'user',
-                'outgoingRelations.related',
-                'outgoingRelations.system',
-            ])
             ->whereIn('id', $seedIds)
+            ->select(['id', 'category_id', 'user_id'])
+            ->with([
+                'tags:id,name',
+                'outgoingRelations:id,document_id,related_id,system_id',
+            ])
             ->get();
 
-        // Kandidat (exclude seed)
-        $candidates = Document::query()
-            ->visibleTo($user)
-            ->with([
-                'category', 'tags', 'user',
-                'outgoingRelations.related',
-                'outgoingRelations.system',
-            ])
-            ->where('status', 'active')
-            ->whereNotIn('id', $seedIds)
-            ->limit(200)
+        if ($seedDocs->isEmpty()) {
+            return collect();
+        }
+
+        $candidates = $this->candidateQuery($user)
+            ->whereNotIn('id', $seedDocs->modelKeys())
+            ->limit(self::MAX_CANDIDATES)
             ->get();
 
         if ($candidates->isEmpty()) {
             return collect();
         }
 
-        // Pre-compute maps untuk seed docs
         $seedRelationMaps = [];
         $seedTags = [];
         $seedSystems = [];
         $seedAuthors = [];
 
         foreach ($seedDocs as $seed) {
-            $seedRelationMaps[$seed->id] = $this->buildRelationMaps($seed, collect());
-            $seedTags[$seed->id] = $seed->tags->pluck('id')->toArray();
-            $seedSystems[$seed->id] = $seed->outgoingRelations()->whereNotNull('system_id')->pluck('system_id')->toArray();
+            $seedRelationMaps[$seed->id] = $this->buildRelationMaps($seed, $candidates);
+            $seedTags[$seed->id] = $seed->tags->pluck('id')->all();
+            $seedSystems[$seed->id] = $seed->outgoingRelations
+                ->whereNotNull('system_id')
+                ->pluck('system_id')
+                ->all();
             $seedAuthors[$seed->id] = $seed->user_id;
         }
 
-        // Coreader map untuk semua kandidat sekaligus
-        $coreaderMap = $this->buildCoreaderMapMultiple($seedDocs, $user);
+        $coreaderMap = $this->buildCoreaderMapMultiple($seedDocs, $candidates, $user);
 
-        $scored = $candidates
-            ->map(fn (Document $c) => $this->scorePersonalOptimized(
+        return $candidates
+            ->map(fn (Document $candidate) => $this->scorePersonalOptimized(
                 $seedDocs,
-                $c,
+                $candidate,
                 $user,
                 $seedRelationMaps,
                 $seedTags,
@@ -157,29 +160,40 @@ class RecommendationEngine
             ->sortByDesc('score')
             ->take($this->maxResults)
             ->values();
+    }
 
-        return $scored;
+    /**
+     * Candidate payload includes only fields used by scoring and recommendation cards.
+     *
+     * @return Builder<Document>
+     */
+    private function candidateQuery(?User $user): Builder
+    {
+        return Document::query()
+            ->forCard()
+            ->visibleTo($user)
+            ->where('status', 'active')
+            ->with('outgoingRelations:id,document_id,related_id,system_id')
+            ->orderByDesc('created_at');
     }
 
     // ==================== PRIVATE HELPERS ====================
 
     /**
-     * Build relation maps untuk 1 dokumen source terhadap koleksi candidates.
-     * Returns: ['explicit' => [candidate_id => true], 'related_ids' => [...]]
+     * Build explicit relation map from already eager-loaded relations.
+     *
+     * @return array{explicit: array<int, int>}
      */
     private function buildRelationMaps(Document $source, Collection $candidates): array
     {
-        $candidateIds = $candidates->pluck('id')->toArray();
-
-        // Cek relasi eksplisit source -> candidate dalam 1 query
-        $explicitTargets = $source->outgoingRelations()
-            ->whereIn('related_id', $candidateIds)
+        $candidateIds = array_fill_keys($candidates->modelKeys(), true);
+        $explicitTargets = $source->outgoingRelations
             ->pluck('related_id')
-            ->toArray();
+            ->filter(fn ($id) => isset($candidateIds[$id]))
+            ->all();
 
         return [
             'explicit' => array_flip($explicitTargets),
-            'related_ids' => $source->outgoingRelations->pluck('related_id')->toArray(),
         ];
     }
 
@@ -222,19 +236,19 @@ class RecommendationEngine
     /**
      * Coreader map untuk multiple seed docs sekaligus.
      */
-    private function buildCoreaderMapMultiple(Collection $seedDocs, ?User $user): array
+    private function buildCoreaderMapMultiple(Collection $seedDocs, Collection $candidates, ?User $user): array
     {
-        if (! $user || $seedDocs->isEmpty()) {
+        if (! $user || $seedDocs->isEmpty() || $candidates->isEmpty()) {
             return [];
         }
 
         $seedIds = $seedDocs->pluck('id')->toArray();
-        $userId = $user->id ?? 0;
+        $candidateIds = $candidates->modelKeys();
 
         // Users yang membaca minimal 2 dari seed docs (co-reading signal)
         $coreaderUserIds = ReadingPosition::query()
             ->whereIn('document_id', $seedIds)
-            ->where('user_id', '!=', $userId)
+            ->where('user_id', '!=', $user->id)
             ->where('percent', '>=', 10)
             ->select('user_id')
             ->groupBy('user_id')
@@ -246,15 +260,15 @@ class RecommendationEngine
             return [];
         }
 
-        // Kandidat yang dibaca oleh coreader users
-        return Document::query()
-            ->where('status', 'active')
-            ->whereHas('readingPositions', fn ($q) => $q
-                ->whereIn('user_id', $coreaderUserIds)
-                ->where('percent', '>=', 10)
-            )
-            ->pluck('id')
-            ->toArray();
+        $coreaderCandidates = ReadingPosition::query()
+            ->whereIn('document_id', $candidateIds)
+            ->whereIn('user_id', $coreaderUserIds)
+            ->where('percent', '>=', 10)
+            ->distinct()
+            ->pluck('document_id')
+            ->all();
+
+        return array_fill_keys($candidateIds, false) + array_fill_keys($coreaderCandidates, true);
     }
 
     /**

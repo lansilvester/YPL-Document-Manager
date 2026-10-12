@@ -14,10 +14,12 @@ class PortalController extends Controller
 {
     public function services(): mixed
     {
-        $forms = Document::query()->with(['category'])
+        $forms = Document::query()
             ->where('visibility', 'public')
             ->where('status', 'active')
             ->where('doc_type', 'form')
+            ->select(['id', 'title', 'slug', 'category_id', 'doc_code', 'version'])
+            ->with('category:id,name')
             ->latest()->limit(6)->get();
 
         $myPending = auth()->check()
@@ -85,8 +87,10 @@ class PortalController extends Controller
             ->when($data['category'] ?? null, fn ($q, $cat) => $q->where('category', $cat))
             ->orderBy('starts_at')->paginate(12)->withQueryString();
 
-        $todayDocs = Document::with(['category'])->where('visibility', 'public')
+        $todayDocs = Document::query()->where('visibility', 'public')
             ->where('status', 'active')->whereNotNull('review_at')
+            ->select(['id', 'title', 'slug', 'category_id', 'review_at'])
+            ->with('category:id,name')
             ->orderBy('review_at')->limit(5)->get();
 
         return view('portal.calendar', [
@@ -102,7 +106,7 @@ class PortalController extends Controller
      */
     public function insight(): mixed
     {
-        $docs = Document::with(['category', 'user', 'tags'])->where('visibility', 'public')
+        $docs = Document::query()->forCard()->where('visibility', 'public')
             ->where('status', 'active')->latest()->limit(6)->get();
 
         return view('portal.insight', [
