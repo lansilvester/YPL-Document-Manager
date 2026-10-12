@@ -26,9 +26,10 @@ class AskYpl
     {
         $keywords = $this->keywords($question);
 
-        // Scope per-dokumen (BAB 14): tanpa query pencarian — kandidat tunggal.
-        $candidates = $scope !== null && $scope->isVisibleTo($user)
-            ? collect([$scope])
+        // Scope per-dokumen (BAB 14): kandidat tunggal tanpa query pencarian.
+        // Scope tak terlihat → tidak ditemukan (tanpa fallback global diam-diam).
+        $candidates = $scope !== null
+            ? ($scope->isVisibleTo($user) ? collect([$scope]) : collect())
             : Document::query()->with(['category'])
                 ->visibleTo($user)
                 ->searchAny($question)

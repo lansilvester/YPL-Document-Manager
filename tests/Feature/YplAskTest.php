@@ -6,6 +6,7 @@ use App\Models\Document;
 use App\Models\DocumentRelation;
 use App\Models\DocumentVersion;
 use App\Models\User;
+use App\Services\AskYpl;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -213,6 +214,9 @@ class YplAskTest extends TestCase
         $this->actingAs($other)->post(route('ask.query'), ['question' => 'rahasia konteks', 'doc' => 'sop-priv-konteks'])
             ->assertNotFound()
             ->assertDontSee('Rahasia konteks.');
+
+        // Level service: scope tak terlihat → tidak ditemukan (tanpa fallback global).
+        $this->assertFalse((new AskYpl)->answer('rahasia konteks', $other, $priv)['found']);
 
         // Pemilik boleh bertanya dalam konteks privatnya.
         $this->actingAs($owner)->post(route('ask.query'), ['question' => 'rahasia konteks', 'doc' => 'sop-priv-konteks'])->assertOk()
