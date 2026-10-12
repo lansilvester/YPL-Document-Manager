@@ -67,6 +67,27 @@ class YplFoundationTest extends TestCase
         $this->assertSame(url('/faq/faq-en'), route('faqs.show', $faq));
     }
 
+    public function test_tidak_ada_gradient_inline_duplikat(): void
+    {
+        // BAB 15: literal gradien kanonis wajib lewat class (grad-navy/grad-red/brand-line).
+        // Varian rotasi cover (stop berbeda) dikecualikan — itu sistem variasi, bukan duplikat.
+        $kanonis = [
+            'linear-gradient(135deg,#002f80,#0046c0)',
+            'linear-gradient(135deg,#a30014,#c90018)',
+            'linear-gradient(90deg,#002f80 60%,#c90018 60%)',
+        ];
+        $pelanggar = [];
+        foreach (glob(resource_path('views/**/*.blade.php')) as $file) {
+            $isi = file_get_contents($file);
+            foreach ($kanonis as $pola) {
+                if (str_contains($isi, $pola)) {
+                    $pelanggar[] = basename($file).' ('.$pola.')';
+                }
+            }
+        }
+        $this->assertSame([], $pelanggar);
+    }
+
     public function test_community_nyata_unit_peran_dan_direktori(): void
     {
         $this->seed(RoleSeeder::class);

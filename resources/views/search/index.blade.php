@@ -6,7 +6,7 @@
 
 <form action="{{ route('search.index') }}" method="get" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg border border-[#d6d6d6] max-w-xl">
   <input name="q" value="{{ $q }}" maxlength="200" placeholder="Dokumen, layanan, FAQ, agenda, atau orang…" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
-  <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110" style="background:linear-gradient(135deg,#002f80,#0046c0)">Cari</button>
+  <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110 grad-navy">Cari</button>
 </form>
 
 @if($q === '')
@@ -15,7 +15,7 @@
   @if($ai && $ai['found'])
     <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 mt-5">
       <div class="text-xs font-bold tracking-widest text-[#002f80]">JAWABAN ASK YPL {{ ($ai['ai'] ?? false) ? '🧪' : '' }}</div>
-      <div class="prose max-w-none mt-2 text-sm text-slate-700 whitespace-pre-line">{{ $ai['answer'] }}</div>
+      <div class="prose font-reading max-w-none mt-2 text-slate-700 whitespace-pre-line">{{ $ai['answer'] }}</div>
       <div class="flex flex-wrap gap-2 mt-3">
         @foreach($ai['sources'] as $hit)
           <a href="{{ route('documents.show', $hit['document']) }}" class="text-xs font-bold bg-[#002f80]/5 text-[#002f80] rounded-full px-3 py-1.5 hover:bg-[#002f80] hover:text-white transition">[{{ $loop->iteration }}] {{ \Illuminate\Support\Str::limit($hit['document']->title, 40) }}</a>

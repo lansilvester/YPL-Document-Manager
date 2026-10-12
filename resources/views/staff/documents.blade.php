@@ -9,7 +9,7 @@
   <p class="text-sm text-slate-300 relative">Halo, <strong class="text-white">{{ auth()->user()->name }}</strong> — kelola perpustakaan dalam satu tampilan: tambah/upload PDF, ganti file, beri badge/tag, dan hapus.</p>
   <form action="{{ route('staff.documents') }}" method="get" class="mt-4 flex gap-2 bg-white rounded-full p-1.5 max-w-md relative">
     <input name="q" value="{{ $q }}" placeholder="Cari dokumen…" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
-    <button class="shrink-0 rounded-full font-bold text-sm px-5 py-2 text-white" style="background:linear-gradient(135deg,#002f80,#0046c0)">Cari</button>
+    <button class="shrink-0 rounded-full font-bold text-sm px-5 py-2 text-white grad-navy">Cari</button>
   </form>
 </div>
 
@@ -18,7 +18,7 @@
   <div class="lg:col-span-2 space-y-5">
     <details class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm overflow-hidden" {{ $errors->any() ? 'open' : '' }}>
       <summary class="cursor-pointer p-5 font-extrabold flex items-center gap-3 hover:bg-[#002f80]/[.03] text-[#002f80]">
-        <span class="w-9 h-9 rounded-xl grid place-items-center text-white" style="background:linear-gradient(135deg,#002f80,#0046c0)">@include('components.icon', ['name' => 'plus', 'class' => 'w-4 h-4'])</span>
+        <span class="w-9 h-9 rounded-xl grid place-items-center text-white grad-navy">@include('components.icon', ['name' => 'plus', 'class' => 'w-4 h-4'])</span>
         Tambah / Upload PDF Baru
       </summary>
       <form method="post" action="{{ route('staff.documents.store') }}" enctype="multipart/form-data" class="p-5 pt-0 space-y-3 border-t border-slate-100">@csrf

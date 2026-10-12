@@ -36,6 +36,10 @@
   .btn-accent:hover { transform: translateY(-1px); }
   .btn-ghost { border: 1px solid #d6d6d6; background: #fff; border-radius: 9999px; padding: .55rem 1.2rem; font-weight: 600; font-size: .875rem; transition: .2s; display: inline-flex; align-items: center; gap: .45rem; justify-content: center; }
   .btn-ghost:hover { border-color: #002f80; color: #002f80; }
+  /* Gradien khas BAB 15 — satu sumber, tanpa inline berulang */
+  .grad-navy { background: linear-gradient(135deg, #002f80, #0046c0); }
+  .grad-red { background: linear-gradient(135deg, #a30014, #c90018); }
+  .brand-line { background: linear-gradient(90deg, #002f80 60%, #c90018 60%); }
   .card-hover { transition: transform .25s ease, box-shadow .25s ease; }
   .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -18px rgba(0,30,80,.35); }
 }
@@ -44,7 +48,7 @@
 <body class="bg-[#eef1f4] text-slate-800 min-h-screen flex flex-col antialiased">
 
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#d6d6d6] shadow-[0_2px_20px_-12px_rgba(0,30,80,.45)]">
-  <div class="h-1" style="background:linear-gradient(90deg,#002f80 60%,#c90018 60%)"></div>
+  <div class="h-1 brand-line"></div>
   {{-- Satu baris: logo + nama situs + menu + akun sejajar, container lebar --}}
   <div class="max-w-[1400px] mx-auto px-4 py-2.5 flex items-center gap-3">
     <a href="{{ route('home') }}" class="flex items-center gap-2.5 shrink-0 min-w-0">
@@ -66,7 +70,7 @@
       @auth
         <div class="relative" id="profile-menu">
           <button type="button" id="profile-menu-btn" aria-haspopup="true" aria-expanded="false" class="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 border border-[#d6d6d6] hover:border-[#002f80] hover:shadow transition bg-white">
-            <span class="w-8 h-8 rounded-full grid place-items-center text-white text-sm font-bold overflow-hidden shrink-0" style="background:linear-gradient(135deg,#002f80,#0046c0)">
+            <span class="w-8 h-8 rounded-full grid place-items-center text-white text-sm font-bold overflow-hidden shrink-0 grad-navy">
               @if(auth()->user()->avatar_path)<img src="{{ asset('storage/'.auth()->user()->avatar_path) }}" class="w-8 h-8 object-cover" alt="">@else{{ strtoupper(substr(auth()->user()->name,0,1)) }}@endif
             </span>
             <span class="hidden xl:block text-sm font-bold text-slate-700 max-w-28 truncate">{{ auth()->user()->name }}</span>
@@ -121,7 +125,7 @@
       @guest
         @unless(request()->routeIs('register', 'login'))
         <a href="{{ route('login') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'logout', 'class' => 'w-4 h-4 scale-x-[-1]']) Masuk</a>
-        @if(\App\Models\Setting::feature('reg'))<a href="{{ route('register') }}" class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-white" style="background:linear-gradient(135deg,#002f80,#0046c0)">@include('components.icon', ['name' => 'plus', 'class' => 'w-4 h-4']) Daftar Gratis</a>@endif
+        @if(\App\Models\Setting::feature('reg'))<a href="{{ route('register') }}" class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-white grad-navy">@include('components.icon', ['name' => 'plus', 'class' => 'w-4 h-4']) Daftar Gratis</a>@endif
         <div class="border-t border-slate-100 my-1"></div>
         @endunless
       @endguest
@@ -156,7 +160,7 @@
 </main>
 
 <footer class="mt-10 border-t border-[#d6d6d6] bg-white">
-  <div class="h-1" style="background:linear-gradient(90deg,#002f80 60%,#c90018 60%)"></div>
+  <div class="h-1 brand-line"></div>
   <div class="max-w-6xl mx-auto px-4 py-8 grid sm:grid-cols-3 gap-6 text-sm">
     <div>
       <div class="flex items-center gap-2">

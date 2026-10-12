@@ -258,7 +258,7 @@ class DocumentController extends Controller
 
         $html = '<!DOCTYPE html><html lang="id"><head><meta charset="utf-8">'
             .'<title>'.e($document->title).' — Lokon Dokumen Digital</title></head>'
-            .'<body style="font-family:sans-serif;max-width:720px;margin:2rem auto;line-height:1.7">'
+            .'<body style="font-family:Georgia,\'Times New Roman\',serif;max-width:720px;margin:2rem auto;line-height:1.7">'
             .'<h1>'.e($document->title).'</h1>'
             .'<p><small>Oleh '.e($document->user->name).' · Yayasan Pendidikan Lokon · Diunduh '.now()->format('d M Y').'</small></p><hr>'
             .$body.'<hr><p><small>Sumber: '.e(url()->current()).'</small></p></body></html>';

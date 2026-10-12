@@ -8,6 +8,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root { --ypl-navy: #002f80; --ypl-red: #c90018; --paper: #faf6ec; }
+  .grad-navy { background: linear-gradient(135deg, #002f80, #0046c0); }
+  .grad-red { background: linear-gradient(135deg, #a30014, #c90018); }
+  .brand-line { background: linear-gradient(90deg, #002f80 60%, #c90018 60%); }
   html, body { height: 100%; }
   body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
   .font-reading { font-family: Georgia, 'Times New Roman', serif; }
@@ -27,7 +30,7 @@
 </style>
 </head>
 <body id="reader-root" data-theme="{{ $pref->normalizedTheme() }}" class="{{ \App\Models\ReadingPref::bodyClass($pref->theme) }} min-h-screen flex flex-col">
-<div class="h-1 shrink-0" style="background:linear-gradient(90deg,#002f80 60%,#c90018 60%)"></div>
+<div class="h-1 shrink-0 brand-line"></div>
 
 {{-- Top slim bar: kembali + kode/judul + menu --}}
 <header class="shrink-0 bg-[#0b1330] text-white">

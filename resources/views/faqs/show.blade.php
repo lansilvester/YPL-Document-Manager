@@ -3,7 +3,7 @@
 @section('content')
 <p class="page-eyebrow text-[#c90018] mt-2">FAQ</p>
 <h1 class="page-title mt-1">{{ $faq->question }}</h1>
-<div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-6 mt-4 prose max-w-none text-slate-700">
+<div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-6 mt-4 prose font-reading max-w-none text-slate-700">
   {!! nl2br(e($faq->answer)) !!}
 </div>
 <h2 class="text-sm font-extrabold tracking-widest text-slate-500 mt-6 mb-2">DOKUMEN TERKAIT</h2>

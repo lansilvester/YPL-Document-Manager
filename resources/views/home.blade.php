@@ -21,7 +21,7 @@
     <p class="text-slate-200 mt-2 text-sm sm:text-base">Knowledge • Governance • Community</p>
     <form action="{{ route('search.index') }}" method="get" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg max-w-xl">
       <input name="q" value="{{ $q }}" placeholder="Apa yang ingin Anda ketahui atau lakukan?" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
-      <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110 inline-flex items-center gap-2" style="background:linear-gradient(135deg,#a30014,#c90018)">Search</button>
+      <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110 inline-flex items-center gap-2 grad-red">Search</button>
     </form>
     <p class="text-slate-200 mt-2 text-xs sm:text-sm">Jelajahi {{ number_format($stats['dokumen']) }} dokumen · {{ $stats['kategori'] }} kategori · {{ number_format($stats['views']) }} kali dibaca komunitas.</p>
     @guest

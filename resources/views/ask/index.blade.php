@@ -17,7 +17,7 @@
 <form action="{{ route('ask.query') }}" method="post" class="mt-5 flex gap-2 bg-white rounded-full p-1.5 shadow-lg border border-[#d6d6d6]">@csrf
   @if(!empty($doc) || !empty($scope))<input type="hidden" name="doc" value="{{ $doc ?? $scope->slug }}">@endif
   <input name="question" value="{{ $question ?? '' }}" required minlength="3" maxlength="500" placeholder="cth: Bagaimana cara mengajukan purchase request?" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">
-  <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110" style="background:linear-gradient(135deg,#002f80,#0046c0)">Tanya</button>
+  <button class="shrink-0 rounded-full font-bold text-sm px-6 py-2.5 text-white transition hover:brightness-110 grad-navy">Tanya</button>
 </form>
 
 @if(!empty($examples))
@@ -33,7 +33,7 @@
     <div class="flex items-center gap-2 text-xs font-bold tracking-widest {{ $found ? 'text-[#002f80]' : 'text-amber-600' }}">
       {{ $found ? (($ai ?? false) ? 'JAWABAN AI BERBASIS SUMBER 🧪' : 'JAWABAN BERBASIS SUMBER') : 'SUMBER TIDAK DITEMUKAN' }}
     </div>
-    <div class="prose max-w-none mt-2 text-sm text-slate-700 whitespace-pre-line">{{ $answer }}</div>
+    <div class="prose font-reading max-w-none mt-2 text-slate-700 whitespace-pre-line">{{ $answer }}</div>
   </div>
 
   @if($found)

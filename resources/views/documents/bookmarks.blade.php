@@ -3,7 +3,7 @@
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Bookmark Saya']]])
 <div class="flex items-center gap-3 mb-1">
-  <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#a30014,#c90018)">@include('components.icon', ['name' => 'star', 'class' => 'w-5 h-5'])</span>
+  <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0 grad-red">@include('components.icon', ['name' => 'star', 'class' => 'w-5 h-5'])</span>
   <div>
     <h1 class="page-title">Dokumen Bookmark</h1>
     <p class="text-sm text-slate-500">Referensi penting yang kamu simpan.</p>

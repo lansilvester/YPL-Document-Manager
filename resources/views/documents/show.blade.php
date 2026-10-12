@@ -13,7 +13,7 @@
       <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">v{{ $document->version }}</span>
       @if($document->doc_type)<span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->doc_type)) }}</span>@endif
     </div>
-    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-3">{{ $document->title }}</h1>
+    <h1 class="page-title mt-3">{{ $document->title }}</h1>
     @if($document->subtitle)<p class="text-slate-200 text-sm mt-1 font-reading italic">{{ $document->subtitle }}</p>@endif
     @if($document->tags->isNotEmpty())
       <div class="flex flex-wrap gap-1.5 mt-2">@include('components.tag-badges', ['tags' => $document->tags])</div>
@@ -241,7 +241,7 @@
     </div>
     <p class="text-xs text-slate-400 mt-2">Tips: gunakan tombol panah pada keyboard untuk pindah halaman. Posisi bacamu tersimpan otomatis.</p>
     @if($safeContent)
-      <details class="mt-4 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 text-sm"><summary class="cursor-pointer font-bold text-[#002f80]">Lihat teks sumber (editor)</summary><div class="prose max-w-none mt-2 text-slate-700">{!! $safeContent !!}</div></details>
+      <details class="mt-4 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 text-sm"><summary class="cursor-pointer font-bold text-[#002f80]">Lihat teks sumber (editor)</summary><div class="prose font-reading max-w-none mt-2 text-slate-700">{!! $safeContent !!}</div></details>
     @endif
   </div>
 
