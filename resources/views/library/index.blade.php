@@ -48,4 +48,14 @@
   @endforeach
 </div>
 @endif
+
+<h2 class="text-lg font-extrabold tracking-tight text-slate-900 mt-8 mb-3">PETA PENGETAHUAN</h2>
+<a href="{{ route('library.graph') }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-5 lg:p-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+  <span class="w-12 h-12 rounded-2xl grid place-items-center text-white grad-navy shrink-0">@include('components.icon', ['name' => 'link', 'class' => 'w-6 h-6'])</span>
+  <span class="min-w-0 flex-1">
+    <span class="block font-extrabold text-slate-900">Knowledge Graph</span>
+    <span class="block text-[13px] text-slate-500 mt-1">Lihat bagaimana dokumen, sistem, agenda, FAQ, dan PIC saling terhubung dalam satu peta — hanya konten yang boleh Anda lihat yang tampil.</span>
+  </span>
+  <span class="text-xs font-bold text-[#002f80] shrink-0">Buka Peta →</span>
+</a>
 @endsection

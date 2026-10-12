@@ -11,6 +11,7 @@ $roleStyle = [
   'anggota' => 'background:#eef0f2;color:#5b6470;border-color:#d6d6d6',
 ];
 $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STAFF', 'anggota' => 'ANGGOTA'];
+$audienceLabel = ['siswa' => 'Siswa', 'orang_tua' => 'Orang Tua', 'guru' => 'Guru', 'karyawan' => 'Karyawan', 'pimpinan' => 'Pimpinan', 'mitra' => 'Mitra', 'publik' => 'Publik'];
 $allCount = $roleCounts->sum();
 @endphp
 
@@ -67,6 +68,8 @@ $allCount = $roleCounts->sum();
             'role' => $u->role,
             'roleLabel' => $roleLabel[$u->role] ?? strtoupper($u->role),
             'roleStyle' => $roleStyle[$u->role] ?? $roleStyle['anggota'],
+            'audience' => $u->audience,
+            'audienceLabel' => $u->audience ? ($audienceLabel[$u->audience] ?? ucfirst($u->audience)) : null,
             'avatar' => $u->avatar_path ? asset('storage/'.$u->avatar_path) : null,
             'created' => $u->created_at?->format('d M Y, H:i'),
             'wa' => $u->wa_number ?? '—',
@@ -89,6 +92,7 @@ $allCount = $roleCounts->sum();
                 <div class="min-w-0">
                   <div class="font-bold truncate">{{ $u->name }}</div>
                   <span class="text-[10px] font-bold rounded-full px-2 py-0.5 border" style="{{ $roleStyle[$u->role] ?? $roleStyle['anggota'] }}">{{ $roleLabel[$u->role] ?? strtoupper($u->role) }}</span>
+                  @if($u->audience)<span class="text-[10px] font-bold rounded-full px-2 py-0.5 border border-[#002f80]/25 bg-[#002f80]/5 text-[#002f80] ml-1">{{ $audienceLabel[$u->audience] ?? ucfirst($u->audience) }}</span>@endif
                 </div>
               </div>
             </td>
@@ -142,6 +146,7 @@ $allCount = $roleCounts->sum();
         <div><dt class="text-[11px] text-slate-400 font-semibold">Tempat, tanggal lahir</dt><dd id="dt-birth" class="font-bold"></dd></div>
         <div class="col-span-2"><dt class="text-[11px] text-slate-400 font-semibold">Info akademik</dt><dd id="dt-academic" class="font-bold"></dd></div>
         <div><dt class="text-[11px] text-slate-400 font-semibold">Verifikasi YPL</dt><dd id="dt-verified" class="font-bold"></dd></div>
+        <div><dt class="text-[11px] text-slate-400 font-semibold">Audiens</dt><dd id="dt-audience" class="font-bold">—</dd></div>
         <div class="grid grid-cols-2 gap-3"><div><dt class="text-[11px] text-slate-400 font-semibold">Dokumen</dt><dd id="dt-docs" class="font-bold"></dd></div><div><dt class="text-[11px] text-slate-400 font-semibold">Bookmark</dt><dd id="dt-marks" class="font-bold"></dd></div></div>
       </dl>
     </div>
@@ -176,6 +181,17 @@ $allCount = $roleCounts->sum();
       </div>
       <div id="role-admin-none" class="hidden"><p class="text-xs font-semibold text-[#33507e] bg-[#e2eaf6] border border-[#c3d2ea] rounded-xl px-3 py-2">Sudah berperan <strong>ADMIN</strong> — peran tidak berubah.</p></div>
 
+      <div>
+        <label class="text-[13px] font-bold">Audiens (BAB 11)</label>
+        <select id="edit-audience" name="audience" class="field mt-1 !py-2 !text-[13px]">
+          <option value="">— Umum (ikut peran sistem) —</option>
+          @foreach(['siswa' => 'Siswa', 'orang_tua' => 'Orang Tua', 'guru' => 'Guru', 'karyawan' => 'Karyawan', 'pimpinan' => 'Pimpinan', 'mitra' => 'Mitra', 'publik' => 'Publik'] as $val => $label)
+            <option value="{{ $val }}">{{ $label }}</option>
+          @endforeach
+        </select>
+        <p class="text-[11px] text-slate-400 mt-1">Menentukan konten unggulan di beranda &amp; dashboard pengguna.</p>
+      </div>
+
       <div class="flex gap-2 pt-1">
         <button type="button" onclick="closeEdit()" class="btn-ghost flex-1">Batal</button>
         <button class="btn-primary flex-1 !py-2.5">Simpan</button>
@@ -207,6 +223,7 @@ function openUserDetail(btn){
   const ver = document.getElementById('dt-verified');
   ver.textContent = e.verified ? 'Terverifikasi YPL' : 'Belum verifikasi';
   ver.style.color = e.verified ? '#0f7a3d' : '#c90018';
+  document.getElementById('dt-audience').textContent = e.audienceLabel || '—';
   const role = document.getElementById('dt-role');
   role.textContent = e.roleLabel; role.style = e.roleStyle;
   const av = document.getElementById('dt-avatar'), ini = document.getElementById('dt-initial');
@@ -235,6 +252,7 @@ function openUserEdit(btn){
   document.getElementById('edit-form').action = e.url;
   document.getElementById('edit-name').value = e.name;
   document.getElementById('edit-email').value = e.email;
+  document.getElementById('edit-audience').value = e.audience || '';
   setRoleArea(e);
   openModal('edit-modal');
 }

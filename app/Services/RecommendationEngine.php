@@ -230,7 +230,7 @@ class RecommendationEngine
             ->unique()
             ->toArray();
 
-        return array_fill_keys($candidateIds, false) + array_fill_keys($coreaderCandidates, true);
+        return array_replace(array_fill_keys($candidateIds, false), array_fill_keys($coreaderCandidates, true));
     }
 
     /**
@@ -268,7 +268,7 @@ class RecommendationEngine
             ->pluck('document_id')
             ->all();
 
-        return array_fill_keys($candidateIds, false) + array_fill_keys($coreaderCandidates, true);
+        return array_replace(array_fill_keys($candidateIds, false), array_fill_keys($coreaderCandidates, true));
     }
 
     /**

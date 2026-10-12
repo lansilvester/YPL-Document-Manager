@@ -93,4 +93,75 @@ class YplKnowledgeGraphTest extends TestCase
         $this->get(route('governance.impact', $doc))->assertOk()
             ->assertSee('Graph Orphan Doc');
     }
+
+    public function test_halaman_peta_pengetahuan_tampil_untuk_tamu(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        Document::factory()->for($staff)->create([
+            'slug' => 'map-public', 'title' => 'Map Public Doc', 'visibility' => 'public',
+            'file_path' => 'documents/m.pdf', 'doc_type' => 'policy', 'status' => 'active',
+        ]);
+
+        $this->get(route('library.graph'))->assertOk()
+            ->assertSee('Peta Pengetahuan')
+            ->assertSee('Map Public Doc');
+    }
+
+    public function test_section_peta_pengetahuan_tampil_di_halaman_library(): void
+    {
+        $this->get(route('library.index'))->assertOk()
+            ->assertSee('PETA PENGETAHUAN')
+            ->assertSee(route('library.graph'), false);
+    }
+
+    public function test_url_lama_peta_pengetahuan_diarahkan_ke_library(): void
+    {
+        $this->get('/peta-pengetahuan')->assertRedirect('/perpustakaan/peta-pengetahuan');
+    }
+
+    public function test_peta_pengetahuan_memusatkan_dokumen_dan_permission_aware(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $center = Document::factory()->for($staff)->create([
+            'slug' => 'map-center', 'title' => 'Map Center Doc', 'visibility' => 'public',
+            'file_path' => 'documents/c.pdf', 'doc_type' => 'policy', 'status' => 'active',
+        ]);
+        $pub = Document::factory()->for($staff)->create([
+            'slug' => 'map-pub', 'title' => 'Map Visible Node', 'visibility' => 'public',
+            'file_path' => 'documents/p.pdf', 'doc_type' => 'sop', 'status' => 'active',
+        ]);
+        $priv = Document::factory()->for($staff)->create([
+            'slug' => 'map-priv', 'title' => 'Map Secret Node', 'visibility' => 'private',
+            'file_path' => 'documents/x.pdf', 'doc_type' => 'sop', 'status' => 'active',
+        ]);
+        DocumentRelation::create(['document_id' => $center->id, 'related_id' => $pub->id, 'relation_type' => 'related']);
+        DocumentRelation::create(['document_id' => $center->id, 'related_id' => $priv->id, 'relation_type' => 'related']);
+
+        $this->get(route('library.graph', ['dokumen' => 'map-center']))->assertOk()
+            ->assertSee('Map Visible Node')
+            ->assertDontSee('Map Secret Node');
+
+        // Privat sebagai pusat tidak terlihat tamu.
+        $this->get(route('library.graph', ['dokumen' => 'map-priv']))->assertOk()
+            ->assertSee('tidak ditemukan atau bersifat privat');
+    }
+
+    public function test_blok_terkait_tampil_di_detail_dokumen(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $doc = Document::factory()->for($staff)->create([
+            'slug' => 'rel-main', 'title' => 'Rel Main Doc', 'visibility' => 'public',
+            'file_path' => 'documents/r.pdf', 'doc_type' => 'policy', 'status' => 'active',
+        ]);
+        $linked = Document::factory()->for($staff)->create([
+            'slug' => 'rel-linked', 'title' => 'Rel Linked Doc', 'visibility' => 'public',
+            'file_path' => 'documents/l.pdf', 'doc_type' => 'sop', 'status' => 'active',
+        ]);
+        DocumentRelation::create(['document_id' => $doc->id, 'related_id' => $linked->id, 'relation_type' => 'related']);
+
+        $this->actingAs($staff)->get(route('documents.show', $doc))->assertOk()
+            ->assertSee('TERKAIT DENGAN TOPIK INI')
+            ->assertSee('Rel Linked Doc')
+            ->assertSee(route('library.graph', ['dokumen' => 'rel-main']), false);
+    }
 }

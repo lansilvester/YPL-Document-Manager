@@ -1,6 +1,6 @@
 # Report — YPL Smart Digital Library (Losnito)
 
-Tanggal: 8 Oktober 2026 · Baseline terverifikasi: 73 test lolos, Pint bersih.
+Tanggal: 12 Oktober 2026 · Baseline terverifikasi: 131 test lolos, Pint bersih.
 
 ## 1. Ringkasan Website
 
@@ -14,21 +14,10 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 |---|---|
 | 1 Foundation (IA, taxonomy, Library Mode) | ✅ Selesai |
 | 2 Living Books (bookshelf B01–B10, book detail, Reader Mode) | ✅ Selesai + fidelity visual BAB 4 |
-| 3 Governance (passport, lifecycle, versioning, approval, relasi) | ✅ Selesai (sisa: revision history isi, otomasi review-due) |
+| 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (snapshot isi per versi + otomasi review-due selesai) |
 | 4 Services (forms, workflow, My Requests) | ✅ Selesai (kurang: integrasi Odoo) |
-| 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | 🔄 Berjalan — Ask YPL v1 + driver Gemini testing, **Recommendations selesai**, universal search selesai |
-| 6 Ecosystem (Odoo, role dashboard, analitik) | ⬜ Belum (fondasi peran + sistem siap) |
-
-## 2. Progress per Phase (Blueprint BAB 18)
-
-| Phase | Status |
-|---|---|
-| 1 Foundation (IA, taxonomy, Library Mode) | ✅ Selesai |
-| 2 Living Books (bookshelf B01–B10, book detail, Reader Mode) | ✅ Selesai + fidelity visual BAB 4 |
-| 3 Governance (passport, lifecycle, versioning, approval, relasi) | ✅ Selesai (sisa: revision history isi, otomasi review-due) |
-| 4 Services (forms, workflow, My Requests) | ✅ Selesai (kurang: integrasi Odoo) |
-| 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | 🔄 Berjalan — Ask YPL v1 + driver Gemini testing, **Recommendations selesai**, universal search selesai |
-| 6 Ecosystem (Odoo, role dashboard, analitik) | ⬜ Belum (fondasi peran + sistem siap) |
+| 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | ✅ Fungsional — Ask YPL v1 + driver Gemini testing, Recommendations selesai, universal search selesai, **Peta Pengetahuan `/peta-pengetahuan`** + blok terkait selesai |
+| 6 Ecosystem (Odoo, role dashboard, analitik) | 🔄 Berjalan — **dashboard per peran `/dashboard` (audience-aware) selesai**; Community/Calendar/Insight nyata; sisa: analytics `activity_logs`, Odoo |
 
 ## 3. Daftar Fitur
 
@@ -44,6 +33,8 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 - **Admin:** dashboard, kelola kategori/handbook, pengguna, riwayat aktivitas, persetujuan peran. **Superadmin:** kelola pengguna, pengaturan web + sakelar fitur, definisi peran.
 - **Recommendations:** rekomendasi dokumen terkait (detail & Reader) + personal (riwayat baca/bookmark) — skor berbobot 6 sinyal, **N+1 eliminated, query O(1)**.
 - **Universal Search `/cari`:** dokumen (kelompok per tipe) + layanan + orang + Ask YPL panel.
+- **Peta Pengetahuan `/peta-pengetahuan`:** halaman eksplorasi graf knowledge lintas koleksi (BAB 12) — pilih dokumen pusat, render graf node-link 2-hop (dokumen/sistem/agenda/FAQ/PIC) + legenda warna + fallback daftar aksesibel; permission-aware. Blok **"Terkait dengan topik ini"** di detail dokumen & governance.
+- **Dashboard Saya `/dashboard`:** satu templat role-aware; seksi per audiens (`users.audience`) — ringkasan, agenda, koleksi, formulir, review jatuh tempo, persetujuan (staff/admin), layanan menunggu, permintaan saya, rekomendasi.
 
 ## 4. Tabel `users` — Deskripsi Kolom
 
@@ -63,6 +54,7 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 | `birth_date` | date, null | Tanggal lahir |
 | `wa_number` | string(25), null | Nomor WhatsApp (normalisasi +62) |
 | `role` | string(20), default `user` | Otoritas: `anggota`, `staff`, `admin`, `superadmin` (registrasi → `anggota`) |
+| `audience` | string(20), null | Audiens UX (dashboard): `siswa`, `orang_tua`, `guru`, `karyawan`, `pimpinan`, `mitra`, `publik`; kosong → fallback ke `role` sistem. Ditetapkan langsung oleh Admin/SA atau lewat pengajuan audiens yang disetujui |
 | `ypl_verified` | boolean, default false | Verifikasi keanggotaan YPL |
 | `created_at` / `updated_at` | timestamps | Audit standar |
 
@@ -72,7 +64,7 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 
 ## 5. Tabel Pendukung (ringkas)
 
-`documents` (metadata knowledge BAB 7 + FTS), `categories` (koleksi + B01–B10), `document_relations` (dokumen↔dokumen/sistem), `document_versions` (audit lifecycle), `systems`, `roles`, `service_requests`, `role_requests`, `bookmarks`, `likes`, `reading_positions`, `reading_prefs`, `tags` (+pivot), `activity_logs`, `settings`, bawaan Laravel (`sessions`, `cache`, `jobs`, `password_reset_tokens`).
+`documents` (metadata knowledge BAB 7 + FTS), `categories` (koleksi + B01–B10), `document_relations` (dokumen↔dokumen/sistem), `document_versions` (audit lifecycle), `systems`, `roles`, `service_requests`, `role_requests` (peran sistem **atau** audiens: `requested_role`/`requested_audience`), `bookmarks`, `likes`, `reading_positions`, `reading_prefs`, `tags` (+pivot), `activity_logs`, `settings`, bawaan Laravel (`sessions`, `cache`, `jobs`, `password_reset_tokens`).
 
 ## 6. Ask YPL — Arsitektur
 
@@ -116,18 +108,14 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 
 ## 9. Sisa Pekerjaan
 
-**Phase 5 Intelligence (sisa):**
-- Knowledge Graph visual (relasi sudah ada, tinggal visualisasi)
+**Phase 5 Intelligence:** ✅ Selesai — Knowledge Graph visual (halaman Peta Pengetahuan + graf impact map + blok terkait).
 
 **Phase 6 Ecosystem:**
-- Role Dashboards (5 peran: Siswa, Orang Tua, Guru, Karyawan, Pimpinan — Prompt 9)
-- Community & Calendar nyata (masih placeholder)
-- Analytics dashboard (data `activity_logs` sudah kumpul sejak awal)
-- Odoo Integration (terakhir)
-
-**Sisa Phase 3:**
-- Revision history isi (snapshot konten per versi)
-- Otomasi review-due (command terjadwal)
+- Penetapan audiens pengguna oleh Admin/SA + alur **pengajuan audiens** dari profil (disetujui Admin/SA) — **selesai**.
+- Seeder demo audiens opsional (`php artisan db:seed --class=AudienceDemoSeeder`).
+- Analytics dashboard dari `activity_logs` (data sudah kumpul sejak awal).
+- Odoo Integration (terakhir).
 
 **Hardening Production:**
-- Cabut key testing, hapus rute `/deploy/{secret}` pasca-deploy
+- ✅ Cabut key testing, hapus rute `/deploy/{secret}` (commit `caa423f`), rate limiter sensitif aktif.
+- Sisa opsional: hapus key Gemini testing (`GEMINI_API_KEY`) dari `.env` produksi bila tidak dipakai.

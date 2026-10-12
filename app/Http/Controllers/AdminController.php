@@ -157,12 +157,17 @@ class AdminController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'audience' => ['nullable', Rule::in(User::AUDIENCES)],
         ], [
             'name.required' => 'Nama wajib diisi.',
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah dipakai pengguna lain.',
+            'audience.in' => 'Pilihan audiens tidak dikenali.',
         ]);
+
+        // Audiens (BAB 11) ditetapkan langsung hanya oleh Admin/Super Admin.
+        $data['audience'] = $data['audience'] ?? null;
 
         if ($editor->isSuperAdmin()) {
             $role = $request->validate(['role' => ['required', 'in:anggota,staff,admin']])['role'];
@@ -176,7 +181,7 @@ class AdminController extends Controller
         }
 
         $user->update($data);
-        ActivityLog::record($editor->id, null, 'user_update', ['user' => $user->email, 'role' => $data['role'] ?? $user->role]);
+        ActivityLog::record($editor->id, null, 'user_update', ['user' => $user->email, 'role' => $data['role'] ?? $user->role, 'audience' => $data['audience']]);
 
         return back()->with('ok', "Akun {$user->name} diperbarui.");
     }

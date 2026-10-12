@@ -116,11 +116,33 @@ $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STA
   </div>
 
   <aside class="space-y-5">
+    {{-- Preferensi audiens (BAB 11) --}}
+    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
+      <h2 class="font-extrabold text-[#002f80] flex items-center gap-2">@include('components.icon', ['name' => 'cap', 'class' => 'w-4 h-4']) Preferensi Audiens</h2>
+      @if($user->audience)
+        <p class="text-sm text-slate-500 mt-2">Audiensmu saat ini: <strong class="text-[#002f80]">{{ str_replace('_', ' ', $user->audience) }}</strong>.</p>
+      @endif
+      @if($pendingRequest && $pendingRequest->requested_audience)
+        <p class="text-sm text-slate-500 mt-2">Pengajuan audiens <strong>{{ str_replace('_', ' ', $pendingRequest->requested_audience) }}</strong> sedang menunggu persetujuan Admin YPL.</p>
+      @else
+        <p class="text-xs text-slate-400 mt-1 mb-3">Pilih pengalaman yang paling sesuai. Ditetapkan setelah disetujui Admin.</p>
+        <form method="post" action="{{ route('profile.role-request') }}" class="space-y-3">@csrf
+          <div><label class="text-[13px] font-bold">Audiens</label><select name="requested_audience" class="field mt-1 !py-2 !text-[13px]" required>
+            <option value="">— Pilih audiens —</option>
+            @foreach(['siswa' => 'Siswa', 'orang_tua' => 'Orang Tua', 'guru' => 'Guru', 'karyawan' => 'Karyawan', 'pimpinan' => 'Pimpinan', 'mitra' => 'Mitra', 'publik' => 'Publik'] as $val => $label)
+              <option value="{{ $val }}" {{ $user->audience === $val ? 'selected' : '' }}>{{ $label }}</option>
+            @endforeach
+          </select></div>
+          <button class="btn-ghost w-full">Kirim Pengajuan Audiens</button>
+        </form>
+      @endif
+    </div>
+
     {{-- Peningkatan peran --}}
     @if($user->role === 'anggota')
     <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
       <h2 class="font-extrabold text-[#002f80] flex items-center gap-2">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Peningkatan Peran</h2>
-      @if($pendingRequest)
+      @if($pendingRequest && $pendingRequest->requested_role)
         <p class="text-sm text-slate-500 mt-2">Pengajuanmu menjadi <strong>{{ $pendingRequest->requested_role }}</strong> sedang menunggu persetujuan Admin YPL.</p>
       @else
         <p class="text-xs text-slate-400 mt-1 mb-3">Peran Staff/Admin memerlukan persetujuan. Peran admin hanya dapat disetujui Super Admin.</p>

@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Document;
 use App\Models\DocumentRelation;
+use App\Models\Role;
 use App\Models\System;
 use App\Models\User;
 use Database\Seeders\SystemsSeeder;
+use Database\Seeders\YplGovernanceSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -281,5 +283,45 @@ class YplGovernanceTest extends TestCase
         // Tipe non-governance tetap layout lama (hero gelap).
         $this->get(route('documents.show', $biasa))->assertOk()
             ->assertSee('linear-gradient(120deg', false);
+    }
+
+    public function test_tipe_governance_baru_dikenali_dan_difilter(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $baru = ['organization', 'risk', 'compliance', 'quality', 'document_control'];
+
+        // Semua tipe BAB 17 terdaftar dan punya label tampilan.
+        foreach ($baru as $tipe) {
+            $this->assertContains($tipe, Document::TYPES);
+            $this->assertContains($tipe, Document::GOVERNANCE_TYPES);
+            $this->assertContains($tipe, Role::DOC_TYPES);
+        }
+        $this->assertSame('Document Control', Document::typeLabel('document_control'));
+        $this->assertSame('Decisions', Document::typeLabel('decision'));
+        $this->assertSame('Risk', Document::typeLabel('risk'));
+
+        // Doc baru: risk + quality, keduanya dapat difilter lewat governance.
+        Document::factory()->for($staff)->create([
+            'slug' => 'gov-risk-1', 'title' => 'Register Risiko', 'visibility' => 'public',
+            'file_path' => 'documents/risk.pdf', 'doc_type' => 'risk', 'status' => 'active',
+        ]);
+        Document::factory()->for($staff)->create([
+            'slug' => 'gov-qlt-1', 'title' => 'Manual Mutu', 'visibility' => 'public',
+            'file_path' => 'documents/qlt.pdf', 'doc_type' => 'quality', 'status' => 'active',
+        ]);
+
+        $this->get(route('governance.index', ['tipe' => 'risk']))->assertOk()
+            ->assertSee('Register Risiko')->assertDontSee('Manual Mutu');
+        $this->get(route('governance.index', ['tipe' => 'quality']))->assertOk()
+            ->assertSee('Manual Mutu')->assertDontSee('Register Risiko');
+    }
+
+    public function test_seeder_governance_ypl_mengisi_tipe_baru(): void
+    {
+        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+
+        foreach (['organization', 'risk', 'compliance', 'quality', 'document_control'] as $tipe) {
+            $this->assertDatabaseHas('documents', ['doc_type' => $tipe]);
+        }
     }
 }

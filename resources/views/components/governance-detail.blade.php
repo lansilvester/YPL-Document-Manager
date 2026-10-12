@@ -4,7 +4,7 @@
 <p class="text-[11px] font-bold tracking-widest text-slate-400 mt-2">
     <a href="{{ route('governance.index') }}" class="hover:text-[#002f80]">GOVERNANCE</a>
     <span class="mx-1">/</span>
-    <a href="{{ route('governance.index', ['tipe' => $document->doc_type]) }}" class="hover:text-[#002f80]">{{ strtoupper(str_replace('_', ' ', $document->doc_type ?? 'doc')) }}</a>
+    <a href="{{ route('governance.index', ['tipe' => $document->doc_type]) }}" class="hover:text-[#002f80]">{{ strtoupper(\App\Models\Document::typeLabel($document->doc_type)) }}</a>
     @if($document->unit)
         <span class="mx-1">/</span>
         <span>{{ strtoupper($document->unit) }}</span>
@@ -36,7 +36,7 @@
                 <div><dt class="text-[11px] font-bold text-slate-400">EFFECTIVE</dt><dd class="font-bold">{{ $document->effective_at?->format('d M Y') ?? '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">REVIEW</dt><dd class="font-bold">{{ $document->review_at?->format('d M Y') ?? '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">CLASS</dt><dd class="font-bold">{{ $document->classification ? strtoupper($document->classification) : '—' }}</dd></div>
-                <div><dt class="text-[11px] font-bold text-slate-400">TYPE</dt><dd class="font-bold">{{ $document->doc_type ? strtoupper(str_replace('_', ' ', $document->doc_type)) : '—' }}</dd></div>
+                <div><dt class="text-[11px] font-bold text-slate-400">TYPE</dt><dd class="font-bold">{{ $document->doc_type ? strtoupper(\App\Models\Document::typeLabel($document->doc_type)) : '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">PIC</dt><dd class="font-bold">{{ $document->pic->name ?? $document->pic_name ?? '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">UNIT</dt><dd class="font-bold">{{ $document->unit ?? '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">VISIBILITY</dt><dd class="font-bold">{{ strtoupper($document->visibility) }}</dd></div>

@@ -25,7 +25,41 @@ class Document extends Model
 
     public const STATUSES = ['draft', 'review', 'approval', 'active', 'review_due', 'archived'];
 
-    public const TYPES = ['policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision', 'form', 'evidence', 'handbook', 'other'];
+    public const TYPES = ['policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision', 'organization', 'risk', 'compliance', 'quality', 'document_control', 'form', 'evidence', 'handbook', 'other'];
+
+    /**
+     * Label tampilan per tipe agar konsisten di seluruh UI (BAB 17).
+     * Kode tetap singular untuk kompatibilitas data; label mengikuti nomenklatur blueprint.
+     *
+     * @var array<string, string>
+     */
+    public const TYPE_LABELS = [
+        'policy' => 'Policy',
+        'regulation' => 'Regulation',
+        'standard' => 'Standard',
+        'sop' => 'SOP',
+        'work_instruction' => 'Work Instruction',
+        'decision' => 'Decisions',
+        'organization' => 'Organization',
+        'risk' => 'Risk',
+        'compliance' => 'Compliance',
+        'quality' => 'Quality',
+        'document_control' => 'Document Control',
+        'form' => 'Form',
+        'evidence' => 'Evidence',
+        'handbook' => 'Handbook',
+        'other' => 'Other',
+    ];
+
+    /** Label tampilan untuk sebuah tipe dokumen (fallback: ubah _ → spasi). */
+    public static function typeLabel(?string $type): string
+    {
+        if ($type === null || $type === '') {
+            return '—';
+        }
+
+        return static::TYPE_LABELS[$type] ?? ucfirst(str_replace('_', ' ', $type));
+    }
 
     public const AUDIENCES = ['siswa', 'orang_tua', 'guru', 'karyawan', 'pimpinan', 'mitra', 'publik'];
 
@@ -410,7 +444,8 @@ class Document extends Model
      * @var array<int, string>
      */
     public const GOVERNANCE_TYPES = [
-        'policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision', 'form', 'evidence',
+        'policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision',
+        'organization', 'risk', 'compliance', 'quality', 'document_control', 'form', 'evidence',
     ];
 
     /**

@@ -77,6 +77,56 @@ class YplGovernanceSeeder extends Seeder
                 'unit' => 'Direktorat Keuangan', 'audience' => ['karyawan', 'guru'],
                 'body' => '<p>Kolom: pemohon, unit, tanggal dibutuhkan, rincian barang/jasa, estimasi biaya, tanda tangan.</p><p>Serahkan ke Direktorat Keuangan setelah ditandatangani atasan langsung.</p>',
             ],
+            [
+                'slug' => 'struktur-organisasi-ypl', 'code' => 'YPL-ORG-001',
+                'title' => 'Struktur Organisasi YPL',
+                'subtitle' => 'Tata kelola dan kewenangan unit',
+                'desc' => 'Bagan organisasi dan pembagian kewenangan unit di lingkungan YPL.',
+                'type' => 'organization', 'version' => '1.0', 'class' => 'internal',
+                'effective' => '2026-01-05', 'review' => '2027-01-05', 'views' => 52,
+                'unit' => 'Direktorat Umum', 'audience' => ['karyawan', 'pimpinan'],
+                'body' => '<p>Struktur organisasi menetapkan garis kewenangan, koordinasi antarunit, dan penanggung jawab layanan.</p>',
+            ],
+            [
+                'slug' => 'register-risiko-ypl', 'code' => 'YPL-RSK-001',
+                'title' => 'Register Risiko YPL',
+                'subtitle' => 'Identifikasi dan mitigasi risiko institusi',
+                'desc' => 'Daftar risiko utama YPL beserta tingkat dan rencana mitigasinya.',
+                'type' => 'risk', 'version' => '1.0', 'class' => 'confidential',
+                'effective' => '2026-02-01', 'review' => '2027-02-01', 'views' => 33,
+                'unit' => 'Direktorat Umum', 'audience' => ['pimpinan'],
+                'body' => '<p>Setiap risiko dinilai berdasarkan kemungkinan dan dampak, lalu dipetakan ke kendali yang berlaku.</p>',
+            ],
+            [
+                'slug' => 'panduan-kepatuhan-ypl', 'code' => 'YPL-CMP-001',
+                'title' => 'Panduan Kepatuhan YPL',
+                'subtitle' => 'Kepatuhan regulasi dan standar mutu',
+                'desc' => 'Ketentuan kepatuhan terhadap regulasi eksternal dan standar mutu internal YPL.',
+                'type' => 'compliance', 'version' => '1.0', 'class' => 'internal',
+                'effective' => '2026-03-01', 'review' => '2027-03-01', 'views' => 41,
+                'unit' => 'Direktorat Umum', 'audience' => ['karyawan', 'pimpinan'],
+                'body' => '<p>Panduan ini memetakan kewajiban kepatuhan, bukti audit, dan jadwal penilaian berkala.</p>',
+            ],
+            [
+                'slug' => 'manual-mutu-ypl', 'code' => 'YPL-QLT-001',
+                'title' => 'Manual Mutu YPL',
+                'subtitle' => 'Sistem manajemen mutu layanan pendidikan',
+                'desc' => 'Kerangka sistem manajemen mutu layanan pendidikan YPL.',
+                'type' => 'quality', 'version' => '1.0', 'class' => 'internal',
+                'effective' => '2026-04-01', 'review' => '2027-04-01', 'views' => 37,
+                'unit' => 'Direktorat Akademik', 'audience' => ['guru', 'pimpinan'],
+                'body' => '<p>Manual mutu menetapkan sasaran mutu, indikator kinerja, dan siklus perbaikan berkelanjutan.</p>',
+            ],
+            [
+                'slug' => 'kebijakan-pengendalian-dokumen', 'code' => 'YPL-DOC-001',
+                'title' => 'Kebijakan Pengendalian Dokumen',
+                'subtitle' => 'Aturan penomoran, revisi, dan pengarsipan',
+                'desc' => 'Aturan pengendalian dokumen: penomoran, versi, persetujuan, dan pengarsipan.',
+                'type' => 'document_control', 'version' => '1.0', 'class' => 'internal',
+                'effective' => '2026-05-01', 'review' => '2027-05-01', 'views' => 29,
+                'unit' => 'Direktorat Umum', 'audience' => ['karyawan', 'pimpinan'],
+                'body' => '<p>Semua dokumen resmi wajib bernomor unik, berversi, disetujui, dan diarsipkan sesuai kebijakan ini.</p>',
+            ],
         ];
 
         $docs = [];
@@ -123,6 +173,9 @@ class YplGovernanceSeeder extends Seeder
             ['sop-pengadaan-barang-dan-jasa', 'wi-purchase-request', 'wi'],
             ['sop-pengadaan-barang-dan-jasa', 'formulir-purchase-request', 'form'],
             ['wi-purchase-request', 'formulir-purchase-request', 'form'],
+            ['kebijakan-pengendalian-dokumen', 'kebijakan-pengadaan-ypl', 'policy'],
+            ['register-risiko-ypl', 'panduan-kepatuhan-ypl', 'compliance'],
+            ['manual-mutu-ypl', 'panduan-kepatuhan-ypl', 'compliance'],
         ];
         foreach ($links as [$from, $to, $type]) {
             DocumentRelation::firstOrCreate(

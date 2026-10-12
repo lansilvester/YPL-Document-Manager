@@ -18,12 +18,16 @@
       <div class="p-4 flex flex-wrap items-center gap-3">
         <div class="flex-1 min-w-52">
           <div class="font-bold">{{ $u->name }} @if($u->isSuperAdmin())<span class="text-[11px] font-bold bg-[#c90018]/10 text-[#c90018] border border-[#c90018]/25 rounded-full px-2 py-0.5">SUPER ADMIN</span>@endif</div>
-          <div class="text-xs text-slate-400">{{ $u->email }} · peran: <strong class="text-[#002f80]">{{ $u->role }}</strong></div>
+          <div class="text-xs text-slate-400">{{ $u->email }} · peran: <strong class="text-[#002f80]">{{ $u->role }}</strong>@if($u->audience) · audiens: <strong class="text-[#002f80]">{{ $u->audience }}</strong>@endif</div>
         </div>
         @unless($u->isSuperAdmin())
-          <form method="post" action="{{ route('sa.users.role', $u) }}" class="flex gap-2">@csrf @method('PUT')
+          <form method="post" action="{{ route('sa.users.role', $u) }}" class="flex flex-wrap gap-2 items-center">@csrf @method('PUT')
             <select name="role" class="field !w-auto !rounded-full !py-1.5 !text-[13px]">
               @foreach(['anggota', 'staff', 'admin'] as $r)<option value="{{ $r }}" {{ $u->role === $r ? 'selected' : '' }}>{{ $r }}</option>@endforeach
+            </select>
+            <select name="audience" class="field !w-auto !rounded-full !py-1.5 !text-[13px]" aria-label="Audiens">
+              <option value="">— umum —</option>
+              @foreach(['siswa', 'orang_tua', 'guru', 'karyawan', 'pimpinan', 'mitra', 'publik'] as $a)<option value="{{ $a }}" {{ $u->audience === $a ? 'selected' : '' }}>{{ $a }}</option>@endforeach
             </select>
             <button class="text-[13px] font-bold bg-[#002f80] text-white rounded-full px-4 py-1.5">Simpan</button>
           </form>

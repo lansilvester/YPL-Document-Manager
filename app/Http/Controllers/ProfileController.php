@@ -23,12 +23,23 @@ class ProfileController extends Controller
             ->with('category:id,name')
             ->latest()->limit(8)->get();
 
-        $viewed = ActivityLog::query()
+        // Riwayat baca: satu baris terbaru per dokumen, dibatasi 8 di level SQL
+        // (tanpa over-fetch 40 baris lalu dipangkas di PHP).
+        $viewedLogIds = ActivityLog::query()
             ->where('user_id', $user->id)->where('action', 'view')
+            ->whereNotNull('document_id')
+            ->selectRaw('MAX(id) as id')
+            ->groupBy('document_id')
+            ->orderByDesc('id')
+            ->limit(8)
+            ->pluck('id');
+
+        $viewed = ActivityLog::query()
+            ->whereIn('id', $viewedLogIds)
             ->select(['id', 'user_id', 'document_id', 'action', 'created_at'])
             ->with('document:id,title,slug')
-            ->latest()->limit(40)->get()
-            ->unique('document_id')->take(8);
+            ->orderByDesc('id')
+            ->get();
 
         $markDocs = Document::query()
             ->whereHas('bookmarks', fn ($query) => $query->where('user_id', $user->id))

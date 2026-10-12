@@ -11,7 +11,7 @@
       <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ $document->source_type === 'editor' ? 'Editor' : 'PDF' }}</span>
       <span class="bg-green-400/25 border border-green-300/40 px-3 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->status)) }}</span>
       <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">v{{ $document->version }}</span>
-      @if($document->doc_type)<span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $document->doc_type)) }}</span>@endif
+      @if($document->doc_type)<span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ strtoupper(\App\Models\Document::typeLabel($document->doc_type)) }}</span>@endif
     </div>
     <h1 class="page-title mt-3">{{ $document->title }}</h1>
     @if($document->subtitle)<p class="text-slate-200 text-sm mt-1 font-reading italic">{{ $document->subtitle }}</p>@endif
@@ -78,6 +78,9 @@
     'isOverdue' => $isOverdue ?? false,
 ])
 
+{{-- B2: blok terkait + tautan peta pengetahuan --}}
+@include('components.related-topics', ['document' => $document, 'impactMap' => $impactMap])
+
 {{-- Aksi dokumen (ringkas, latar terang) --}}
 <div class="flex flex-wrap gap-2 mt-4 text-[13px] font-bold">
   <a href="{{ route('reader.show', $document) }}" class="btn-ghost !py-2">📖 Baca Imersif</a>
@@ -129,7 +132,7 @@
     <h2 class="font-extrabold tracking-tight text-[#002f80]">DOCUMENT PASSPORT</h2>
     <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
       <div><dt class="text-[11px] font-bold text-slate-400">DOC ID</dt><dd class="font-bold">{{ $document->doc_code ?? '—' }}</dd></div>
-      <div><dt class="text-[11px] font-bold text-slate-400">TYPE</dt><dd class="font-bold">{{ $document->doc_type ? strtoupper(str_replace('_', ' ', $document->doc_type)) : '—' }}</dd></div>
+      <div><dt class="text-[11px] font-bold text-slate-400">TYPE</dt><dd class="font-bold">{{ $document->doc_type ? strtoupper(\App\Models\Document::typeLabel($document->doc_type)) : '—' }}</dd></div>
       <div><dt class="text-[11px] font-bold text-slate-400">OWNER</dt><dd class="font-bold">{{ $document->user->name }}</dd></div>
       <div><dt class="text-[11px] font-bold text-slate-400">APPROVER</dt><dd class="font-bold">{{ $document->approver->name ?? '—' }}</dd></div>
       <div><dt class="text-[11px] font-bold text-slate-400">EFFECTIVE</dt><dd class="font-bold">{{ $document->effective_at?->format('d M Y') ?? '—' }}</dd></div>
@@ -187,15 +190,15 @@
         <button class="btn-primary !py-2 !text-xs shrink-0">Tambah</button>
       </form>
       <form method="post" action="{{ route('documents.relations.store', $document) }}" class="flex gap-2 mt-2">@csrf
-        <select name="system_slug" class="field !text-xs flex-1" aria-label="Sistem terkait"><option value="">— Pilih sistem —</option>@foreach(\App\Models\System::orderBy('name')->get() as $s)<option value="{{ $s->slug }}">{{ $s->name }}</option>@endforeach</select>
+        <select name="system_slug" class="field !text-xs flex-1" aria-label="Sistem terkait"><option value="">— Pilih sistem —</option>@foreach($relateOptions['systems'] as $s)<option value="{{ $s->slug }}">{{ $s->name }}</option>@endforeach</select>
         <button class="btn-ghost !py-2 !text-xs shrink-0">Tautkan Sistem</button>
       </form>
       <form method="post" action="{{ route('documents.relations.store', $document) }}" class="flex gap-2 mt-2">@csrf
-        <select name="event_slug" class="field !text-xs flex-1" aria-label="Agenda terkait"><option value="">— Pilih agenda —</option>@foreach(\App\Models\Event::orderBy('starts_at')->get() as $e)<option value="{{ $e->slug }}">{{ $e->title }}</option>@endforeach</select>
+        <select name="event_slug" class="field !text-xs flex-1" aria-label="Agenda terkait"><option value="">— Pilih agenda —</option>@foreach($relateOptions['events'] as $e)<option value="{{ $e->slug }}">{{ $e->title }}</option>@endforeach</select>
         <button class="btn-ghost !py-2 !text-xs shrink-0">Tautkan Agenda</button>
       </form>
       <form method="post" action="{{ route('documents.relations.store', $document) }}" class="flex gap-2 mt-2">@csrf
-        <select name="faq_slug" class="field !text-xs flex-1" aria-label="FAQ terkait"><option value="">— Pilih FAQ —</option>@foreach(\App\Models\Faq::orderBy('sort_order')->get() as $f)<option value="{{ $f->slug }}">{{ \Illuminate\Support\Str::limit($f->question, 60) }}</option>@endforeach</select>
+        <select name="faq_slug" class="field !text-xs flex-1" aria-label="FAQ terkait"><option value="">— Pilih FAQ —</option>@foreach($relateOptions['faqs'] as $f)<option value="{{ $f->slug }}">{{ \Illuminate\Support\Str::limit($f->question, 60) }}</option>@endforeach</select>
         <button class="btn-ghost !py-2 !text-xs shrink-0">Tautkan FAQ</button>
       </form>
     @endcan
@@ -209,6 +212,9 @@
     @endif
   </div>
 </div>
+
+{{-- B2: blok terkait + tautan peta pengetahuan --}}
+@include('components.related-topics', ['document' => $document, 'impactMap' => $impactMap])
 @endif
 
 <div class="grid lg:grid-cols-[minmax(0,1fr)_340px] gap-6 items-start mt-6">

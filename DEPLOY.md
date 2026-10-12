@@ -16,10 +16,17 @@
 - Pastikan folder `storage/` writable (chmod 775). Storage file PDF memakai disk lokal `private` di `storage/app/private` — aman di InfinityFree.
 
 ## 3. Siapkan database (sekali saja)
-- Buat database MySQL di control panel (nama/user/host sesuai `.env`).
-- Buka di browser: `https://domain-anda/deploy/SECRET` (ganti SECRET dengan `DEPLOY_SECRET`).
-- Respons JSON `{"ok": true}` = migrasi + seed admin + (opsional) Super Admin berhasil. **Catat password SA yang tampil sekali itu.**
-- **WAJIB: hapus rute `/deploy/{secret}` dari `routes/web.php`**, upload ulang file tersebut.
+Rute bootstrap `/deploy/{secret}` **sudah dihapus** dari `routes/web.php` (hardening, commit `caa423f`). Tanpa SSH, jalankan migrasi dengan salah satu cara:
+
+- **Cara A — dari lokal (disarankan):** arahkan `DB_*` di `.env` lokal ke database MySQL produksi InfinityFree, lalu:
+  ```bash
+  php artisan migrate --force
+  php artisan db:seed --force
+  php artisan ypl:superadmin --email=superadmin@lokon.or.id
+  ```
+  Setelah selesai, kembalikan `.env` lokal ke SQLite/MySQL dev.
+- **Cara B — rute sementara:** tambahkan kembali rute `/deploy/{secret}` secara manual, buka sekali di browser, lalu **hapus lagi** sebelum selesai. Jangan biarkan rute ini ikut ter-deploy.
+- Ganti password akun bawaan **segera** setelah login pertama.
 
 ## 4. Batasan yang berlaku di InfinityFree
 - Upload PDF maksimal **9 MB** (limit server ±10 MB). File 50 MB tidak bisa di-hosting di sini.
@@ -29,4 +36,4 @@
 
 ## 5. Akun bawaan (ganti password setelah masuk!)
 - Admin: `admin@lokon.or.id` / `password`
-- Super Admin: sesuai output deploy di atas
+- Super Admin: akun dari `php artisan ypl:superadmin --email=...` (password tampil sekali saat dibuat)

@@ -28,7 +28,7 @@
           <div class="sm:col-span-2"><label class="text-[13px] font-bold">Deskripsi</label><textarea name="description" rows="2" class="field mt-1">{{ old('description') }}</textarea></div>
           <div><label class="text-[13px] font-bold">Kategori</label><select name="category_id" class="field mt-1"><option value="">— Tanpa kategori —</option>@foreach($categories as $c)<option value="{{ $c->id }}">{{ $c->name }}</option>@endforeach</select></div>
           <div><label class="text-[13px] font-bold">Visibilitas *</label><select name="visibility" class="field mt-1"><option value="public">Publik</option><option value="restricted">Terbatas</option><option value="private">Privat</option></select></div>
-          <div><label class="text-[13px] font-bold">Tipe</label><select name="doc_type" class="field mt-1"><option value="">— Pilih —</option>@foreach(\App\Models\Document::TYPES as $t)<option value="{{ $t }}">{{ ucfirst(str_replace('_', ' ', $t)) }}</option>@endforeach</select></div>
+          <div><label class="text-[13px] font-bold">Tipe</label><select name="doc_type" class="field mt-1"><option value="">— Pilih —</option>@foreach(\App\Models\Document::TYPES as $t)<option value="{{ $t }}">{{ \App\Models\Document::typeLabel($t) }}</option>@endforeach</select></div>
           <div><label class="text-[13px] font-bold">Unit</label><input name="unit" value="{{ old('unit') }}" class="field mt-1"></div>
           <div><label class="text-[13px] font-bold">PIC</label><select name="pic_id" class="field mt-1"><option value="">— Pilih PIC —</option>@foreach($pics as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach</select></div>
           <div>

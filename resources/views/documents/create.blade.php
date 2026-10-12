@@ -15,7 +15,7 @@
       <div><label class="text-[13px] font-bold">Siapa boleh lihat *</label><select name="visibility" class="field mt-1"><option value="public">Publik — seluruh komunitas</option><option value="restricted">Terbatas — pengguna login</option><option value="private">Privat — hanya saya</option></select></div>
     </div>
     <div class="grid sm:grid-cols-2 gap-4">
-      <div><label class="text-[13px] font-bold">Tipe dokumen</label><select name="doc_type" class="field mt-1"><option value="">— Pilih tipe —</option>@foreach(\App\Models\Document::TYPES as $t)<option value="{{ $t }}">{{ ucfirst(str_replace('_', ' ', $t)) }}</option>@endforeach</select></div>
+      <div><label class="text-[13px] font-bold">Tipe dokumen</label><select name="doc_type" class="field mt-1"><option value="">— Pilih tipe —</option>@foreach(\App\Models\Document::TYPES as $t)<option value="{{ $t }}">{{ \App\Models\Document::typeLabel($t) }}</option>@endforeach</select></div>
       <div><label class="text-[13px] font-bold">Klasifikasi</label><select name="classification" class="field mt-1"><option value="">— Pilih —</option><option value="public">Public</option><option value="internal">Internal</option><option value="confidential">Confidential</option></select></div>
     </div>
     <div class="grid sm:grid-cols-3 gap-4">

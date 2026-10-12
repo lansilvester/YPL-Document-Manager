@@ -16,7 +16,7 @@
       <div class="p-4 flex flex-wrap items-center gap-3">
         <div class="flex-1 min-w-52">
           <div class="font-bold">{{ $r->user->name }} <span class="font-normal text-slate-400 text-xs">{{ $r->user->email }}</span></div>
-          <div class="text-xs text-slate-500 mt-0.5">Minta peran <strong class="text-[#002f80]">{{ $r->requested_role }}</strong> · {{ $r->created_at->format('d M Y H:i') }}</div>
+          <div class="text-xs text-slate-500 mt-0.5">@if($r->requested_audience) Minta audiens <strong class="text-[#002f80]">{{ str_replace('_', ' ', $r->requested_audience) }}</strong>@else Minta peran <strong class="text-[#002f80]">{{ $r->requested_role }}</strong>@endif · {{ $r->created_at->format('d M Y H:i') }}</div>
           @if($r->reason)<div class="text-[13px] text-slate-600 mt-1">“{{ $r->reason }}”</div>@endif
           @if($r->status !== 'pending')<div class="text-xs mt-1">Status: <strong>{{ $r->status }}</strong> oleh {{ $r->reviewer->name ?? '—' }}</div>@endif
         </div>

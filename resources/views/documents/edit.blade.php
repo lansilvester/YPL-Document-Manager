@@ -14,7 +14,7 @@
       <div><label class="text-[13px] font-bold">Siapa boleh lihat *</label><select name="visibility" class="field mt-1">@foreach(['public' => 'Publik', 'restricted' => 'Terbatas (login)', 'private' => 'Privat'] as $v => $l)<option value="{{ $v }}" {{ $document->visibility === $v ? 'selected' : '' }}>{{ $l }}</option>@endforeach</select></div>
     </div>
     <div class="grid sm:grid-cols-2 gap-4">
-      <div><label class="text-[13px] font-bold">Tipe dokumen</label><select name="doc_type" class="field mt-1"><option value="">— Pilih tipe —</option>@foreach(\App\Models\Document::TYPES as $t)<option value="{{ $t }}" {{ $document->doc_type === $t ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $t)) }}</option>@endforeach</select></div>
+      <div><label class="text-[13px] font-bold">Tipe dokumen</label><select name="doc_type" class="field mt-1"><option value="">— Pilih tipe —</option>@foreach(\App\Models\Document::TYPES as $t)<option value="{{ $t }}" {{ $document->doc_type === $t ? 'selected' : '' }}>{{ \App\Models\Document::typeLabel($t) }}</option>@endforeach</select></div>
       <div><label class="text-[13px] font-bold">Klasifikasi</label><select name="classification" class="field mt-1"><option value="">— Pilih —</option>@foreach(['public' => 'Public', 'internal' => 'Internal', 'confidential' => 'Confidential'] as $v => $l)<option value="{{ $v }}" {{ $document->classification === $v ? 'selected' : '' }}>{{ $l }}</option>@endforeach</select></div>
     </div>
     <div class="grid sm:grid-cols-3 gap-4">

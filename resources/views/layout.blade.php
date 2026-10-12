@@ -82,6 +82,7 @@
               <div class="text-[11px] text-slate-300 truncate">{{ auth()->user()->email }} · {{ strtoupper(auth()->user()->role) }}</div>
             </div>
             <div class="p-1.5 text-sm font-semibold">
+              <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Dashboard Saya</a>
               <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'users', 'class' => 'w-4 h-4']) Profil Saya</a>
               @if(\App\Models\Setting::feature('upload'))<a href="{{ route('documents.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'upload', 'class' => 'w-4 h-4']) Unggah PDF</a>@endif
               @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Tulis Dokumen</a>@endif
@@ -132,6 +133,7 @@
       @endguest
       <a href="{{ route('home') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Home</a>
       <a href="{{ route('library.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'compass', 'class' => 'w-4 h-4']) Library</a>
+      <a href="{{ route('library.graph') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'link', 'class' => 'w-4 h-4']) Peta Pengetahuan</a>
       <a href="{{ route('governance.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">Governance</a>
       <a href="{{ route('services.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">Services</a>
       <a href="{{ route('community.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">Community</a>
@@ -141,6 +143,7 @@
       @auth
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-3 pt-1 text-[11px] font-bold tracking-widest text-slate-400">AKUN & KERJA</div>
+        <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'home', 'class' => 'w-4 h-4']) Dashboard Saya</a>
         @if(\App\Models\Setting::feature('upload'))<a href="{{ route('documents.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'upload', 'class' => 'w-4 h-4']) Unggah PDF</a>@endif
         @if(\App\Models\Setting::feature('editor'))<a href="{{ route('editor.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4']) Tulis Dokumen</a>@endif
         <a href="{{ route('documents.my') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#002f80]/5 hover:text-[#002f80]">@include('components.icon', ['name' => 'folder', 'class' => 'w-4 h-4']) Dokumen Saya</a>
@@ -176,6 +179,7 @@
       <div class="flex flex-col gap-1 text-slate-500">
         <a class="hover:text-[#002f80]" href="{{ route('library.index') }}">Digital Bookshelf</a>
         <a class="hover:text-[#002f80]" href="{{ route('governance.index') }}">Governance</a>
+        <a class="hover:text-[#002f80]" href="{{ route('library.graph') }}">Peta Pengetahuan</a>
         <a class="hover:text-[#002f80]" href="{{ route('services.index') }}">Services</a>
         <a class="hover:text-[#002f80]" href="{{ route('insight.index') }}">Insight</a>
       </div>

@@ -42,4 +42,14 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    /**
+     * Set the user's audience experience (BAB 11).
+     */
+    public function audience(string $audience): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'audience' => $audience,
+        ]);
+    }
 }

@@ -142,34 +142,71 @@ class AskYpl
 
         return [
             'answer' => implode("\n", $lines),
-            'sources' => [['document' => $doc, 'passage' => $summary !== '' ? $summary : $doc->title, 'score' => 1]],
+            'sources' => [['document' => $doc, 'passage' => $summary !== '' ? $summary : $doc->title, 'score' => 1, 'section' => 'Ringkasan', 'field' => 'description']],
             'found' => true,
             'ai' => false,
         ];
     }
 
     /**
-     * @return array{document: Document, passage: string, score: int}
+     * @return array{document: Document, passage: string, score: int, section: ?string, field: string}
      */
     private function bestPassage(Document $doc, Collection $keywords): array
     {
-        $fields = array_filter([
-            $doc->title.' '.$doc->subtitle,
-            $doc->description,
-            $this->plainText($doc->content),
-        ]);
+        $best = ['document' => $doc, 'passage' => '', 'score' => 0, 'section' => null, 'field' => 'title'];
 
-        $best = ['document' => $doc, 'passage' => '', 'score' => 0];
-        foreach ($fields as $text) {
-            foreach ($this->sentences($text) as $sentence) {
+        $candidates = [
+            ['text' => $doc->title.' '.$doc->subtitle, 'section' => null, 'field' => 'title'],
+            ['text' => $doc->description ?? '', 'section' => 'Ringkasan', 'field' => 'description'],
+        ];
+        foreach ($this->contentSentences($doc->content) as $c) {
+            $candidates[] = $c;
+        }
+
+        foreach ($candidates as $c) {
+            foreach ($this->sentences($c['text']) as $sentence) {
                 $score = $this->score($sentence, $keywords);
                 if ($score > $best['score']) {
-                    $best = ['document' => $doc, 'passage' => $sentence, 'score' => $score];
+                    $best = [
+                        'document' => $doc, 'passage' => $sentence, 'score' => $score,
+                        'section' => $c['section'], 'field' => $c['field'],
+                    ];
                 }
             }
         }
 
         return $best;
+    }
+
+    /**
+     * Pecah konten HTML menjadi kalimat beserta heading h1–h3 terdekat di atasnya
+     * (BAB 14): sitasi section-level yang jujur — tanpa nomor halaman rekaan.
+     *
+     * @return list<array{text: string, section: ?string, field: string}>
+     */
+    private function contentSentences(?string $html): array
+    {
+        if ($html === null || $html === '') {
+            return [];
+        }
+
+        $parts = preg_split('/<h[1-3][^>]*>(.*?)<\/h[1-3]>/is', $html, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+        $out = [];
+        $section = null;
+        foreach ($parts as $i => $part) {
+            if ($i % 2 === 1) {
+                $section = $this->plainText($part) ?: null;
+
+                continue;
+            }
+            $text = $this->plainText($part);
+            if (trim($text) === '') {
+                continue;
+            }
+            $out[] = ['text' => $text, 'section' => $section, 'field' => 'content'];
+        }
+
+        return $out;
     }
 
     /** Kata kunci: huruf kecil, min 2 karakter, tanpa duplikat (paritas ftsMatch). */

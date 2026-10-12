@@ -17,7 +17,7 @@ class Role extends Model
 
     public const COLLECTIONS = ['handbook', 'governance', 'academic', 'boarding', 'staff', 'parent', 'public'];
 
-    public const DOC_TYPES = ['policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision', 'form', 'evidence', 'handbook', 'other'];
+    public const DOC_TYPES = ['policy', 'regulation', 'standard', 'sop', 'work_instruction', 'decision', 'organization', 'risk', 'compliance', 'quality', 'document_control', 'form', 'evidence', 'handbook', 'other'];
 
     public const QUICK_ACTIONS = ['handbook', 'policy', 'sop', 'form', 'calendar', 'ask'];
 

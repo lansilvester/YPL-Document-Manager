@@ -5,7 +5,7 @@
 
 ![Home — desktop](presentasi/screenshots/desktop-home.png)
 
-- **Status (12 Okt 2026):** 99 tests lolos (633 assertions) · 94 routes · 42 commits · branch `main`
+- **Status (12 Okt 2026):** 131 tests lolos (794 assertions) · 101 routes · 59 commits · branch `main`
 - **Repo:** `lansilvester/YPL-Document-Manager`
 - **Presentasi progress:** [`presentasi/LOSNITO-Progress-Report.pptx`](presentasi/LOSNITO-Progress-Report.pptx) (18 slide, desktop + mobile)
 
@@ -31,11 +31,12 @@ Alur pakai tipikal: `Home → /perpustakaan → /baca/{slug} → /governance/{sl
 | 2 Living Books (bookshelf B01–B10, book detail, Reader Mode) | ✅ Selesai |
 | 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (snapshot revisi + otomasi review-due terjadwal) |
 | 4 Services (forms, workflow, My Requests) | ✅ Selesai (kurang: integrasi Odoo) |
-| 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | ✅ Fungsional — search + Ask YPL v1 + rekomendasi + graf 2-hop permission-aware |
-| 6 Ecosystem (role dashboards, analytics, Odoo) | 🔄 Berjalan — Community, Calendar, Insight sudah nyata (prioritas-1); beranda role-aware + blok Untuk Anda selesai |
+| 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | ✅ Fungsional — search + Ask YPL v1 + rekomendasi + graf 2-hop permission-aware + halaman **Peta Pengetahuan `/peta-pengetahuan`** |
+| 6 Ecosystem (role dashboards, analytics, Odoo) | 🔄 Berjalan — Community, Calendar, Insight sudah nyata (prioritas-1); dashboard per peran (`/dashboard`, audience-aware) selesai |
 
 Update terbaru (8–12 Okt): Event + FAQ jadi first-class knowledge · graf node-link 2-hop permission-aware di impact map ·
-Community/Calendar/Insight nyata · thumbnails lazy + catatan pembaca per halaman di Reader · eliminasi N+1 doc-card.
+halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik ini"** di detail dokumen · dashboard per peran
+**`/dashboard`** audience-aware (`users.audience`) · penetapan audiens oleh Admin/SA + **pengajuan audiens** dari profil (disetujui Admin/SA, kolom `role_requests.requested_audience`) · seeder demo audiens opsional (`--class=AudienceDemoSeeder`) · Community/Calendar/Insight nyata · thumbnails lazy + catatan pembaca per halaman di Reader · eliminasi N+1 doc-card.
 
 ---
 
@@ -74,6 +75,8 @@ Community/Calendar/Insight nyata · thumbnails lazy + catatan pembaca per halama
 
 ![Search — desktop](presentasi/screenshots/desktop-search-query.png)
 
+- **Peta Pengetahuan `/peta-pengetahuan`** — halaman eksplorasi graf knowledge lintas koleksi (BAB 12): pilih dokumen pusat, render graf node-link 2-hop (dokumen, sistem, agenda, FAQ, PIC) dengan legenda warna, fallback daftar teks untuk aksesibilitas. Permission-aware: simpul privat tidak pernah tampil untuk tamu. Blok **"Terkait dengan topik ini"** muncul di detail dokumen biasa & governance dengan tautan langsung ke peta.
+
 - **Ask YPL `/tanya`** — jawaban ekstraktif bersitasi dari knowledge sesuai otoritas user; driver Gemini untuk testing — gagal/timeout otomatis fallback ekstraktif. Tamu → publik; anggota → +restricted + milik sendiri; admin → semua. Tiap pertanyaan diaudit ke `activity_logs`.
 
 ![Ask YPL — desktop](presentasi/screenshots/desktop-ask.png)
@@ -83,6 +86,7 @@ Community/Calendar/Insight nyata · thumbnails lazy + catatan pembaca per halama
 ### Akun & Peran
 - Registrasi/login, reset password, profil + avatar + ganti password, pengajuan kenaikan peran, panel staff/admin/superadmin.
 - Peran: `anggota` (baca publik/restricted, unggah, ajukan) · `staff` (+kelola dokumen, proses layanan) · `admin` (+kategori/pengguna, publish) · `superadmin` (pengaturan web + definisi peran). Registrasi → `anggota`.
+- **Dashboard Saya `/dashboard`** — satu templat role-aware dengan seksi berbeda per audiens (`siswa`, `orang_tua`, `guru`, `karyawan`, `pimpinan`, `mitra`, `publik`; kolom `users.audience`, fallback ke peran sistem). Seksi: ringkasan, agenda, koleksi, formulir, review jatuh tempo, persetujuan (staff/admin), layanan menunggu, permintaan saya, plus rekomendasi personal. Audiens ditetapkan langsung oleh Admin/SA, atau diajukan pengguna dari profil lalu disetujui Admin/SA.
 
 ---
 
@@ -104,18 +108,19 @@ Community/Calendar/Insight nyata · thumbnails lazy + catatan pembaca per halama
 
 ```text
 app/
-  Http/Controllers/   # 20 controller: Home, Library, Reader, Governance, Search,
-                      #   Ask, Document, Event, Faq, Staff, Admin, SuperAdmin, ...
+  Http/Controllers/   # 23 controller: Home, Library (termasuk Peta Pengetahuan),
+                      #   Reader, Governance, Search, Ask, Document, Event, Faq, Staff,
+                      #   Admin, SuperAdmin, RoleDashboard, ...
   Models/             # 19 model: Document, Category, DocumentRelation,
                       #   DocumentVersion, Event, Faq, System, Role, ...
   Services/           # AskYpl, RecommendationEngine, ImpactMap, GeminiLlm,
                       #   HtmlSanitizer, DocumentFiles, WaNumber
-routes/web.php        # 94 routes: public • auth • staff/ • admin/ • sa/
-database/migrations/  # 24 migrations (users, documents+FTS, categories B01–B10,
+routes/web.php        # 101 routes: public • auth • staff/ • admin/ • sa/
+database/migrations/  # 28 migrations (users+audience, documents+FTS, categories B01–B10,
                       #   relations, versions+snapshot, events, faqs, systems, ...)
-resources/views/      # home, library, reader, governance, search, ask, portal,
-                      #   systems, community/calendar/insight, admin, sa, ...
-tests/Feature/        # 12 file test (±95 tests)
+resources/views/      # home, library (termasuk peta-pengetahuan), reader, governance,
+                      #   search, ask, portal, dashboard, systems, admin, sa, ...
+tests/Feature/        # 14 file test (±131 tests)
 presentasi/           # slide progress + screenshot desktop & mobile
 ```
 
@@ -134,7 +139,7 @@ php artisan serve               # http://localhost:8000
 ```
 
 ```bash
-php artisan test --compact      # 95 tests, ~5 detik
+php artisan test --compact      # 131 tests, ~3 detik
 vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
 ```
 
@@ -145,14 +150,16 @@ vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
 | Peran | Email | Password |
 |---|---|---|
 | Admin | `admin@lokon.or.id` | `password` |
-| Super Admin | dibuat saat deploy via `DEPLOY_SA_EMAIL` | ditampilkan sekali di output `/deploy` |
+| Super Admin | dibuat saat deploy via `php artisan ypl:superadmin --email=...` | diatur saat pembuatan |
+
+Akun demo per audiens (opsional): `php artisan db:seed --class=AudienceDemoSeeder` membuat `demo-{audiens}@lokon.or.id` untuk siswa, orang_tua, guru, karyawan, pimpinan, mitra, publik (password `password`).
 
 ---
 
 ## 8. Testing & Kualitas
 
-- `php artisan test --compact` → **99 passed, 633 assertions** (12 Okt 2026).
-- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), doc-card N+1 regression.
+- `php artisan test --compact` → **131 passed, 794 assertions** (12 Okt 2026).
+- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression.
 - Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, maupun graf.
 
 ---
@@ -161,9 +168,9 @@ vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
 
 Panduan lengkap: [`DEPLOY.md`](DEPLOY.md). Ringkasnya:
 
-1. Salin `.env.production` → `.env`, sesuaikan `APP_URL`, `DEPLOY_SECRET`, `DEPLOY_SA_EMAIL`, kredensial MySQL. `APP_DEBUG=false`.
+1. Salin `.env.production` → `.env`, sesuaikan `APP_URL`, kredensial MySQL, `DEPLOY_SA_EMAIL`. `APP_DEBUG=false`.
 2. Upload isi `public/` → `htdocs/`; upload app (sejajar `htdocs`); `storage/` writable.
-3. Sekali saja: buka `https://domain-anda/deploy/SECRET` → migrasi + seed + Super Admin. **Lalu hapus rute `/deploy/{secret}` dari `routes/web.php`.**
+3. Jalankan migrasi dari lokal (tanpa SSH): arahkan `DB_*` ke MySQL produksi → `php artisan migrate --force && php artisan db:seed --force && php artisan ypl:superadmin --email=superadmin@lokon.or.id`. (Rute `/deploy/{secret}` sudah dihapus demi keamanan — lihat [`DEPLOY.md`](DEPLOY.md).)
 
 Batasan InfinityFree: PDF ≤ 9 MB · tanpa worker/cron (semua `sync`) · seed tanpa 15 PDF besar dev.
 
@@ -185,9 +192,9 @@ Aplikasi responsif penuh — contoh Home dan Library di viewport 390px:
 
 ## 11. Sisa Pekerjaan / Roadmap
 
-- **Phase 5 (sisa):** visualisasi Knowledge Graph penuh (relasi + data sudah ada).
-- **Phase 6:** Role Dashboards — fondasi beranda role-aware selesai (quick actions + explore tersaring scope + blok Untuk Anda); lanjutkan dashboard per peran (Siswa, Orang Tua, Guru, Karyawan, Pimpinan) · Analytics dashboard dari `activity_logs` · Integrasi Odoo (terakhir).
-- **Hardening:** cabut key testing, hapus rute `/deploy/{secret}` pasca-deploy.
+- **Phase 5:** ✅ Selesai — visualisasi Knowledge Graph penuh (halaman Peta Pengetahuan + blok terkait & graf impact map).
+- **Phase 6:** Role Dashboards ✅ selesai (`/dashboard` audience-aware per peran) · Analytics dashboard dari `activity_logs` (sisa) · Integrasi Odoo (terakhir).
+- **Hardening:** ✅ cabut key testing, hapus rute `/deploy/{secret}` (commit `caa423f`), rate limiter sensitif (`login`/`register`/`uploads`/`interactions`).
 
 ---
 

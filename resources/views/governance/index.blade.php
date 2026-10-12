@@ -19,7 +19,7 @@
         <select name="tipe" class="field !w-auto !rounded-full" onchange="this.form.submit()">
             <option value="">Semua Tipe</option>
             @foreach(\App\Models\Document::TYPES as $t)
-                <option value="{{ $t }}" {{ ($filters['tipe'] ?? '') === $t ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $t)) }}{{ isset($typeCounts[$t]) ? ' · '.$typeCounts[$t] : '' }}</option>
+                <option value="{{ $t }}" {{ ($filters['tipe'] ?? '') === $t ? 'selected' : '' }}>{{ \App\Models\Document::typeLabel($t) }}{{ isset($typeCounts[$t]) ? ' · '.$typeCounts[$t] : '' }}</option>
             @endforeach
         </select>
 
@@ -61,7 +61,7 @@
     @forelse($docs as $d)
         <a href="{{ route('governance.show', $d) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block group">
             <div class="flex flex-wrap gap-1.5 text-[10px] font-bold">
-                <span class="bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full">{{ $d->doc_type ? strtoupper(str_replace('_', ' ', $d->doc_type)) : 'NO TYPE' }}</span>
+                <span class="bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full">{{ $d->doc_type ? strtoupper(\App\Models\Document::typeLabel($d->doc_type)) : 'NO TYPE' }}</span>
                 <span class="{{ $d->statusBadge() }} px-2 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $d->status)) }}</span>
                 <span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-full">v{{ $d->version }}</span>
             </div>

@@ -9,7 +9,7 @@ class RoleRequest extends Model
 {
     public const PROMOTABLE = ['staff', 'admin'];
 
-    protected $fillable = ['user_id', 'requested_role', 'reason', 'status', 'reviewed_by', 'reviewed_at'];
+    protected $fillable = ['user_id', 'requested_role', 'requested_audience', 'reason', 'status', 'reviewed_by', 'reviewed_at'];
 
     protected function casts(): array
     {

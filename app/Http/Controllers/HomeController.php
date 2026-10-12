@@ -16,7 +16,7 @@ class HomeController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
         $user = $request->user();
-        $role = Role::for($user);
+        $role = $user ? $user->audienceRole() : Role::for(null);
 
         $latest = Document::query()->where('visibility', 'public')
             ->whereIn('status', Document::LIVE_STATUSES)

@@ -37,10 +37,9 @@
         </a>
         @auth
           @if(\App\Models\Setting::feature('bookmark'))
-            @php $bookMarked = \App\Models\Bookmark::where('user_id', auth()->id())->where('document_id', $first->id)->exists(); @endphp
             @include('components.bookmark-button', [
               'document' => $first,
-              'marked' => $bookMarked,
+              'marked' => $firstMarked,
               'labelOn' => 'Tersimpan',
               'labelOff' => 'Bookmark',
               'btnClass' => 'btn-ghost h-10 px-4 rounded-full inline-flex items-center justify-center gap-2 text-sm font-bold cursor-pointer transition shadow-sm',

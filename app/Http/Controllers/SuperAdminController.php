@@ -101,9 +101,12 @@ class SuperAdminController extends Controller
             abort(403, 'Akun Super Admin tidak dapat diubah. Hanya ada 1.');
         }
 
-        $data = $request->validate(['role' => ['required', 'in:anggota,staff,admin']]);
-        $user->update(['role' => $data['role']]);
-        ActivityLog::record(auth()->id(), null, 'role_approve', ['user' => $user->email, 'role' => $data['role']]);
+        $data = $request->validate([
+            'role' => ['required', 'in:anggota,staff,admin'],
+            'audience' => ['nullable', Rule::in(User::AUDIENCES)],
+        ]);
+        $user->update(['role' => $data['role'], 'audience' => $data['audience'] ?? null]);
+        ActivityLog::record(auth()->id(), null, 'role_approve', ['user' => $user->email, 'role' => $data['role'], 'audience' => $data['audience'] ?? null]);
 
         return back()->with('ok', "Peran {$user->name} diubah menjadi {$data['role']}.");
     }

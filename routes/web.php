@@ -16,6 +16,7 @@ use App\Http\Controllers\PortalController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\ReaderController;
+use App\Http\Controllers\RoleDashboardController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\StaffController;
@@ -29,6 +30,8 @@ Route::get('/cari', [SearchController::class, 'index'])->name('search.index');
 
 // YPL SDL Phase 1 — Information Architecture.
 Route::get('/perpustakaan', [LibraryController::class, 'index'])->name('library.index');
+// Peta Pengetahuan (BAB 12) — bagian dari Library: eksplorasi graf permission-aware.
+Route::get('/perpustakaan/peta-pengetahuan', [LibraryController::class, 'graph'])->name('library.graph');
 Route::get('/perpustakaan/{category:slug}', [LibraryController::class, 'show'])->name('library.show');
 
 // Governance (BAB 13) — Document Control & Governance
@@ -37,6 +40,9 @@ Route::post('/governance/ekspor', [GovernanceController::class, 'export'])->midd
 Route::get('/governance/{document:slug}', [GovernanceController::class, 'show'])->name('governance.show');
 Route::get('/governance/{document:slug}/versi', [GovernanceController::class, 'versions'])->name('governance.versions');
 Route::get('/governance/{document:slug}/impact', [GovernanceController::class, 'impactMap'])->name('governance.impact');
+
+// URL lama Peta Pengetahuan → dipertahankan sebagai redirect agar tautan tetap hidup.
+Route::redirect('/peta-pengetahuan', '/perpustakaan/peta-pengetahuan', 301);
 
 Route::get('/layanan', [PortalController::class, 'services'])->name('services.index');
 Route::get('/help', [PortalController::class, 'help'])->name('help.index');
@@ -101,6 +107,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/preferensi-baca', [InteractionController::class, 'savePrefs'])->middleware('throttle:interactions')->name('api.prefs');
     Route::post('/api/dokumen/{document:slug}/catatan', [InteractionController::class, 'storeNote'])->middleware('throttle:interactions')->name('api.notes.store');
     Route::delete('/api/dokumen/{document:slug}/catatan/{note}', [InteractionController::class, 'destroyNote'])->middleware('throttle:interactions')->name('api.notes.destroy');
+
+    // Phase 6 — Role Dashboard (BAB 11): satu dashboard, konten menyesuaikan peran.
+    Route::get('/dashboard', [RoleDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');

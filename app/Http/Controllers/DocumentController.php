@@ -119,7 +119,18 @@ class DocumentController extends Controller
         $impactMap = ImpactMap::for($document, auth()->user());
         $isOverdue = $document->review_at && $document->review_at < now() && $document->status === 'active';
 
-        return view('documents.show', compact('document', 'pref', 'position', 'isMarked', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'recommendations', 'popular', 'transitions', 'impactMap', 'isOverdue'));
+        // Opsi relasi — dipindah dari view agar query tidak jalan saat render,
+        // dan hanya diambil untuk pengguna yang berhak menautkan relasi.
+        $relateOptions = null;
+        if (auth()->check() && auth()->user()->can('relate', $document)) {
+            $relateOptions = [
+                'systems' => System::orderBy('name')->get(['id', 'slug', 'name']),
+                'events' => Event::orderBy('starts_at')->get(['id', 'slug', 'title']),
+                'faqs' => Faq::orderBy('sort_order')->get(['id', 'slug', 'question']),
+            ];
+        }
+
+        return view('documents.show', compact('document', 'pref', 'position', 'isMarked', 'liked', 'likesCount', 'canEmbed', 'embedCode', 'safeContent', 'recommendations', 'popular', 'transitions', 'impactMap', 'isOverdue', 'relateOptions'));
     }
 
     /**
