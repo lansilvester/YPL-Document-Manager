@@ -59,18 +59,24 @@ class PortalController extends Controller
     public function community(): mixed
     {
         $user = auth()->user();
+        $q = trim((string) request()->query('q', ''));
+        $like = '%'.$q.'%';
 
         $units = Unit::query()->withCount('contacts')
             ->orderBy('sort_order')->orderBy('name')->get();
 
         $contacts = Contact::query()->with('unit:id,name,slug')
+            ->when($q !== '', fn ($w) => $w->where('name', 'like', $like))
             ->orderBy('sort_order')->orderBy('name')->get();
 
         $people = $user
-            ? User::query()->select(['id', 'name', 'role', 'academic_info'])->orderBy('name')->paginate(12)
+            ? User::query()->select(['id', 'name', 'role', 'academic_info'])
+                ->when($q !== '', fn ($w) => $w->where('name', 'like', $like))
+                ->orderBy('name')->paginate(12)->withQueryString()
             : null;
 
         return view('portal.community', [
+            'q' => $q,
             'units' => $units,
             'contacts' => $contacts,
             'people' => $people,

@@ -164,4 +164,46 @@ class YplKnowledgeGraphTest extends TestCase
             ->assertSee('Rel Linked Doc')
             ->assertSee(route('library.graph', ['dokumen' => 'rel-main']), false);
     }
+
+    public function test_peta_pengetahuan_hormati_kontrol_kedalaman(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $a = Document::factory()->for($staff)->create([
+            'slug' => 'map-kd-a', 'title' => 'Map KD A', 'visibility' => 'public',
+            'file_path' => 'documents/a.pdf', 'doc_type' => 'policy', 'status' => 'active',
+        ]);
+        $b = Document::factory()->for($staff)->create([
+            'slug' => 'map-kd-b', 'title' => 'Map KD B', 'visibility' => 'public',
+            'file_path' => 'documents/b.pdf', 'doc_type' => 'policy', 'status' => 'active',
+        ]);
+        $c = Document::factory()->for($staff)->create([
+            'slug' => 'map-kd-c', 'title' => 'Map KD C', 'visibility' => 'public',
+            'file_path' => 'documents/c.pdf', 'doc_type' => 'policy', 'status' => 'active',
+        ]);
+        DocumentRelation::create(['document_id' => $a->id, 'related_id' => $b->id, 'relation_type' => 'related']);
+        DocumentRelation::create(['document_id' => $b->id, 'related_id' => $c->id, 'relation_type' => 'related']);
+
+        $this->get(route('library.graph', ['dokumen' => 'map-kd-a', 'kedalaman' => 1]))->assertOk()
+            ->assertSee('"title":"Map KD B"', false)
+            ->assertDontSee('"title":"Map KD C"', false);
+
+        $this->get(route('library.graph', ['dokumen' => 'map-kd-a', 'kedalaman' => 2]))->assertOk()
+            ->assertSee('"title":"Map KD B"', false)
+            ->assertSee('"title":"Map KD C"', false);
+    }
+
+    public function test_simpul_pic_pada_graf_bertaut_ke_kontak_publik(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $pic = User::factory()->create(['role' => 'admin', 'name' => 'Map Clickable PIC']);
+        $doc = Document::factory()->for($staff)->create([
+            'slug' => 'map-pic-click', 'title' => 'Map PIC Click Doc', 'visibility' => 'public',
+            'file_path' => 'documents/pic.pdf', 'doc_type' => 'sop', 'status' => 'active',
+            'pic_id' => $pic->id,
+        ]);
+
+        $this->get(route('library.graph', ['dokumen' => 'map-pic-click']))->assertOk()
+            ->assertSee('Map Clickable PIC')
+            ->assertSee(str_replace('/', '\\/', route('community.index', ['q' => 'Map Clickable PIC'])).'#kontak-pic', false);
+    }
 }

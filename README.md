@@ -5,7 +5,7 @@
 
 ![Home — desktop](presentasi/screenshots/desktop-home.png)
 
-- **Status (13 Okt 2026):** 159 tests lolos (973 assertions) · 113 routes · branch `main`
+- **Status (13 Okt 2026):** 161 tests lolos (982 assertions) · 113 routes · branch `main`
 - **Repo:** `lansilvester/YPL-Document-Manager`
 - **Presentasi progress:** [`presentasi/LOSNITO-Progress-Report.pptx`](presentasi/LOSNITO-Progress-Report.pptx) (18 slide, desktop + mobile)
 
@@ -76,7 +76,7 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 
 ![Search — desktop](presentasi/screenshots/desktop-search-query.png)
 
-- **Peta Pengetahuan `/peta-pengetahuan`** — halaman eksplorasi graf knowledge lintas koleksi (BAB 12): pilih dokumen pusat, render graf node-link 2-hop (dokumen, sistem, agenda, FAQ, PIC) dengan legenda warna, fallback daftar teks untuk aksesibilitas. Permission-aware: simpul privat tidak pernah tampil untuk tamu. Blok **"Terkait dengan topik ini"** muncul di detail dokumen biasa & governance dengan tautan langsung ke peta.
+- **Peta Pengetahuan `/peta-pengetahuan`** — halaman eksplorasi graf knowledge lintas koleksi (BAB 12): pilih dokumen pusat, render graf node-link 2-hop (dokumen, sistem, agenda, FAQ, PIC) dengan **kontrol kedalaman 1/2 dan simpul PIC yang bisa diklik** menuju kontak publik (`/community#kontak-pic`), legenda warna, fallback daftar teks untuk aksesibilitas. Permission-aware: simpul privat tidak pernah tampil untuk tamu. Blok **"Terkait dengan topik ini"** muncul di detail dokumen biasa & governance dengan tautan langsung ke peta.
 
 - **Ask YPL `/tanya`** — jawaban ekstraktif **bersitasi section-level** (§ heading) dari knowledge sesuai otoritas user; driver Gemini untuk testing — gagal/timeout otomatis fallback ekstraktif. Tamu → publik; anggota → +restricted + milik sendiri; admin → semua. Tiap pertanyaan diaudit ke `activity_logs`. Endpoint sama menyajikan **JSON** untuk panel inline Reader (ter-scoped ke dokumen yang dibaca).
 
@@ -121,7 +121,7 @@ database/migrations/  # 32 migrations (users+audience, documents+FTS, categories
                       #   relations, versions+snapshot, events, faqs, systems, units, contacts, ...)
 resources/views/      # home, library (termasuk peta-pengetahuan), reader, governance,
                       #   search, ask, portal, dashboard, systems, admin, sa, ...
-tests/Feature/        # 16 file test (±159 tests)
+tests/Feature/        # 16 file test (±161 tests)
 presentasi/           # slide progress + screenshot desktop & mobile
 ```
 
@@ -140,7 +140,7 @@ php artisan serve               # http://localhost:8000
 ```
 
 ```bash
-php artisan test --compact      # 159 tests, ~4 detik
+php artisan test --compact      # 161 tests, ~4 detik
 vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
 ```
 
@@ -159,8 +159,8 @@ Akun demo per audiens (opsional): `php artisan db:seed --class=AudienceDemoSeede
 
 ## 8. Testing & Kualitas
 
-- `php artisan test --compact` → **159 passed, 973 assertions** (13 Okt 2026).
-- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control + archive policy, **notifikasi review/arsip + pusat notifikasi**), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression.
+- `php artisan test --compact` → **161 passed, 982 assertions** (13 Okt 2026).
+- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control + archive policy, **notifikasi review/arsip + pusat notifikasi**), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan + kontrol kedalaman + PIC klikabel, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression.
 - Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, maupun graf.
 
 ---

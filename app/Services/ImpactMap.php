@@ -150,7 +150,7 @@ class ImpactMap
             $nodes[] = [
                 'id' => $key, 'kind' => 'person', 'ring' => $ring,
                 'title' => $name, 'subtitle' => 'PIC',
-                'url' => null,
+                'url' => route('community.index', ['q' => $name]).'#kontak-pic',
             ];
 
             return $key;

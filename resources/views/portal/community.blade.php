@@ -14,7 +14,10 @@
   @endforelse
 </div>
 
-<h2 class="section-label mt-6 mb-2">KONTAK PIC ({{ $contacts->count() }})</h2>
+<h2 class="section-label mt-6 mb-2 scroll-mt-24" id="kontak-pic">KONTAK PIC ({{ $contacts->count() }})</h2>
+@if($q !== '')
+  <p class="text-sm text-slate-500 mb-2">Menampilkan hasil untuk <strong class="text-[#002f80]">"{{ $q }}"</strong> · <a href="{{ route('community.index') }}" class="underline">tampilkan semua</a></p>
+@endif
 <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
   @forelse($contacts as $c)
     <div class="bg-white rounded-2xl border border-[#d6d6d6] p-4">

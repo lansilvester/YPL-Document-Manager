@@ -29,9 +29,17 @@
   <div class="mt-6 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-6">
     <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
       <h2 class="font-extrabold text-[#002f80]">Graf: {{ $focus->title }}</h2>
-      <a href="{{ $focus->isGovernance() ? route('governance.impact', $focus) : route('documents.show', $focus) }}" class="text-xs font-bold text-slate-400 hover:text-[#002f80]">Buka Impact Map lengkap →</a>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-slate-400">Kedalaman</span>
+        <div class="flex items-center gap-1 rounded-full bg-slate-100 p-1">
+          @foreach([1, 2] as $d)
+            <a href="{{ route('library.graph', ['dokumen' => $focus->slug, 'kedalaman' => $d]) }}" class="px-3 py-1 rounded-full text-xs font-bold {{ $depth === $d ? 'bg-[#002f80] text-white' : 'text-slate-600 hover:bg-slate-200' }}" aria-current="{{ $depth === $d ? 'true' : 'false' }}">{{ $d }}</a>
+          @endforeach
+        </div>
+        <a href="{{ $focus->isGovernance() ? route('governance.impact', $focus) : route('documents.show', $focus) }}" class="text-xs font-bold text-slate-400 hover:text-[#002f80]">Impact Map lengkap →</a>
+      </div>
     </div>
-    <p class="text-sm text-slate-500 mb-4">Simpul tengah adalah dokumen yang Anda pilih; cincin pertama & kedua adalah yang tertaut padanya.</p>
+    <p class="text-sm text-slate-500 mb-4">Simpul tengah adalah dokumen yang Anda pilih; cincin pertama & kedua adalah yang tertaut padanya. Klik simpul untuk membuka.</p>
     @include('components.knowledge-graph', ['graph' => $graph, 'id' => 'kg-explore', 'label' => 'Graf peta pengetahuan untuk '.$focus->title])
     @if($graph['truncated'] > 0)
       <p class="text-xs text-slate-400 mt-2">+{{ $graph['truncated'] }} simpul lain disembunyikan agar graf tetap terbaca.</p>
@@ -49,7 +57,7 @@
   <p class="text-sm text-slate-500 mt-1">Dokumen berikut paling banyak terhubung dengan pengetahuan lain.</p>
   <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
     @forelse($centers as $d)
-      <a href="{{ route('library.graph', ['dokumen' => $d->slug]) }}" class="card-hover bg-white rounded-xl border border-[#d6d6d6] p-4 block">
+      <a href="{{ route('library.graph', ['dokumen' => $d->slug, 'kedalaman' => $depth]) }}" class="card-hover bg-white rounded-xl border border-[#d6d6d6] p-4 block">
         <div class="text-[11px] font-bold text-slate-400">{{ $d->category->name ?? 'Tanpa kategori' }}</div>
         <div class="font-bold text-slate-900 leading-snug mt-0.5 line-clamp-2">{{ $d->title }}</div>
         <div class="text-xs text-slate-500 mt-2">{{ ($d->outgoing_relations_count ?? 0) + ($d->incoming_relations_count ?? 0) }} relasi · {{ number_format($d->views_count) }} dibaca</div>

@@ -1,6 +1,6 @@
 # Report — YPL Smart Digital Library (Losnito)
 
-Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 159 test lolos, Pint bersih.
+Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 161 test lolos, Pint bersih.
 
 ## 1. Ringkasan Website
 
@@ -34,7 +34,7 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 - **Admin:** dashboard, kelola kategori/handbook, pengguna, riwayat aktivitas, persetujuan peran. **Superadmin:** kelola pengguna, pengaturan web + sakelar fitur, definisi peran.
 - **Recommendations:** rekomendasi dokumen terkait (detail & Reader) + personal (riwayat baca/bookmark) — skor berbobot 6 sinyal, **N+1 eliminated, query O(1)**.
 - **Universal Search `/cari`:** dokumen (kelompok per tipe) + layanan + orang + **PIC/kontak publik** + Ask YPL panel.
-- **Peta Pengetahuan `/peta-pengetahuan`:** halaman eksplorasi graf knowledge lintas koleksi (BAB 12) — pilih dokumen pusat, render graf node-link 2-hop (dokumen/sistem/agenda/FAQ/PIC) + legenda warna + fallback daftar aksesibel; permission-aware. Blok **"Terkait dengan topik ini"** di detail dokumen & governance.
+- **Peta Pengetahuan `/peta-pengetahuan`:** halaman eksplorasi graf knowledge lintas koleksi (BAB 12) — pilih dokumen pusat, render graf node-link 2-hop (dokumen/sistem/agenda/FAQ/PIC) dengan kontrol kedalaman 1/2, simpul PIC klikabel menuju kontak publik, legenda warna + fallback daftar aksesibel; permission-aware. Blok **"Terkait dengan topik ini"** di detail dokumen & governance.
 - **Dashboard Saya `/dashboard`:** satu templat role-aware; seksi per audiens (`users.audience`) — ringkasan, agenda, koleksi, formulir, review jatuh tempo, persetujuan (staff/admin), layanan menunggu, permintaan saya, rekomendasi.
 
 ## 4. Tabel `users` — Deskripsi Kolom

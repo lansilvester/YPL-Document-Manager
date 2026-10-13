@@ -74,13 +74,14 @@ class LibraryController extends Controller
         $user = auth()->user();
         $q = trim((string) $request->query('q', ''));
         $focusSlug = $request->query('dokumen');
+        $depth = max(1, min(2, (int) $request->query('kedalaman', 2)));
 
         $focus = null;
         $graph = null;
         if ($focusSlug) {
             $focus = Document::query()->visibleTo($user)->where('slug', $focusSlug)->first();
             if ($focus) {
-                $graph = ImpactMap::graph($focus, $user, 2);
+                $graph = ImpactMap::graph($focus, $user, $depth);
             }
         }
 
@@ -100,6 +101,7 @@ class LibraryController extends Controller
             'q' => $q,
             'focus' => $focus,
             'focusSlug' => $focusSlug,
+            'depth' => $depth,
             'graph' => $graph,
             'centers' => $centers,
             'stats' => $this->graphStats($user),
