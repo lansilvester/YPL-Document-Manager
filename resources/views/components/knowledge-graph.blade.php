@@ -10,7 +10,7 @@
   $markerId = 'kg-arrow-'.$id;
   $listId = 'kg-list-'.$id;
 @endphp
-<div class="rounded-xl border border-[#d6d6d6] bg-slate-50/50 overflow-x-auto">
+<div class="rounded-xl border border-[var(--ypl-gray)] bg-slate-50/50 overflow-x-auto">
   <svg id="{{ $id }}" viewBox="0 0 900 600" class="w-full min-w-[640px] h-auto select-none" role="img" aria-label="{{ $label }}" aria-describedby="{{ $listId }}"></svg>
 </div>
 <ul id="{{ $listId }}" class="sr-only">

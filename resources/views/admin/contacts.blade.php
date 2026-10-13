@@ -8,14 +8,14 @@
 
 <div class="grid md:grid-cols-3 gap-5">
   <div class="md:col-span-2">
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
-      <h2 class="font-extrabold mb-3 text-[#002f80]">Kontak ({{ $contacts->count() }})</h2>
+    <div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-5">
+      <h2 class="font-extrabold mb-3 text-[var(--ypl-navy)]">Kontak ({{ $contacts->count() }})</h2>
       <div class="space-y-3">
         @forelse($contacts as $c)
           <details class="border border-slate-100 rounded-xl overflow-hidden">
             <summary class="cursor-pointer list-none flex items-center gap-3 p-3">
               <span class="flex-1 min-w-0"><span class="block font-bold truncate">{{ $c->name }} <span class="text-slate-400 font-semibold">{{ $c->position ? '· '.$c->position : '' }}</span></span><span class="block text-xs text-slate-400 truncate">{{ $c->unit->name ?? 'Tanpa unit' }} · {{ $c->email ?? $c->phone ?? '—' }}</span></span>
-              <span class="text-xs font-bold text-[#002f80]">Ubah ▾</span>
+              <span class="text-xs font-bold text-[var(--ypl-navy)]">Ubah ▾</span>
             </summary>
             <form method="post" action="{{ route('admin.contacts.update', $c) }}" class="border-t border-slate-100 p-3 grid sm:grid-cols-2 gap-3">@csrf @method('PUT')
               <div><label class="text-[12px] font-bold">Nama *</label><input name="name" required value="{{ old('name', $c->name) }}" maxlength="120" class="field mt-1"></div>
@@ -26,7 +26,7 @@
               <div><label class="text-[12px] font-bold">Urutan</label><input type="number" name="sort_order" value="{{ old('sort_order', $c->sort_order) }}" min="0" max="999" class="field mt-1"></div>
               <div class="sm:col-span-2 flex items-center justify-between gap-2">
                 <button class="btn-primary !py-2">Simpan</button>
-                <button form="del-contact-{{ $c->id }}" class="text-[13px] font-bold border border-[#c90018]/30 text-[#c90018] rounded-full px-3 py-1.5 hover:bg-[#c90018]/5">Hapus</button>
+                <button form="del-contact-{{ $c->id }}" class="text-[13px] font-bold border border-[var(--ypl-red)]/30 text-[var(--ypl-red)] rounded-full px-3 py-1.5 hover:bg-[var(--ypl-red)]/5">Hapus</button>
               </div>
             </form>
             <form id="del-contact-{{ $c->id }}" method="post" action="{{ route('admin.contacts.destroy', $c) }}" data-confirm="Hapus kontak {{ $c->name }}?">@csrf @method('DELETE')</form>
@@ -37,8 +37,8 @@
       </div>
     </div>
   </div>
-  <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 h-fit">
-    <h2 class="font-extrabold mb-3 text-[#002f80]">Tambah Kontak</h2>
+  <div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-5 h-fit">
+    <h2 class="font-extrabold mb-3 text-[var(--ypl-navy)]">Tambah Kontak</h2>
     <form method="post" action="{{ route('admin.contacts.store') }}" class="space-y-3">@csrf
       <div><label class="text-[13px] font-bold">Nama *</label><input name="name" required maxlength="120" class="field mt-1"></div>
       <div><label class="text-[13px] font-bold">Jabatan</label><input name="position" maxlength="120" class="field mt-1"></div>

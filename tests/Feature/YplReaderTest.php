@@ -224,7 +224,7 @@ class YplReaderTest extends TestCase
 
         // Render memakai kelas paper + penanda tema + label tombol.
         $this->actingAs($user)->get(route('reader.show', $doc))->assertOk()
-            ->assertSee('bg-[#faf6ec]', false)
+            ->assertSee('bg-[var(--ypl-reader-paper)]', false)
             ->assertSee('data-theme="paper"', false)
             ->assertSee('Tema: Paper');
     }
@@ -239,7 +239,7 @@ class YplReaderTest extends TestCase
         ReadingPref::updateOrCreate(['user_id' => $user->id], ['theme' => 'sepia', 'zoom' => 100, 'layout' => 'single']);
 
         $this->actingAs($user)->get(route('reader.show', $doc))->assertOk()
-            ->assertSee('bg-[#10182e]', false)
+            ->assertSee('bg-[var(--ypl-reader-light)]', false)
             ->assertSee('data-theme="light"', false);
     }
 

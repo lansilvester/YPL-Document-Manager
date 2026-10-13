@@ -3,7 +3,7 @@
 
 @section('hero')
 @if(!$document->isGovernance())
-<div class="text-white shadow-xl shadow-[#002f80]/25" style="background:linear-gradient(120deg,#000f2e,#002f80 60%,#0a4fc4)">
+<div class="text-white shadow-xl shadow-[var(--ypl-navy)]/25" style="background:linear-gradient(120deg,var(--ypl-navy-900),var(--ypl-navy) 60%,var(--ypl-navy-500))">
   <div class="max-w-6xl mx-auto px-4 py-6 sm:py-8 w-full">
     <div class="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
       <span class="bg-white/15 border border-white/20 px-3 py-1 rounded-full">{{ $document->category->name ?? 'Tanpa kategori' }}</span>
@@ -21,10 +21,10 @@
     <p class="text-slate-300 text-sm mt-2 inline-flex items-center gap-1.5">Oleh <strong class="text-white">{{ $document->user->name }}</strong> · <span class="inline-flex items-center gap-1">@include('components.icon', ['name' => 'eye', 'class' => 'w-3.5 h-3.5']) {{ number_format($document->views_count) }}</span> · <span class="inline-flex items-center gap-1">@include('components.icon', ['name' => 'download', 'class' => 'w-3.5 h-3.5']) {{ number_format($document->downloads_count) }}</span></p>
     @if($document->description)<p class="text-slate-200 text-sm mt-2 max-w-2xl">{{ $document->description }}</p>@endif
     <div class="flex flex-wrap gap-2 mt-4 text-[13px] font-bold">
-      <a href="{{ route('reader.show', $document) }}" class="bg-[#c90018] text-white rounded-full px-5 py-2 shadow hover:brightness-110 inline-flex items-center gap-2">📖 Baca Imersif</a>
+      <a href="{{ route('reader.show', $document) }}" class="bg-[var(--ypl-red)] text-white rounded-full px-5 py-2 shadow hover:brightness-110 inline-flex items-center gap-2">📖 Baca Imersif</a>
       @if($document->file_path && \App\Models\Setting::feature('download'))
         @auth
-          <a href="{{ route('documents.download', $document) }}" class="bg-white text-[#002f80] rounded-full px-5 py-2 shadow hover:brightness-95 inline-flex items-center gap-2">@include('components.icon', ['name' => 'download', 'class' => 'w-4 h-4']) Unduh PDF</a>
+          <a href="{{ route('documents.download', $document) }}" class="bg-white text-[var(--ypl-navy)] rounded-full px-5 py-2 shadow hover:brightness-95 inline-flex items-center gap-2">@include('components.icon', ['name' => 'download', 'class' => 'w-4 h-4']) Unduh PDF</a>
           <a href="{{ route('documents.downloadHtml', $document) }}" class="rounded-full px-5 py-2 border border-white/40 bg-white/10 backdrop-blur hover:bg-white/20 inline-flex items-center gap-2">@include('components.icon', ['name' => 'file', 'class' => 'w-4 h-4']) Unduh HTML</a>
         @else
           <a href="{{ route('login') }}" class="bg-white/20 border border-white/40 text-white rounded-full px-5 py-2 inline-flex items-center gap-2 hover:bg-white/30">@include('components.icon', ['name' => 'lock', 'class' => 'w-4 h-4']) Masuk untuk mengunduh</a>
@@ -32,7 +32,7 @@
       @endif
       @if(\App\Models\Setting::feature('like'))
       @auth
-        <form method="post" action="{{ route('documents.like', $document) }}" class="inline">@csrf<button class="rounded-full px-5 py-2 border backdrop-blur inline-flex items-center gap-2 {{ $liked ? 'bg-[#c90018] border-[#c90018] text-white' : 'border-white/40 bg-white/10 hover:bg-white/20' }}">@include('components.icon', ['name' => 'heart', 'class' => 'w-4 h-4']) {{ number_format($likesCount) }} Suka</button></form>
+        <form method="post" action="{{ route('documents.like', $document) }}" class="inline">@csrf<button class="rounded-full px-5 py-2 border backdrop-blur inline-flex items-center gap-2 {{ $liked ? 'bg-[var(--ypl-red)] border-[var(--ypl-red)] text-white' : 'border-white/40 bg-white/10 hover:bg-white/20' }}">@include('components.icon', ['name' => 'heart', 'class' => 'w-4 h-4']) {{ number_format($likesCount) }} Suka</button></form>
       @else
         <span class="rounded-full px-5 py-2 border border-white/40 bg-white/10 inline-flex items-center gap-2 opacity-90">@include('components.icon', ['name' => 'heart', 'class' => 'w-4 h-4']) {{ number_format($likesCount) }} · <a href="{{ route('login') }}" class="underline">Masuk untuk menyukai</a></span>
       @endauth
@@ -128,8 +128,8 @@
 
 {{-- Phase 3 — Document Passport + Lifecycle + Connected Knowledge --}}
 <div class="grid lg:grid-cols-2 gap-4 mb-6">
-  <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
-    <h2 class="font-extrabold tracking-tight text-[#002f80]">DOCUMENT PASSPORT</h2>
+  <div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-5">
+    <h2 class="font-extrabold tracking-tight text-[var(--ypl-navy)]">DOCUMENT PASSPORT</h2>
     <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
       <div><dt class="text-[11px] font-bold text-slate-400">DOC ID</dt><dd class="font-bold">{{ $document->doc_code ?? '—' }}</dd></div>
       <div><dt class="text-[11px] font-bold text-slate-400">TYPE</dt><dd class="font-bold">{{ $document->doc_type ? strtoupper(\App\Models\Document::typeLabel($document->doc_type)) : '—' }}</dd></div>
@@ -142,7 +142,7 @@
       <div><dt class="text-[11px] font-bold text-slate-400">PIC</dt><dd class="font-bold">{{ $document->pic->name ?? $document->pic_name ?? '—' }}</dd></div>
       <div><dt class="text-[11px] font-bold text-slate-400">UNIT</dt><dd class="font-bold">{{ $document->unit ?? '—' }}</dd></div>
       @if(!empty($document->audience))
-        <div class="col-span-2"><dt class="text-[11px] font-bold text-slate-400">AUDIENCE</dt><dd class="flex flex-wrap gap-1 mt-1">@foreach($document->audience as $a)<span class="text-[11px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $a)) }}</span>@endforeach</dd></div>
+        <div class="col-span-2"><dt class="text-[11px] font-bold text-slate-400">AUDIENCE</dt><dd class="flex flex-wrap gap-1 mt-1">@foreach($document->audience as $a)<span class="text-[11px] font-bold bg-[var(--ypl-navy)]/5 text-[var(--ypl-navy)] px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $a)) }}</span>@endforeach</dd></div>
       @endif
     </dl>
     @if(!empty($transitions))
@@ -150,7 +150,7 @@
         @foreach($transitions as $next)
           <form method="post" action="{{ route('documents.transition', $document) }}" class="inline">@csrf
             <input type="hidden" name="to" value="{{ $next }}">
-            <button class="text-xs font-bold rounded-full px-4 py-2 {{ $next === 'active' ? 'bg-[#002f80] text-white' : ($next === 'archived' ? 'bg-[#c90018] text-white' : 'border border-[#002f80]/30 text-[#002f80] hover:bg-[#002f80] hover:text-white') }} transition">→ {{ strtoupper(str_replace('_', ' ', $next)) }}</button>
+            <button class="text-xs font-bold rounded-full px-4 py-2 {{ $next === 'active' ? 'bg-[var(--ypl-navy)] text-white' : ($next === 'archived' ? 'bg-[var(--ypl-red)] text-white' : 'border border-[var(--ypl-navy)]/30 text-[var(--ypl-navy)] hover:bg-[var(--ypl-navy)] hover:text-white') }} transition">→ {{ strtoupper(str_replace('_', ' ', $next)) }}</button>
           </form>
         @endforeach
       </div>
@@ -158,24 +158,24 @@
     @endif
   </div>
 
-  <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
-    <h2 class="font-extrabold tracking-tight text-[#002f80]">RELATED KNOWLEDGE</h2>
+  <div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-5">
+    <h2 class="font-extrabold tracking-tight text-[var(--ypl-navy)]">RELATED KNOWLEDGE</h2>
     <div class="mt-2 space-y-1.5">
       @forelse($document->outgoingRelations as $rel)
         @if($rel->system)
           <div class="flex items-center gap-2 text-sm">
             <span class="text-[10px] font-bold bg-green-700/10 text-green-700 px-2 py-1 rounded-full shrink-0">SYSTEM</span>
-            <a href="{{ route('systems.show', $rel->system) }}" class="font-bold truncate hover:text-[#002f80] flex-1">{{ $rel->system->name }}</a>
+            <a href="{{ route('systems.show', $rel->system) }}" class="font-bold truncate hover:text-[var(--ypl-navy)] flex-1">{{ $rel->system->name }}</a>
             @can('relate', $document)
-              <form method="post" action="{{ route('documents.relations.destroy', [$document, $rel]) }}" class="inline">@csrf @method('DELETE')<button class="text-[#c90018] text-xs font-bold" aria-label="Hapus relasi">✕</button></form>
+              <form method="post" action="{{ route('documents.relations.destroy', [$document, $rel]) }}" class="inline">@csrf @method('DELETE')<button class="text-[var(--ypl-red)] text-xs font-bold" aria-label="Hapus relasi">✕</button></form>
             @endcan
           </div>
         @elseif($rel->related)
           <div class="flex items-center gap-2 text-sm">
-            <span class="text-[10px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full shrink-0">{{ strtoupper($rel->relation_type) }}</span>
-            <a href="{{ route('documents.show', $rel->related) }}" class="font-bold truncate hover:text-[#002f80] flex-1">{{ $rel->related->title }}</a>
+            <span class="text-[10px] font-bold bg-[var(--ypl-navy)]/5 text-[var(--ypl-navy)] px-2 py-1 rounded-full shrink-0">{{ strtoupper($rel->relation_type) }}</span>
+            <a href="{{ route('documents.show', $rel->related) }}" class="font-bold truncate hover:text-[var(--ypl-navy)] flex-1">{{ $rel->related->title }}</a>
             @can('relate', $document)
-              <form method="post" action="{{ route('documents.relations.destroy', [$document, $rel]) }}" class="inline">@csrf @method('DELETE')<button class="text-[#c90018] text-xs font-bold" aria-label="Hapus relasi">✕</button></form>
+              <form method="post" action="{{ route('documents.relations.destroy', [$document, $rel]) }}" class="inline">@csrf @method('DELETE')<button class="text-[var(--ypl-red)] text-xs font-bold" aria-label="Hapus relasi">✕</button></form>
             @endcan
           </div>
         @endif
@@ -221,12 +221,12 @@
   {{-- Kiri: pratinjau dokumen --}}
   <div class="min-w-0">
     {{-- Fase 1: penampil + atur tampilan + lanjut baca --}}
-    <div id="reader" data-theme="{{ $pref->theme }}" class="rounded-3xl shadow-xl overflow-hidden border {{ $pref->theme === 'dark' ? 'bg-[#141920] border-white/10' : 'bg-white border-[#d6d6d6]' }}">
-      <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 border-b text-sm sticky top-0 z-10 {{ $pref->theme === 'dark' ? 'bg-[#1c2431] text-stone-100 border-white/10' : 'bg-slate-50/90 backdrop-blur text-slate-700' }}">
+    <div id="reader" data-theme="{{ $pref->theme }}" class="rounded-3xl shadow-xl overflow-hidden border {{ $pref->theme === 'dark' ? 'bg-[var(--ypl-reader-dark)] border-white/10' : 'bg-white border-[var(--ypl-gray)]' }}">
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 border-b text-sm sticky top-0 z-10 {{ $pref->theme === 'dark' ? 'bg-[var(--ypl-reader-toolbar)] text-stone-100 border-white/10' : 'bg-slate-50/90 backdrop-blur text-slate-700' }}">
         <div class="flex items-center gap-1.5">
-          <button id="btn-prev" aria-label="Halaman sebelumnya" class="w-8 h-8 rounded-full border border-current/20 grid place-items-center hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition">@include('components.icon', ['name' => 'chev-left', 'class' => 'w-4 h-4'])</button>
+          <button id="btn-prev" aria-label="Halaman sebelumnya" class="w-8 h-8 rounded-full border border-current/20 grid place-items-center hover:bg-[var(--ypl-navy)] hover:text-white hover:border-[var(--ypl-navy)] transition">@include('components.icon', ['name' => 'chev-left', 'class' => 'w-4 h-4'])</button>
           <span class="text-xs font-bold tabular-nums px-1"><span id="pg-now">1</span> <span class="opacity-50">/</span> <span id="pg-total">…</span></span>
-          <button id="btn-next" aria-label="Halaman berikutnya" class="w-8 h-8 rounded-full border border-current/20 grid place-items-center hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition">@include('components.icon', ['name' => 'chev-right', 'class' => 'w-4 h-4'])</button>
+          <button id="btn-next" aria-label="Halaman berikutnya" class="w-8 h-8 rounded-full border border-current/20 grid place-items-center hover:bg-[var(--ypl-navy)] hover:text-white hover:border-[var(--ypl-navy)] transition">@include('components.icon', ['name' => 'chev-right', 'class' => 'w-4 h-4'])</button>
         </div>
         <label class="text-xs font-semibold flex items-center gap-1.5">Zoom
           <select id="sel-zoom" class="rounded-full text-xs font-bold px-2 py-1 bg-transparent border border-current/20 outline-none cursor-pointer">
@@ -239,21 +239,21 @@
             <option value="double" {{ $pref->layout === 'double' ? 'selected' : '' }}>Double page</option>
           </select>
         </label>
-        <button id="btn-theme" class="text-xs font-bold rounded-full px-3 py-1.5 border border-current/20 hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => $pref->theme === 'dark' ? 'sun' : 'moon', 'class' => 'w-3.5 h-3.5']) {{ $pref->theme === 'dark' ? 'Mode Terang' : 'Mode Gelap' }}</button>
-        <button id="btn-full" class="text-xs font-bold rounded-full px-3 py-1.5 border border-current/20 hover:bg-[#002f80] hover:text-white hover:border-[#002f80] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'maximize', 'class' => 'w-3.5 h-3.5']) Layar Penuh</button>
-        @auth @if($position)<span id="resume-hint" class="ml-auto text-[11px] font-semibold px-3 py-1.5 rounded-full bg-[#002f80]/10 text-[#002f80] inline-flex items-center gap-1">@include('components.icon', ['name' => 'bookmark', 'class' => 'w-3 h-3']) Terakhir: hal. {{ $position->page }}</span>@endif @endauth
+        <button id="btn-theme" class="text-xs font-bold rounded-full px-3 py-1.5 border border-current/20 hover:bg-[var(--ypl-navy)] hover:text-white hover:border-[var(--ypl-navy)] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => $pref->theme === 'dark' ? 'sun' : 'moon', 'class' => 'w-3.5 h-3.5']) {{ $pref->theme === 'dark' ? 'Mode Terang' : 'Mode Gelap' }}</button>
+        <button id="btn-full" class="text-xs font-bold rounded-full px-3 py-1.5 border border-current/20 hover:bg-[var(--ypl-navy)] hover:text-white hover:border-[var(--ypl-navy)] transition inline-flex items-center gap-1.5">@include('components.icon', ['name' => 'maximize', 'class' => 'w-3.5 h-3.5']) Layar Penuh</button>
+        @auth @if($position)<span id="resume-hint" class="ml-auto text-[11px] font-semibold px-3 py-1.5 rounded-full bg-[var(--ypl-navy)]/10 text-[var(--ypl-navy)] inline-flex items-center gap-1">@include('components.icon', ['name' => 'bookmark', 'class' => 'w-3 h-3']) Terakhir: hal. {{ $position->page }}</span>@endif @endauth
       </div>
-      <div id="pages" class="flex flex-wrap justify-center items-start gap-5 p-5 max-h-[78vh] overflow-auto {{ $pref->theme === 'dark' ? 'bg-[#141920]' : 'bg-[#dde2e8]' }}"></div>
+      <div id="pages" class="flex flex-wrap justify-center items-start gap-5 p-5 max-h-[78vh] overflow-auto {{ $pref->theme === 'dark' ? 'bg-[var(--ypl-reader-dark)]' : 'bg-[var(--ypl-reader-stage)]' }}"></div>
     </div>
     <p class="text-xs text-slate-400 mt-2">Tips: gunakan tombol panah pada keyboard untuk pindah halaman. Posisi bacamu tersimpan otomatis.</p>
     @if($safeContent)
-      <details class="mt-4 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 text-sm"><summary class="cursor-pointer font-bold text-[#002f80]">Lihat teks sumber (editor)</summary><div class="prose font-reading max-w-none mt-2 text-slate-700">{!! $safeContent !!}</div></details>
+      <details class="mt-4 bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-5 text-sm"><summary class="cursor-pointer font-bold text-[var(--ypl-navy)]">Lihat teks sumber (editor)</summary><div class="prose font-reading max-w-none mt-2 text-slate-700">{!! $safeContent !!}</div></details>
     @endif
   </div>
 
   {{-- Kanan: Rekomendasi pintar --}}
-  <aside class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-4">
-    <div class="flex items-center gap-2 text-[#002f80] font-extrabold">
+  <aside class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-4">
+    <div class="flex items-center gap-2 text-[var(--ypl-navy)] font-extrabold">
       @include('components.icon', ['name' => 'tag', 'class' => 'w-4.5 h-4.5'])
       <h2 class="text-sm">REKOMENDASI UNTUK ANDA</h2>
     </div>
@@ -261,12 +261,12 @@
       <div class="mt-2 divide-y divide-slate-100">
         @forelse($recommendations as $rec)
           <a href="{{ route('documents.show', $rec['document']) }}" class="flex items-start gap-3 py-2.5 group">
-            <span class="w-9 h-9 rounded-xl grid place-items-center text-white text-sm font-extrabold shrink-0" style="background:{{ ['linear-gradient(135deg,#001c55,#002f80)','linear-gradient(135deg,#002f80,#3b6fd4)','linear-gradient(135deg,#7a0010,#c90018)','linear-gradient(135deg,#334155,#64748b)'][$loop->iteration % 4] }}">{{ $loop->iteration }}</span>
+            <span class="w-9 h-9 rounded-xl grid place-items-center text-white text-sm font-extrabold shrink-0" style="background:{{ ['linear-gradient(135deg,var(--ypl-navy-800),var(--ypl-navy))','linear-gradient(135deg,var(--ypl-navy),#3b6fd4)','linear-gradient(135deg,var(--ypl-red-800),var(--ypl-red))','linear-gradient(135deg,#334155,var(--ypl-muted))'][$loop->iteration % 4] }}">{{ $loop->iteration }}</span>
             <span class="min-w-0">
-              <span class="block font-bold text-slate-800 text-sm leading-snug line-clamp-2 group-hover:text-[#002f80]">{{ $rec['document']->title }}</span>
+              <span class="block font-bold text-slate-800 text-sm leading-snug line-clamp-2 group-hover:text-[var(--ypl-navy)]">{{ $rec['document']->title }}</span>
               <span class="block text-[11px] text-slate-400 mt-0.5">
                 @if($rec['reasons'])
-                  <span class="text-[10px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-0.5 rounded-full">{{ $rec['reasons'][0] }}</span>
+                  <span class="text-[10px] font-bold bg-[var(--ypl-navy)]/5 text-[var(--ypl-navy)] px-2 py-0.5 rounded-full">{{ $rec['reasons'][0] }}</span>
                 @endif
                 <span class="ml-2 inline-flex items-center gap-1">@include('components.icon', ['name' => 'eye', 'class' => 'w-3 h-3']) {{ number_format($rec['document']->views_count) }} kali dibaca</span>
               </span>
@@ -286,9 +286,9 @@
 @if($popular->isNotEmpty())
 <section class="mt-10">
   <div class="flex items-center gap-2 mb-4">
-    <span class="w-10 h-10 rounded-2xl grid place-items-center text-white" style="background:linear-gradient(135deg,#7a0010,#c90018)">@include('components.icon', ['name' => 'flame', 'class' => 'w-5 h-5'])</span>
+    <span class="w-10 h-10 rounded-2xl grid place-items-center text-white" style="background:linear-gradient(135deg,var(--ypl-red-800),var(--ypl-red))">@include('components.icon', ['name' => 'flame', 'class' => 'w-5 h-5'])</span>
     <div>
-      <h2 class="text-xl font-extrabold tracking-tight text-[#002f80]">Dokumen Populer</h2>
+      <h2 class="text-xl font-extrabold tracking-tight text-[var(--ypl-navy)]">Dokumen Populer</h2>
       <p class="text-xs text-slate-500">Dokumen yang paling sering dibaca komunitas.</p>
     </div>
   </div>
@@ -305,11 +305,11 @@
 @if($canEmbed && \App\Models\Setting::feature('embed'))
 {{-- Modal kode semat --}}
 <div id="embed-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-[#000f2e]/60 backdrop-blur-sm" onclick="closeEmbedModal()"></div>
+  <div class="absolute inset-0 bg-[var(--ypl-navy-900)]/60 backdrop-blur-sm" onclick="closeEmbedModal()"></div>
   <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg">
     <div class="flex items-center justify-between p-5 pb-3 border-b border-slate-100">
-      <h2 class="font-extrabold text-[#002f80]">Sematkan Dokumen</h2>
-      <button type="button" onclick="closeEmbedModal()" aria-label="Tutup" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-[#c90018]">@include('components.icon', ['name' => 'x', 'class' => 'w-4 h-4'])</button>
+      <h2 class="font-extrabold text-[var(--ypl-navy)]">Sematkan Dokumen</h2>
+      <button type="button" onclick="closeEmbedModal()" aria-label="Tutup" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-[var(--ypl-red)]">@include('components.icon', ['name' => 'x', 'class' => 'w-4 h-4'])</button>
     </div>
     <div class="p-5 space-y-3">
       <p class="text-xs text-slate-500">Tempel kode berikut ke situs/blog. Pratinjau mengikuti visibilitas dokumen ({{ $document->visibility }}).</p>

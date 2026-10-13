@@ -2,9 +2,9 @@
   Variabel: $document, $impactMap. Opsional: $transitions, $isOverdue. --}}
 {{-- Breadcrumb ala mockup: GOVERNANCE / TIPE / UNIT --}}
 <p class="text-[11px] font-bold tracking-widest text-slate-400 mt-2">
-    <a href="{{ route('governance.index') }}" class="hover:text-[#002f80]">GOVERNANCE</a>
+    <a href="{{ route('governance.index') }}" class="hover:text-[var(--ypl-navy)]">GOVERNANCE</a>
     <span class="mx-1">/</span>
-    <a href="{{ route('governance.index', ['tipe' => $document->doc_type]) }}" class="hover:text-[#002f80]">{{ strtoupper(\App\Models\Document::typeLabel($document->doc_type)) }}</a>
+    <a href="{{ route('governance.index', ['tipe' => $document->doc_type]) }}" class="hover:text-[var(--ypl-navy)]">{{ strtoupper(\App\Models\Document::typeLabel($document->doc_type)) }}</a>
     @if($document->unit)
         <span class="mx-1">/</span>
         <span>{{ strtoupper($document->unit) }}</span>
@@ -27,8 +27,8 @@
 <div class="grid lg:grid-cols-[340px_minmax(0,1fr)] gap-6 lg:gap-8 mt-6">
     {{-- Passport Card --}}
     <aside class="space-y-5">
-        <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
-            <h2 class="font-extrabold tracking-tight text-[#002f80]">DOCUMENT PASSPORT</h2>
+        <div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-5">
+            <h2 class="font-extrabold tracking-tight text-[var(--ypl-navy)]">DOCUMENT PASSPORT</h2>
             <dl class="mt-4 space-y-2.5 text-[13px]">
                 <div><dt class="text-[11px] font-bold text-slate-400">DOC ID</dt><dd class="font-bold font-mono">{{ $document->doc_code ?? '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">OWNER</dt><dd class="font-bold">{{ $document->user->name }}</dd></div>
@@ -41,7 +41,7 @@
                 <div><dt class="text-[11px] font-bold text-slate-400">UNIT</dt><dd class="font-bold">{{ $document->unit ?? '—' }}</dd></div>
                 <div><dt class="text-[11px] font-bold text-slate-400">VISIBILITY</dt><dd class="font-bold">{{ strtoupper($document->visibility) }}</dd></div>
                 @if(!empty($document->audience))
-                    <div><dt class="text-[11px] font-bold text-slate-400">AUDIENCE</dt><dd class="flex flex-wrap gap-1 mt-1">@foreach($document->audience as $a)<span class="text-[11px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $a)) }}</span>@endforeach</dd></div>
+                    <div><dt class="text-[11px] font-bold text-slate-400">AUDIENCE</dt><dd class="flex flex-wrap gap-1 mt-1">@foreach($document->audience as $a)<span class="text-[11px] font-bold bg-[var(--ypl-navy)]/5 text-[var(--ypl-navy)] px-2 py-0.5 rounded-full">{{ strtoupper(str_replace('_', ' ', $a)) }}</span>@endforeach</dd></div>
                 @endif
                 <div><dt class="text-[11px] font-bold text-slate-400">KATEGORI</dt><dd class="font-bold">{{ $document->category->name ?? '—' }}</dd></div>
             </dl>
@@ -49,13 +49,13 @@
 
         {{-- Transitions --}}
         @if(!empty($transitions ?? []))
-        <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5">
-            <h3 class="font-extrabold text-[#002f80] mb-3">TRANSISI STATUS</h3>
+        <div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-5">
+            <h3 class="font-extrabold text-[var(--ypl-navy)] mb-3">TRANSISI STATUS</h3>
             <div class="flex flex-wrap gap-2">
                 @foreach($transitions as $next)
                     <form method="post" action="{{ route('documents.transition', $document) }}" class="inline">@csrf
                         <input type="hidden" name="to" value="{{ $next }}">
-                        <button class="text-xs font-bold rounded-full px-4 py-2 {{ $next === 'active' ? 'bg-[#002f80] text-white' : ($next === 'archived' ? 'bg-[#c90018] text-white' : 'border border-[#002f80]/30 text-[#002f80] hover:bg-[#002f80] hover:text-white') }} transition">→ {{ strtoupper(str_replace('_', ' ', $next)) }}</button>
+                        <button class="text-xs font-bold rounded-full px-4 py-2 {{ $next === 'active' ? 'bg-[var(--ypl-navy)] text-white' : ($next === 'archived' ? 'bg-[var(--ypl-red)] text-white' : 'border border-[var(--ypl-navy)]/30 text-[var(--ypl-navy)] hover:bg-[var(--ypl-navy)] hover:text-white') }} transition">→ {{ strtoupper(str_replace('_', ' ', $next)) }}</button>
                     </form>
                 @endforeach
             </div>
@@ -77,26 +77,26 @@
 
     {{-- Related Knowledge ala mockup --}}
     <div class="min-w-0">
-        <h2 class="font-extrabold tracking-tight text-[#002f80]">RELATED KNOWLEDGE</h2>
+        <h2 class="font-extrabold tracking-tight text-[var(--ypl-navy)]">RELATED KNOWLEDGE</h2>
         <div class="mt-3 space-y-2.5">
             @forelse($impactMap['references'] as $ref)
-                <a href="{{ $ref['route'] }}" class="flex items-center gap-3 bg-white rounded-2xl border border-[#d6d6d6] px-4 py-3 hover:border-[#002f80] hover:shadow-md transition group">
-                    <span class="w-9 h-9 rounded-xl grid place-items-center bg-slate-100 text-slate-500 group-hover:bg-[#002f80] group-hover:text-white transition shrink-0">@include('components.icon', ['name' => 'file', 'class' => 'w-4 h-4'])</span>
+                <a href="{{ $ref['route'] }}" class="flex items-center gap-3 bg-white rounded-2xl border border-[var(--ypl-gray)] px-4 py-3 hover:border-[var(--ypl-navy)] hover:shadow-md transition group">
+                    <span class="w-9 h-9 rounded-xl grid place-items-center bg-slate-100 text-slate-500 group-hover:bg-[var(--ypl-navy)] group-hover:text-white transition shrink-0">@include('components.icon', ['name' => 'file', 'class' => 'w-4 h-4'])</span>
                     <span class="min-w-0 flex-1">
-                        <span class="block font-bold text-sm text-slate-900 group-hover:text-[#002f80] truncate">{{ $ref['title'] }}</span>
+                        <span class="block font-bold text-sm text-slate-900 group-hover:text-[var(--ypl-navy)] truncate">{{ $ref['title'] }}</span>
                         <span class="block text-[11px] text-slate-400">Open →</span>
                     </span>
                 </a>
             @empty
-                <p class="text-sm text-slate-400 bg-white rounded-2xl border border-dashed border-[#d6d6d6] p-6 text-center">Belum ada relasi eksplisit. Tambahkan relasi di detail dokumen.</p>
+                <p class="text-sm text-slate-400 bg-white rounded-2xl border border-dashed border-[var(--ypl-gray)] p-6 text-center">Belum ada relasi eksplisit. Tambahkan relasi di detail dokumen.</p>
             @endforelse
             @if($impactMap['referenced_by']->isNotEmpty())
                 <p class="text-[11px] font-bold tracking-widest text-slate-400 pt-2">DIRUJUK OLEH</p>
                 @foreach($impactMap['referenced_by'] as $ref)
-                    <a href="{{ route('documents.show', $ref['slug']) }}" class="flex items-center gap-3 bg-white rounded-2xl border border-[#d6d6d6] px-4 py-3 hover:border-[#c90018] transition group">
-                        <span class="w-9 h-9 rounded-xl grid place-items-center bg-slate-100 text-slate-500 group-hover:bg-[#c90018] group-hover:text-white transition shrink-0">@include('components.icon', ['name' => 'file', 'class' => 'w-4 h-4'])</span>
+                    <a href="{{ route('documents.show', $ref['slug']) }}" class="flex items-center gap-3 bg-white rounded-2xl border border-[var(--ypl-gray)] px-4 py-3 hover:border-[var(--ypl-red)] transition group">
+                        <span class="w-9 h-9 rounded-xl grid place-items-center bg-slate-100 text-slate-500 group-hover:bg-[var(--ypl-red)] group-hover:text-white transition shrink-0">@include('components.icon', ['name' => 'file', 'class' => 'w-4 h-4'])</span>
                         <span class="min-w-0 flex-1">
-                            <span class="block font-bold text-sm text-slate-900 group-hover:text-[#c90018] truncate">{{ $ref['source_title'] }}</span>
+                            <span class="block font-bold text-sm text-slate-900 group-hover:text-[var(--ypl-red)] truncate">{{ $ref['source_title'] }}</span>
                             <span class="block text-[11px] text-slate-400">Open →</span>
                         </span>
                     </a>

@@ -2,9 +2,9 @@
 @section('title', 'Unggah PDF')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dokumen Saya', route('documents.my')], ['Unggah PDF']]])
-<div class="max-w-xl mx-auto bg-white rounded-3xl border border-[#d6d6d6] shadow-xl shadow-[#002f80]/5 p-7 sm:p-8">
+<div class="max-w-xl mx-auto bg-white rounded-3xl border border-[var(--ypl-gray)] shadow-xl shadow-[var(--ypl-navy)]/5 p-7 sm:p-8">
   <div class="w-12 h-12 rounded-2xl grid place-items-center text-white mb-3 grad-navy">@include('components.icon', ['name' => 'upload', 'class' => 'w-5 h-5'])</div>
-  <h1 class="text-xl font-extrabold tracking-tight text-[#002f80]">Unggah File PDF</h1>
+  <h1 class="text-xl font-extrabold tracking-tight text-[var(--ypl-navy)]">Unggah File PDF</h1>
   <p class="text-sm text-slate-500 mb-5">Bagikan materi ke seluruh komunitas YPL dalam hitungan detik.</p>
   <form method="post" action="{{ route('documents.store') }}" enctype="multipart/form-data" class="space-y-4">@csrf
     <div><label class="text-[13px] font-bold">Judul dokumen *</label><input name="title" required value="{{ old('title') }}" placeholder="cth: Panduan Praktikum IPA Kelas 8" class="field mt-1"></div>
@@ -29,7 +29,7 @@
     </div>
     <div><span class="text-[13px] font-bold">Audience</span><div class="flex flex-wrap gap-2 mt-1">@foreach(\App\Models\Document::AUDIENCES as $a)<label class="text-xs font-semibold inline-flex items-center gap-1.5 bg-slate-50 border rounded-full px-3 py-1.5"><input type="checkbox" name="audience[]" value="{{ $a }}"> {{ str_replace('_', ' ', $a) }}</label>@endforeach</div></div>
     <p class="text-[11px] text-slate-400">Dokumen baru masuk sebagai <strong>DRAFT</strong>. Alur persetujuan ada di halaman detail.</p>
-    <div><label class="text-[13px] font-bold">File PDF (maks 9 MB) *</label><input type="file" name="file" accept="application/pdf" required class="field mt-1 file:mr-3 file:rounded-full file:border-0 file:bg-[#002f80]/10 file:text-[#002f80] file:text-xs file:font-bold file:px-4 file:py-2"></div>
+    <div><label class="text-[13px] font-bold">File PDF (maks 9 MB) *</label><input type="file" name="file" accept="application/pdf" required class="field mt-1 file:mr-3 file:rounded-full file:border-0 file:bg-[var(--ypl-navy)]/10 file:text-[var(--ypl-navy)] file:text-xs file:font-bold file:px-4 file:py-2"></div>
     <button class="btn-primary w-full !py-3">@include('components.icon', ['name' => 'upload', 'class' => 'w-4 h-4']) Unggah Dokumen</button>
   </form>
 </div>

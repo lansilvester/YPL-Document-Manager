@@ -13,28 +13,28 @@
 {{-- Ringkasan --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
   @foreach([['Total Peran', $stats['total'], 'users'], ['Sistem 🔒', $stats['system'], 'shield'], ['Audiens', $stats['audience'], 'cap'], ['Pengguna Terpetakan', $stats['mapped'], 'check']] as [$l, $v, $i])
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-4 flex items-center gap-3">
-      <span class="w-10 h-10 rounded-xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#001c55,#0046c0)">@include('components.icon', ['name' => $i, 'class' => 'w-5 h-5'])</span>
-      <span><span class="block text-2xl font-extrabold text-[#002f80] leading-none">{{ $v }}</span><span class="text-xs text-slate-500 font-semibold">{{ $l }}</span></span>
+    <div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-4 flex items-center gap-3">
+      <span class="w-10 h-10 rounded-xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,var(--ypl-navy-800),var(--ypl-navy-600))">@include('components.icon', ['name' => $i, 'class' => 'w-5 h-5'])</span>
+      <span><span class="block text-2xl font-extrabold text-[var(--ypl-navy)] leading-none">{{ $v }}</span><span class="text-xs text-slate-500 font-semibold">{{ $l }}</span></span>
     </div>
   @endforeach
 </div>
 
 {{-- Toolbar interaktif --}}
-<div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-3 mb-4 flex flex-col sm:flex-row gap-2 sm:items-center">
+<div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-3 mb-4 flex flex-col sm:flex-row gap-2 sm:items-center">
   <div class="relative flex-1 min-w-0">
     <input id="role-search" placeholder="Cari nama atau slug peran…" class="field !rounded-full !pl-10" aria-label="Cari peran">
     <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">@include('components.icon', ['name' => 'search', 'class' => 'w-4 h-4'])</span>
   </div>
   <div class="flex gap-2 text-xs font-bold">
-    <button data-role-filter="semua" class="role-filter px-4 py-2 rounded-full bg-[#002f80] text-white transition">Semua</button>
+    <button data-role-filter="semua" class="role-filter px-4 py-2 rounded-full bg-[var(--ypl-navy)] text-white transition">Semua</button>
     <button data-role-filter="sistem" class="role-filter px-4 py-2 rounded-full bg-slate-100 text-slate-600 transition">🔒 Sistem</button>
     <button data-role-filter="audiens" class="role-filter px-4 py-2 rounded-full bg-slate-100 text-slate-600 transition">Audiens</button>
   </div>
   <span id="role-count" class="text-xs text-slate-400 font-semibold sm:ml-auto whitespace-nowrap"></span>
 </div>
 
-<div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm overflow-hidden mb-6">
+<div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm overflow-hidden mb-6">
   <div class="overflow-x-auto">
     <table class="w-full text-sm min-w-[880px]">
       <thead class="sticky top-0">
@@ -60,7 +60,7 @@
               @if($r->description)<span class="block text-xs text-slate-500 mt-0.5">{{ $r->description }}</span>@endif
             </td>
             <td class="px-4 py-3">
-              <span class="flex flex-wrap gap-1">@foreach($r->scopes['collections'] ?? [] as $c)<span class="text-[11px] font-bold bg-[#002f80]/5 text-[#002f80] px-2 py-0.5 rounded-full">{{ $c }}</span>@endforeach</span>
+              <span class="flex flex-wrap gap-1">@foreach($r->scopes['collections'] ?? [] as $c)<span class="text-[11px] font-bold bg-[var(--ypl-navy)]/5 text-[var(--ypl-navy)] px-2 py-0.5 rounded-full">{{ $c }}</span>@endforeach</span>
             </td>
             <td class="px-4 py-3 text-xs text-slate-500">
               @if(!empty($r->homepage['quick']))<span class="block"><span class="font-bold text-slate-600">Quick:</span> {{ implode(' → ', $r->homepage['quick']) }}</span>@endif
@@ -69,9 +69,9 @@
             </td>
             <td class="px-4 py-3"><span class="text-sm font-bold">{{ $userCounts[$r->slug] ?? 0 }}</span></td>
             <td class="px-4 py-3 text-right whitespace-nowrap">
-              <button data-role-toggle="{{ $r->id }}" class="text-xs font-bold text-[#002f80] border border-[#002f80]/30 rounded-full px-3 py-1.5 hover:bg-[#002f80] hover:text-white transition" aria-expanded="false">Ubah</button>
+              <button data-role-toggle="{{ $r->id }}" class="text-xs font-bold text-[var(--ypl-navy)] border border-[var(--ypl-navy)]/30 rounded-full px-3 py-1.5 hover:bg-[var(--ypl-navy)] hover:text-white transition" aria-expanded="false">Ubah</button>
               @unless($r->is_system)
-                <form method="post" action="{{ route('sa.roles.destroy', $r) }}" class="inline" data-confirm="Hapus peran {{ $r->name }}?">@csrf @method('DELETE')<button class="text-xs font-bold text-[#c90018] border border-[#c90018]/30 rounded-full px-3 py-1.5 hover:bg-[#c90018]/5">Hapus</button></form>
+                <form method="post" action="{{ route('sa.roles.destroy', $r) }}" class="inline" data-confirm="Hapus peran {{ $r->name }}?">@csrf @method('DELETE')<button class="text-xs font-bold text-[var(--ypl-red)] border border-[var(--ypl-red)]/30 rounded-full px-3 py-1.5 hover:bg-[var(--ypl-red)]/5">Hapus</button></form>
               @endunless
             </td>
           </tr>
@@ -132,7 +132,7 @@
       kind = btn.dataset.roleFilter;
       document.querySelectorAll('.role-filter').forEach(function (b) {
         var on = b === btn;
-        b.classList.toggle('bg-[#002f80]', on);
+        b.classList.toggle('bg-[var(--ypl-navy)]', on);
         b.classList.toggle('text-white', on);
         b.classList.toggle('bg-slate-100', !on);
         b.classList.toggle('text-slate-600', !on);
@@ -144,8 +144,8 @@
 })();
 </script>
 
-<div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-5 mt-6">
-  <h2 class="font-extrabold mb-3 text-[#002f80]">Buat Peran Baru</h2>
+<div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-5 mt-6">
+  <h2 class="font-extrabold mb-3 text-[var(--ypl-navy)]">Buat Peran Baru</h2>
   <form method="post" action="{{ route('sa.roles.store') }}" class="space-y-3">@csrf
     <div class="grid sm:grid-cols-3 gap-3">
       <div><label class="text-[13px] font-bold">Slug * <span class="font-normal text-slate-400">huruf kecil/angka/_</span></label><input name="slug" required pattern="[a-z0-9_]+" maxlength="30" placeholder="cth: wali_kelas" class="field mt-1"></div>

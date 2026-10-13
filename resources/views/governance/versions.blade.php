@@ -13,20 +13,20 @@
 <div class="max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-6">
         <div>
-            <p class="text-xs font-bold tracking-widest text-[#c90018]">VERSION HISTORY</p>
+            <p class="text-xs font-bold tracking-widest text-[var(--ypl-red)]">VERSION HISTORY</p>
             <h1 class="page-title mt-1">{{ $document->title }}</h1>
             <p class="text-sm text-slate-500 mt-1">v{{ $document->version }} · {{ strtoupper(str_replace('_', ' ', $document->status)) }} · {{ $document->doc_code ?? '—' }}</p>
         </div>
         <a href="{{ route('governance.show', $document) }}" class="btn-ghost">← Kembali</a>
     </div>
 
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm overflow-hidden">
+    <div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/70">
             <div class="flex items-center justify-between">
-                <h2 class="font-extrabold tracking-tight text-[#002f80]">Version History ({{ $versions->total() }} versi)</h2>
+                <h2 class="font-extrabold tracking-tight text-[var(--ypl-navy)]">Version History ({{ $versions->total() }} versi)</h2>
                 <div class="flex items-center gap-2 text-xs text-slate-400">
                     <span>{{ $versions->total() }} total versi</span>
-                    <span class="px-2 py-0.5 rounded-full bg-[#002f80]/10 text-[#002f80]">v{{ $document->version }}</span>
+                    <span class="px-2 py-0.5 rounded-full bg-[var(--ypl-navy)]/10 text-[var(--ypl-navy)]">v{{ $document->version }}</span>
                 </div>
             </div>
         </div>
@@ -41,7 +41,7 @@
                 <div class="p-5 hover:bg-slate-50/70 transition border-b border-slate-100/50 last:border-0">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div class="flex items-center gap-3">
-                            <span class="text-xs font-extrabold bg-[#002f80] text-white px-2.5 py-1 rounded-full shrink-0">v{{ $v->version }}</span>
+                            <span class="text-xs font-extrabold bg-[var(--ypl-navy)] text-white px-2.5 py-1 rounded-full shrink-0">v{{ $v->version }}</span>
                             <div>
                                 <div class="flex items-center gap-2 text-sm">
                                     <span class="px-2 py-0.5 rounded-full text-[11px] font-bold {{ \App\Models\Document::statusBadgeFor($v->to_status) }}">
@@ -73,7 +73,7 @@
 
                     @if($diff)
                         <details class="mt-2 text-xs" open>
-                            <summary class="cursor-pointer font-bold text-[#c90018]">What changed? ({{ count($diff) }} bidang)</summary>
+                            <summary class="cursor-pointer font-bold text-[var(--ypl-red)]">What changed? ({{ count($diff) }} bidang)</summary>
                             <div class="mt-2 space-y-1.5 bg-slate-50/70 rounded-xl p-3">
                                 @foreach($diff as $d)
                                     @php
@@ -83,7 +83,7 @@
                                         <span class="font-bold text-slate-400 shrink-0 min-w-28">{{ strtoupper(str_replace('_', ' ', $d['field'])) }}:</span>
                                         <span class="text-slate-400 line-through">{{ $fmt($d['from']) }}</span>
                                         <span class="text-slate-400">→</span>
-                                        <span class="font-semibold text-[#002f80]">{{ $fmt($d['to']) }}</span>
+                                        <span class="font-semibold text-[var(--ypl-navy)]">{{ $fmt($d['to']) }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -94,7 +94,7 @@
 
                     @if(!empty($v->snapshot))
                         <details class="mt-2 text-xs">
-                            <summary class="cursor-pointer font-bold text-[#002f80]">Snapshot isi revisi</summary>
+                            <summary class="cursor-pointer font-bold text-[var(--ypl-navy)]">Snapshot isi revisi</summary>
                             <dl class="mt-2 grid sm:grid-cols-2 gap-x-4 gap-y-1 text-slate-600 bg-slate-50/70 rounded-xl p-3">
                                 @foreach($v->snapshot as $k => $sv)
                                     <div class="flex gap-2 min-w-0"><dt class="font-bold text-slate-400 shrink-0">{{ strtoupper(str_replace('_', ' ', $k)) }}:</dt><dd class="truncate">{{ is_array($sv) ? implode(', ', $sv) : ($sv ?? '—') }}</dd></div>

@@ -2,12 +2,12 @@
 @section('title', 'Kelola Governance')
 @section('content')
 <div class="mb-6">
-    <p class="text-xs font-bold tracking-widest text-[#c90018]">GOVERNANCE</p>
+    <p class="text-xs font-bold tracking-widest text-[var(--ypl-red)]">GOVERNANCE</p>
     <h1 class="page-title">Kelola Dokumen Governance</h1>
 </div>
 
 {{-- Filter Bar --}}
-<div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-4 mb-6">
+<div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-4 mb-6">
     <form action="{{ route('governance.index') }}" method="get" class="flex flex-col sm:flex-row gap-3">
         <input type="hidden" name="tipe" value="{{ $filters['tipe'] ?? '' }}">
         <input type="hidden" name="status" value="{{ $filters['status'] ?? '' }}">
@@ -39,51 +39,51 @@
             @endforeach
         </select>
 
-        <div class="flex gap-1 bg-white border border-[#d6d6d6] rounded-full p-1">
+        <div class="flex gap-1 bg-white border border-[var(--ypl-gray)] rounded-full p-1">
             <input name="unit" value="{{ $filters['unit'] ?? '' }}" placeholder="Cari unit…" class="bg-transparent text-xs px-3 outline-none w-32" aria-label="Cari unit">
-            <button class="rounded-full bg-[#002f80] text-white text-xs font-bold px-4 py-1.5">Cari</button>
+            <button class="rounded-full bg-[var(--ypl-navy)] text-white text-xs font-bold px-4 py-1.5">Cari</button>
         </div>
 
         @if($filters['q'] || $filters['tipe'] || $filters['status'] || $filters['audiens'] || $filters['unit'])
-            <a href="{{ route('governance.index') }}" class="text-xs font-bold text-[#c90018]">Reset ✕</a>
+            <a href="{{ route('governance.index') }}" class="text-xs font-bold text-[var(--ypl-red)]">Reset ✕</a>
         @endif
     </form>
     <form action="{{ route('governance.export') }}" method="post" class="mt-3 flex justify-end">@csrf
         @foreach(['q', 'tipe', 'status', 'audiens', 'unit'] as $k)
             <input type="hidden" name="{{ $k }}" value="{{ $filters[$k] ?? '' }}">
         @endforeach
-        <button class="text-xs font-bold text-[#002f80] border border-[#002f80]/30 rounded-full px-4 py-1.5 hover:bg-[#002f80] hover:text-white transition">Ekspor CSV</button>
+        <button class="text-xs font-bold text-[var(--ypl-navy)] border border-[var(--ypl-navy)]/30 rounded-full px-4 py-1.5 hover:bg-[var(--ypl-navy)] hover:text-white transition">Ekspor CSV</button>
     </form>
 </div>
 
 {{-- Hasil --}}
 <div class="grid sm:grid-cols-2 gap-4">
     @forelse($docs as $d)
-        <a href="{{ route('governance.show', $d) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] p-4 block group">
+        <a href="{{ route('governance.show', $d) }}" class="card-hover bg-white rounded-2xl border border-[var(--ypl-gray)] p-4 block group">
             <div class="flex flex-wrap gap-1.5 text-[10px] font-bold">
-                <span class="bg-[#002f80]/5 text-[#002f80] px-2 py-1 rounded-full">{{ $d->doc_type ? strtoupper(\App\Models\Document::typeLabel($d->doc_type)) : 'NO TYPE' }}</span>
+                <span class="bg-[var(--ypl-navy)]/5 text-[var(--ypl-navy)] px-2 py-1 rounded-full">{{ $d->doc_type ? strtoupper(\App\Models\Document::typeLabel($d->doc_type)) : 'NO TYPE' }}</span>
                 <span class="{{ $d->statusBadge() }} px-2 py-1 rounded-full">{{ strtoupper(str_replace('_', ' ', $d->status)) }}</span>
                 <span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-full">v{{ $d->version }}</span>
             </div>
-            <div class="font-bold text-slate-900 mt-2 leading-snug line-clamp-2 group-hover:text-[#002f80] transition">{{ $d->title }}</div>
+            <div class="font-bold text-slate-900 mt-2 leading-snug line-clamp-2 group-hover:text-[var(--ypl-navy)] transition">{{ $d->title }}</div>
             <div class="text-[11px] text-slate-400 mt-1 flex flex-wrap gap-1">
                 <span>{{ $d->doc_code ?? '—' }}</span>
                 <span>·</span>
                 <span>{{ $d->category->name ?? 'Tanpa kategori' }}</span>
                 @if($d->unit)
                     <span>·</span>
-                    <span class="bg-[#002f80]/5 text-[#002f80] px-1.5 py-0.5 rounded-full text-[10px] font-bold">{{ $d->unit }}</span>
+                    <span class="bg-[var(--ypl-navy)]/5 text-[var(--ypl-navy)] px-1.5 py-0.5 rounded-full text-[10px] font-bold">{{ $d->unit }}</span>
                 @endif
                 @if($d->audience && count($d->audience) > 0)
                     <span>·</span>
                     @foreach($d->audience as $a)
-                        <span class="bg-[#002f80]/5 text-[#002f80] px-1.5 py-0.5 rounded-full text-[10px] font-bold">{{ str_replace('_', ' ', $a) }}</span>
+                        <span class="bg-[var(--ypl-navy)]/5 text-[var(--ypl-navy)] px-1.5 py-0.5 rounded-full text-[10px] font-bold">{{ str_replace('_', ' ', $a) }}</span>
                     @endforeach
                 @endif
             </div>
         </a>
     @empty
-        <div class="sm:col-span-2 bg-white rounded-2xl border border-dashed border-[#d6d6d6] p-10 text-center text-slate-400">
+        <div class="sm:col-span-2 bg-white rounded-2xl border border-dashed border-[var(--ypl-gray)] p-10 text-center text-slate-400">
             <p class="font-bold text-slate-700">Belum ada dokumen governance pada filter ini.</p>
         </div>
     @endforelse
@@ -92,8 +92,8 @@
 <div class="mt-5">{{ $docs->links() }}</div>
 
 {{-- Summary Stats --}}
-<div class="mt-6 bg-white rounded-2xl border border-[#d6d6d6] shadow-sm p-4">
-    <h2 class="font-extrabold text-[#002f80] mb-3">Ringkasan</h2>
+<div class="mt-6 bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm p-4">
+    <h2 class="font-extrabold text-[var(--ypl-navy)] mb-3">Ringkasan</h2>
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-sm">
         @foreach([
             ['Total', $docs->total(), 'users', null],
@@ -108,11 +108,11 @@
             {{-- Status internal tanpa isi disembunyikan dari non-staff (kriteria 12). --}}
             @if($count > 0 || ! $statusLink || (auth()->check() && auth()->user()->isStaff()))
             @if($statusLink)
-                <a href="{{ route('governance.index', ['status' => $statusLink]) }}" class="bg-slate-50/70 rounded-xl p-3 hover:border-[#002f80] border border-transparent transition block">
+                <a href="{{ route('governance.index', ['status' => $statusLink]) }}" class="bg-slate-50/70 rounded-xl p-3 hover:border-[var(--ypl-navy)] border border-transparent transition block">
             @else
                 <div class="bg-slate-50/70 rounded-xl p-3">
             @endif
-                <div class="text-2xl font-extrabold text-[#002f80]">{{ $count }}</div>
+                <div class="text-2xl font-extrabold text-[var(--ypl-navy)]">{{ $count }}</div>
                 <div class="text-xs text-slate-500 font-semibold">{{ $label }}</div>
             @if($statusLink)
                 </a>

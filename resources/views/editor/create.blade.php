@@ -2,9 +2,9 @@
 @section('title', 'Tulis Dokumen')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dokumen Saya', route('documents.my')], ['Tulis Dokumen']]])
-<div class="max-w-3xl mx-auto bg-white rounded-3xl border border-[#d6d6d6] shadow-xl shadow-[#002f80]/5 p-7 sm:p-8">
+<div class="max-w-3xl mx-auto bg-white rounded-3xl border border-[var(--ypl-gray)] shadow-xl shadow-[var(--ypl-navy)]/5 p-7 sm:p-8">
   <div class="w-12 h-12 rounded-2xl grid place-items-center text-white grad-navy">@include('components.icon', ['name' => 'pen', 'class' => 'w-5 h-5'])</div>
-  <h1 class="text-xl font-extrabold tracking-tight text-[#002f80]">Tulis Isi Dokumen</h1>
+  <h1 class="text-xl font-extrabold tracking-tight text-[var(--ypl-navy)]">Tulis Isi Dokumen</h1>
   <p class="text-sm text-slate-500 mb-5">Susun materi langsung di platform — otomatis disimpan sebagai PDF yang siap dibagikan.</p>
   <form method="post" action="{{ route('editor.store') }}" class="space-y-4">@csrf
     <div><label class="text-[13px] font-bold">Judul *</label><input name="title" required value="{{ old('title') }}" placeholder="cth: Modul Pelatihan Guru Baru" class="field mt-1"></div>

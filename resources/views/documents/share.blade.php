@@ -2,9 +2,9 @@
 @section('title', 'Bagikan')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], [$document->title, route('documents.show', $document)], ['Bagikan']]])
-<div class="max-w-lg mx-auto bg-white rounded-3xl border border-[#d6d6d6] shadow-xl p-7 text-center">
+<div class="max-w-lg mx-auto bg-white rounded-3xl border border-[var(--ypl-gray)] shadow-xl p-7 text-center">
   <div class="w-12 h-12 mx-auto rounded-2xl grid place-items-center text-white grad-navy">@include('components.icon', ['name' => 'share', 'class' => 'w-5 h-5'])</div>
-  <h1 class="text-xl font-extrabold tracking-tight mt-3 text-[#002f80]">Bagikan Dokumen</h1>
+  <h1 class="text-xl font-extrabold tracking-tight mt-3 text-[var(--ypl-navy)]">Bagikan Dokumen</h1>
   <p class="text-sm text-slate-500 mb-5">{{ $document->title }}</p>
   <div class="flex gap-2 mb-4 text-left">
     <input id="share-url" readonly value="{{ $url }}" class="field !rounded-full !py-2.5 text-xs">

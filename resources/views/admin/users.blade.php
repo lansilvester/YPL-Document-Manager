@@ -16,7 +16,7 @@ $allCount = $roleCounts->sum();
 @endphp
 
 <div class="flex items-center gap-3 mb-4">
-  <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,#001c55,#002f80)">@include('components.icon', ['name' => 'users', 'class' => 'w-5 h-5'])</span>
+  <span class="w-11 h-11 rounded-2xl grid place-items-center text-white shrink-0" style="background:linear-gradient(135deg,var(--ypl-navy-800),var(--ypl-navy))">@include('components.icon', ['name' => 'users', 'class' => 'w-5 h-5'])</span>
   <div class="flex-1">
     <h1 class="page-title">Kelola Pengguna</h1>
     <p class="text-sm text-slate-500">Daftar akun komunitas. @if(! $isSuperAdmin)Akun Super Admin tidak ditampilkan untuk admin.@endif</p>
@@ -40,14 +40,14 @@ $allCount = $roleCounts->sum();
 
 {{-- Filter peran --}}
 <div class="flex gap-2 mb-4 text-[13px] font-semibold overflow-x-auto pb-1">
-  <a href="{{ route('admin.users', ['q' => $q]) }}" class="shrink-0 px-4 py-1.5 rounded-full border transition {{ $role === '' ? 'bg-[#002f80] text-white border-[#002f80] shadow' : 'bg-white border-[#d6d6d6] hover:border-[#002f80]' }}">Semua ({{ number_format($allCount) }})</a>
+  <a href="{{ route('admin.users', ['q' => $q]) }}" class="shrink-0 px-4 py-1.5 rounded-full border transition {{ $role === '' ? 'bg-[var(--ypl-navy)] text-white border-[var(--ypl-navy)] shadow' : 'bg-white border-[var(--ypl-gray)] hover:border-[var(--ypl-navy)]' }}">Semua ({{ number_format($allCount) }})</a>
   @foreach(['anggota' => 'Anggota', 'staff' => 'Staff', 'admin' => 'Admin'] as $val => $label)
-    <a href="{{ route('admin.users', ['role' => $val, 'q' => $q]) }}" class="shrink-0 px-4 py-1.5 rounded-full border transition {{ $role === $val ? 'bg-[#002f80] text-white border-[#002f80] shadow' : 'bg-white border-[#d6d6d6] hover:border-[#002f80]' }}">{{ $label }} ({{ number_format($roleCounts[$val] ?? 0) }})</a>
+    <a href="{{ route('admin.users', ['role' => $val, 'q' => $q]) }}" class="shrink-0 px-4 py-1.5 rounded-full border transition {{ $role === $val ? 'bg-[var(--ypl-navy)] text-white border-[var(--ypl-navy)] shadow' : 'bg-white border-[var(--ypl-gray)] hover:border-[var(--ypl-navy)]' }}">{{ $label }} ({{ number_format($roleCounts[$val] ?? 0) }})</a>
   @endforeach
 </div>
 
 {{-- Tabel pengguna --}}
-<div class="bg-white rounded-2xl border border-[#d6d6d6] shadow-sm overflow-hidden">
+<div class="bg-white rounded-2xl border border-[var(--ypl-gray)] shadow-sm overflow-hidden">
   <div class="overflow-x-auto">
     <table class="w-full text-sm min-w-[720px]">
       <thead>
@@ -87,12 +87,12 @@ $allCount = $roleCounts->sum();
                 @if($u->avatar_path)
                   <img src="{{ asset('storage/'.$u->avatar_path) }}" class="w-9 h-9 rounded-xl object-cover shadow">
                 @else
-                  <span class="w-9 h-9 rounded-xl grid place-items-center text-white text-xs font-extrabold shrink-0" style="background:linear-gradient(135deg,#001c55,#0046c0)">{{ strtoupper(mb_substr($u->name, 0, 1)) }}</span>
+                  <span class="w-9 h-9 rounded-xl grid place-items-center text-white text-xs font-extrabold shrink-0" style="background:linear-gradient(135deg,var(--ypl-navy-800),var(--ypl-navy-600))">{{ strtoupper(mb_substr($u->name, 0, 1)) }}</span>
                 @endif
                 <div class="min-w-0">
                   <div class="font-bold truncate">{{ $u->name }}</div>
                   <span class="text-[10px] font-bold rounded-full px-2 py-0.5 border" style="{{ $roleStyle[$u->role] ?? $roleStyle['anggota'] }}">{{ $roleLabel[$u->role] ?? strtoupper($u->role) }}</span>
-                  @if($u->audience)<span class="text-[10px] font-bold rounded-full px-2 py-0.5 border border-[#002f80]/25 bg-[#002f80]/5 text-[#002f80] ml-1">{{ $audienceLabel[$u->audience] ?? ucfirst($u->audience) }}</span>@endif
+                  @if($u->audience)<span class="text-[10px] font-bold rounded-full px-2 py-0.5 border border-[var(--ypl-navy)]/25 bg-[var(--ypl-navy)]/5 text-[var(--ypl-navy)] ml-1">{{ $audienceLabel[$u->audience] ?? ucfirst($u->audience) }}</span>@endif
                 </div>
               </div>
             </td>
@@ -100,14 +100,14 @@ $allCount = $roleCounts->sum();
             <td class="px-4 py-3 text-slate-500 whitespace-nowrap">{{ $u->created_at?->format('d M Y') }}</td>
             <td class="px-4 py-3">
               <div class="flex justify-end gap-1.5">
-                <button type="button" onclick="openUserDetail(this)" title="Lihat detail" class="w-8 h-8 rounded-full grid place-items-center border border-[#d6d6d6] text-slate-500 hover:text-[#002f80] hover:border-[#002f80]/40 hover:bg-[#002f80]/5 transition">@include('components.icon', ['name' => 'eye', 'class' => 'w-4 h-4'])</button>
-                <button type="button" onclick="openUserEdit(this)" title="Edit user" class="w-8 h-8 rounded-full grid place-items-center border border-[#d6d6d6] text-slate-500 hover:text-[#002f80] hover:border-[#002f80]/40 hover:bg-[#002f80]/5 transition">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4'])</button>
+                <button type="button" onclick="openUserDetail(this)" title="Lihat detail" class="w-8 h-8 rounded-full grid place-items-center border border-[var(--ypl-gray)] text-slate-500 hover:text-[var(--ypl-navy)] hover:border-[var(--ypl-navy)]/40 hover:bg-[var(--ypl-navy)]/5 transition">@include('components.icon', ['name' => 'eye', 'class' => 'w-4 h-4'])</button>
+                <button type="button" onclick="openUserEdit(this)" title="Edit user" class="w-8 h-8 rounded-full grid place-items-center border border-[var(--ypl-gray)] text-slate-500 hover:text-[var(--ypl-navy)] hover:border-[var(--ypl-navy)]/40 hover:bg-[var(--ypl-navy)]/5 transition">@include('components.icon', ['name' => 'pen', 'class' => 'w-4 h-4'])</button>
                 @if($u->id !== auth()->id() && ! $u->isSuperAdmin())
                   <form method="post" action="{{ route('admin.users.destroy', $u) }}" data-confirm="Hapus akun {{ $u->name }} secara permanen?" class="inline">@csrf @method('DELETE')
-                    <button class="w-8 h-8 rounded-full grid place-items-center border border-[#d6d6d6] text-slate-500 hover:text-[#c90018] hover:border-[#c90018]/40 hover:bg-[#c90018]/5 transition" title="Hapus user">@include('components.icon', ['name' => 'trash', 'class' => 'w-4 h-4'])</button>
+                    <button class="w-8 h-8 rounded-full grid place-items-center border border-[var(--ypl-gray)] text-slate-500 hover:text-[var(--ypl-red)] hover:border-[var(--ypl-red)]/40 hover:bg-[var(--ypl-red)]/5 transition" title="Hapus user">@include('components.icon', ['name' => 'trash', 'class' => 'w-4 h-4'])</button>
                   </form>
                 @else
-                  <span class="w-8 h-8 rounded-full grid place-items-center border border-[#d6d6d6] text-slate-300 cursor-not-allowed" title="Tidak dapat dihapus">@include('components.icon', ['name' => 'trash', 'class' => 'w-4 h-4'])</span>
+                  <span class="w-8 h-8 rounded-full grid place-items-center border border-[var(--ypl-gray)] text-slate-300 cursor-not-allowed" title="Tidak dapat dihapus">@include('components.icon', ['name' => 'trash', 'class' => 'w-4 h-4'])</span>
                 @endif
               </div>
             </td>
@@ -123,17 +123,17 @@ $allCount = $roleCounts->sum();
 
 {{-- Modal detail --}}
 <div id="detail-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-[#000f2e]/60 backdrop-blur-sm" onclick="closeDetail()"></div>
+  <div class="absolute inset-0 bg-[var(--ypl-navy-900)]/60 backdrop-blur-sm" onclick="closeDetail()"></div>
   <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-    <div class="absolute top-0 inset-x-0 h-1.5" style="background:linear-gradient(90deg,#002f80,#0a4fc4)"></div>
+    <div class="absolute top-0 inset-x-0 h-1.5" style="background:linear-gradient(90deg,var(--ypl-navy),var(--ypl-navy-500))"></div>
     <div class="flex items-center justify-between p-5 pb-2">
-      <h2 class="font-extrabold text-[#002f80]">Detail Pengguna</h2>
-      <button type="button" onclick="closeDetail()" aria-label="Tutup" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-[#c90018]">@include('components.icon', ['name' => 'x', 'class' => 'w-4 h-4'])</button>
+      <h2 class="font-extrabold text-[var(--ypl-navy)]">Detail Pengguna</h2>
+      <button type="button" onclick="closeDetail()" aria-label="Tutup" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-[var(--ypl-red)]">@include('components.icon', ['name' => 'x', 'class' => 'w-4 h-4'])</button>
     </div>
     <div class="px-5 pb-5">
       <div class="flex items-center gap-3">
         <img id="dt-avatar" class="hidden w-14 h-14 rounded-2xl object-cover shadow">
-        <span id="dt-initial" class="hidden w-14 h-14 rounded-2xl grid place-items-center text-white text-xl font-extrabold shrink-0" style="background:linear-gradient(135deg,#001c55,#0046c0)"></span>
+        <span id="dt-initial" class="hidden w-14 h-14 rounded-2xl grid place-items-center text-white text-xl font-extrabold shrink-0" style="background:linear-gradient(135deg,var(--ypl-navy-800),var(--ypl-navy-600))"></span>
         <div class="min-w-0">
           <div id="dt-name" class="font-extrabold text-lg truncate"></div>
           <span id="dt-role" class="text-[10px] font-bold rounded-full px-2 py-0.5 border inline-block mt-0.5"></span>
@@ -155,20 +155,20 @@ $allCount = $roleCounts->sum();
 
 {{-- Modal edit --}}
 <div id="edit-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-[#000f2e]/60 backdrop-blur-sm" onclick="closeEdit()"></div>
+  <div class="absolute inset-0 bg-[var(--ypl-navy-900)]/60 backdrop-blur-sm" onclick="closeEdit()"></div>
   <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
     <div class="sticky top-0 flex items-center justify-between p-5 pb-3 bg-white/95 backdrop-blur rounded-t-3xl border-b border-slate-100">
-      <h2 class="font-extrabold text-[#002f80]">Edit User</h2>
-      <button type="button" onclick="closeEdit()" aria-label="Tutup" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-[#c90018]">@include('components.icon', ['name' => 'x', 'class' => 'w-4 h-4'])</button>
+      <h2 class="font-extrabold text-[var(--ypl-navy)]">Edit User</h2>
+      <button type="button" onclick="closeEdit()" aria-label="Tutup" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-[var(--ypl-red)]">@include('components.icon', ['name' => 'x', 'class' => 'w-4 h-4'])</button>
     </div>
     <form id="edit-form" method="post" action="{{ route('admin.users.update', $users->first() ?? 1) }}" class="p-5 space-y-3">@csrf @method('PUT')
       <div><label class="text-[13px] font-bold">Nama lengkap</label><input id="edit-name" name="name" required class="field mt-1 !py-2 !text-[13px]">
-        @error('name')<p class="text-xs font-semibold text-[#c90018] mt-1">{{ $message }}</p>@enderror</div>
+        @error('name')<p class="text-xs font-semibold text-[var(--ypl-red)] mt-1">{{ $message }}</p>@enderror</div>
       <div><label class="text-[13px] font-bold">Email</label><input id="edit-email" name="email" type="email" required class="field mt-1 !py-2 !text-[13px]">
-        @error('email')<p class="text-xs font-semibold text-[#c90018] mt-1">{{ $message }}</p>@enderror</div>
+        @error('email')<p class="text-xs font-semibold text-[var(--ypl-red)] mt-1">{{ $message }}</p>@enderror</div>
 
       {{-- Area peran: diisi JS sesuai aturan --}}
-      <div id="role-sa-none" class="hidden"><p class="text-xs font-semibold text-[#a30014] bg-[#fbe0e4] border border-[#f3b7c0] rounded-xl px-3 py-2">Akun Super Admin — peran dikunci, tidak dapat diubah.</p></div>
+      <div id="role-sa-none" class="hidden"><p class="text-xs font-semibold text-[var(--ypl-red-600)] bg-[#fbe0e4] border border-[#f3b7c0] rounded-xl px-3 py-2">Akun Super Admin — peran dikunci, tidak dapat diubah.</p></div>
       <div id="role-sa-select" class="hidden">
         <label class="text-[13px] font-bold">Peran</label>
         <select name="role" class="field mt-1 !py-2 !text-[13px]">
@@ -176,7 +176,7 @@ $allCount = $roleCounts->sum();
         </select>
       </div>
       <div id="role-admin-promote" class="hidden">
-        <p class="text-xs font-semibold text-[#002f80] bg-[#dbe4f7] border border-[#b9c9ec] rounded-xl px-3 py-2">Akan dinaikkan menjadi <strong>ADMIN</strong>. Admin hanya dapat menaikkan peran.</p>
+        <p class="text-xs font-semibold text-[var(--ypl-navy)] bg-[#dbe4f7] border border-[#b9c9ec] rounded-xl px-3 py-2">Akan dinaikkan menjadi <strong>ADMIN</strong>. Admin hanya dapat menaikkan peran.</p>
         <input type="hidden" name="role" value="admin">
       </div>
       <div id="role-admin-none" class="hidden"><p class="text-xs font-semibold text-[#33507e] bg-[#e2eaf6] border border-[#c3d2ea] rounded-xl px-3 py-2">Sudah berperan <strong>ADMIN</strong> — peran tidak berubah.</p></div>

@@ -2,8 +2,8 @@
 @section('title', 'Ubah Isi Dokumen')
 @section('content')
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Dokumen Saya', route('documents.my')], ['Ubah Isi Dokumen']]])
-<div class="max-w-3xl mx-auto bg-white rounded-3xl border border-[#d6d6d6] shadow-xl shadow-[#002f80]/5 p-7 sm:p-8">
-  <h1 class="text-xl font-extrabold tracking-tight text-[#002f80]">Ubah Isi Dokumen</h1>
+<div class="max-w-3xl mx-auto bg-white rounded-3xl border border-[var(--ypl-gray)] shadow-xl shadow-[var(--ypl-navy)]/5 p-7 sm:p-8">
+  <h1 class="text-xl font-extrabold tracking-tight text-[var(--ypl-navy)]">Ubah Isi Dokumen</h1>
   <p class="text-sm text-slate-500 mb-5">{{ $document->title }} — PDF akan dibuat ulang otomatis.</p>
   <form method="post" action="{{ route('editor.update', $document) }}" class="space-y-4">@csrf @method('PUT')
     <div><label class="text-[13px] font-bold">Judul *</label><input name="title" required value="{{ old('title', $document->title) }}" class="field mt-1"></div>

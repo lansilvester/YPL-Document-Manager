@@ -13,7 +13,7 @@
   @forelse($docs as $d)
     @include('components.doc-card', ['d' => $d])
   @empty
-    <div class="sm:col-span-2 lg:col-span-3 bg-white rounded-2xl border border-dashed border-[#d6d6d6] p-10 text-center text-slate-400">
+    <div class="sm:col-span-2 lg:col-span-3 bg-white rounded-2xl border border-dashed border-[var(--ypl-gray)] p-10 text-center text-slate-400">
       <span class="inline-block">@include('components.icon', ['name' => 'bookmark', 'class' => 'w-12 h-12'])</span>
       <p class="font-bold mt-2 text-slate-700">Belum ada bookmark</p>
       <p class="text-sm text-slate-500">Buka dokumen lalu tekan <strong>Simpan ke Bookmark</strong>.</p>

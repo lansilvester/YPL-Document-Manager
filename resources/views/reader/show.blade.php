@@ -7,10 +7,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-  :root { --ypl-navy: #002f80; --ypl-red: #c90018; --paper: #faf6ec; }
-  .grad-navy { background: linear-gradient(135deg, #002f80, #0046c0); }
-  .grad-red { background: linear-gradient(135deg, #a30014, #c90018); }
-  .brand-line { background: linear-gradient(90deg, #002f80 60%, #c90018 60%); }
+  @include('components.tokens')
+  .grad-navy { background: var(--ypl-grad-navy); }
+  .grad-red { background: var(--ypl-grad-red); }
+  .brand-line { background: linear-gradient(90deg, var(--ypl-navy) 60%, var(--ypl-red) 60%); }
   html, body { height: 100%; }
   body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
   .font-reading { font-family: Georgia, 'Times New Roman', serif; }
@@ -33,7 +33,7 @@
 <div class="h-1 shrink-0 brand-line"></div>
 
 {{-- Top slim bar: kembali + kode/judul + menu --}}
-<header class="shrink-0 bg-[#0b1330] text-white">
+<header class="shrink-0 bg-[var(--ypl-reader-bar)] text-white">
   <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2 flex items-center gap-3 text-sm">
     <a href="{{ $document->category ? route('library.show', $document->category) : route('library.index') }}" class="w-9 h-9 rounded-full grid place-items-center hover:bg-white/10 shrink-0" aria-label="Kembali ke Library">←</a>
     <div class="min-w-0 flex-1 text-center sm:text-left">
@@ -54,15 +54,15 @@
 
 {{-- Stage + TOC drawer --}}
 <div class="flex-1 flex min-h-0 relative">
-  <aside id="toc-drawer" class="hidden absolute z-30 left-0 top-0 bottom-0 w-80 max-w-[85vw] overflow-y-auto bg-[#f5f1e8] text-slate-800 shadow-2xl">
+  <aside id="toc-drawer" class="hidden absolute z-30 left-0 top-0 bottom-0 w-80 max-w-[85vw] overflow-y-auto bg-[var(--ypl-reader-panel)] text-slate-800 shadow-2xl">
     <div class="flex items-center justify-between px-5 pt-4">
-      <h2 class="font-extrabold tracking-wide text-[#002f80]">CONTENTS</h2>
+      <h2 class="font-extrabold tracking-wide text-[var(--ypl-navy)]">CONTENTS</h2>
       <button id="btn-toc-close" class="w-8 h-8 rounded-full grid place-items-center text-slate-400 hover:bg-slate-200" aria-label="Tutup daftar isi">✕</button>
     </div>
     <div class="px-3 py-2 space-y-0.5">
-      <a href="{{ route('reader.show', $document) }}" class="block px-3 py-2.5 rounded-xl bg-[#002f80]/10 font-bold text-sm text-[#002f80]">▶ {{ $document->title }} <span class="block text-[11px] font-normal text-slate-500">Sedang dibaca</span></a>
+      <a href="{{ route('reader.show', $document) }}" class="block px-3 py-2.5 rounded-xl bg-[var(--ypl-navy)]/10 font-bold text-sm text-[var(--ypl-navy)]">▶ {{ $document->title }} <span class="block text-[11px] font-normal text-slate-500">Sedang dibaca</span></a>
       @foreach($chapters as $i => $c)
-        <a href="{{ route('reader.show', $c) }}" class="block px-3 py-2 rounded-xl hover:bg-[#002f80]/5 text-sm"><span class="text-slate-400 font-bold mr-2">{{ $i + 2 }}.</span>{{ $c->title }}</a>
+        <a href="{{ route('reader.show', $c) }}" class="block px-3 py-2 rounded-xl hover:bg-[var(--ypl-navy)]/5 text-sm"><span class="text-slate-400 font-bold mr-2">{{ $i + 2 }}.</span>{{ $c->title }}</a>
       @endforeach
     </div>
     @if(!empty($sections))
@@ -70,7 +70,7 @@
       <h2 class="text-xs font-bold tracking-widest text-slate-400 mt-3 mb-2">BAGIAN DOKUMEN</h2>
       <ol class="space-y-0.5 text-sm max-h-64 overflow-y-auto">
         @foreach($sections as $s)
-          <li><a href="#{{ $s['id'] }}" data-section-jump="{{ $s['id'] }}" class="block px-3 py-2 rounded-xl hover:bg-[#002f80]/5"><span class="text-slate-400 font-bold mr-2">{{ $loop->iteration }}.</span>{{ $s['label'] }}</a></li>
+          <li><a href="#{{ $s['id'] }}" data-section-jump="{{ $s['id'] }}" class="block px-3 py-2 rounded-xl hover:bg-[var(--ypl-navy)]/5"><span class="text-slate-400 font-bold mr-2">{{ $loop->iteration }}.</span>{{ $s['label'] }}</a></li>
         @endforeach
       </ol>
     </div>
@@ -81,7 +81,7 @@
       <h2 class="text-xs font-bold tracking-widest text-slate-400 mt-4 mb-2">DIRECT PAGE JUMP</h2>
       <form id="form-jump" class="flex gap-2">
         <input id="in-jump" type="number" min="1" placeholder="No. halaman" class="w-full rounded-full bg-white border border-slate-300 px-3 py-2 text-sm outline-none" aria-label="Lompat ke halaman">
-        <button class="shrink-0 rounded-full bg-[#002f80] text-white font-bold text-sm px-4">Go</button>
+        <button class="shrink-0 rounded-full bg-[var(--ypl-navy)] text-white font-bold text-sm px-4">Go</button>
       </form>
       <h2 class="text-xs font-bold tracking-widest text-slate-400 mt-4 mb-2">PAGES</h2>
       <div id="pg-grid" class="pg-grid grid grid-cols-3 gap-2"></div>
@@ -91,13 +91,13 @@
     {{-- Rekomendasi di Reader --}}
     @if($recommendations->isNotEmpty())
       <div class="px-5 pt-4 pb-5 border-t border-slate-200">
-        <h2 class="text-xs font-bold tracking-widest text-[#002f80] mb-3">REKOMENDASI</h2>
+        <h2 class="text-xs font-bold tracking-widest text-[var(--ypl-navy)] mb-3">REKOMENDASI</h2>
         <div class="space-y-2">
           @foreach($recommendations as $rec)
-            <a href="{{ route('reader.show', $rec['document']) }}" class="block px-3 py-2 rounded-xl hover:bg-[#002f80]/5 text-sm">
+            <a href="{{ route('reader.show', $rec['document']) }}" class="block px-3 py-2 rounded-xl hover:bg-[var(--ypl-navy)]/5 text-sm">
               <span class="text-slate-400 font-bold mr-2">{{ $loop->iteration }}.</span>{{ $rec['document']->title }}
               @if($rec['reasons'])
-                <span class="block text-[10px] text-[#002f80] font-bold mt-1">{{ $rec['reasons'][0] }}</span>
+                <span class="block text-[10px] text-[var(--ypl-navy)] font-bold mt-1">{{ $rec['reasons'][0] }}</span>
               @endif
             </a>
           @endforeach
@@ -110,30 +110,30 @@
     <div id="search-panel" class="hidden mx-auto max-w-2xl mt-3 px-3">
       <form id="form-search" class="flex gap-2 bg-white rounded-full p-1.5 shadow-xl">
         <input id="in-search" placeholder="Search in book…" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0" aria-label="Cari dalam buku">
-        <button class="shrink-0 rounded-full font-bold text-sm px-5 py-2 text-white bg-[#002f80]">Find</button>
+        <button class="shrink-0 rounded-full font-bold text-sm px-5 py-2 text-white bg-[var(--ypl-navy)]">Find</button>
       </form>
       <div id="search-meta" class="text-xs text-slate-300 mt-1.5 px-1"></div>
       <div id="search-hits" class="mt-1 space-y-1"></div>
     </div>
     <div id="ask-panel" class="hidden mx-auto max-w-2xl mt-3 px-3">
-      <div class="bg-[#f5f1e8] text-slate-800 rounded-2xl p-4 shadow-xl">
+      <div class="bg-[var(--ypl-reader-panel)] text-slate-800 rounded-2xl p-4 shadow-xl">
         <div class="flex items-center justify-between gap-2">
-          <h2 class="text-xs font-bold tracking-widest text-[#002f80]">ASK YPL · KONTEKS DOKUMEN INI</h2>
-          <a href="{{ route('ask.index', ['doc' => $document->slug]) }}" class="text-[11px] font-bold text-slate-500 hover:text-[#002f80] shrink-0">Halaman penuh →</a>
+          <h2 class="text-xs font-bold tracking-widest text-[var(--ypl-navy)]">ASK YPL · KONTEKS DOKUMEN INI</h2>
+          <a href="{{ route('ask.index', ['doc' => $document->slug]) }}" class="text-[11px] font-bold text-slate-500 hover:text-[var(--ypl-navy)] shrink-0">Halaman penuh →</a>
         </div>
         <form id="form-ask" class="flex gap-2 mt-2">
           <input id="in-ask" maxlength="500" placeholder="Tanya tentang dokumen ini…" class="flex-1 rounded-full bg-white border border-slate-300 px-4 py-2 text-sm outline-none min-w-0" aria-label="Pertanyaan Ask YPL">
-          <button class="shrink-0 rounded-full bg-[#002f80] text-white font-bold text-sm px-5 py-2">Tanya</button>
+          <button class="shrink-0 rounded-full bg-[var(--ypl-navy)] text-white font-bold text-sm px-5 py-2">Tanya</button>
         </form>
         <div class="mt-2">
-          <button type="button" id="btn-explain" class="text-xs font-semibold bg-white border border-slate-300 rounded-full px-3 py-1.5 hover:border-[#002f80] hover:text-[#002f80] transition">Ringkas dokumen ini</button>
+          <button type="button" id="btn-explain" class="text-xs font-semibold bg-white border border-slate-300 rounded-full px-3 py-1.5 hover:border-[var(--ypl-navy)] hover:text-[var(--ypl-navy)] transition">Ringkas dokumen ini</button>
         </div>
-        <p id="ask-error" class="hidden text-xs font-bold text-[#c90018] mt-2"></p>
+        <p id="ask-error" class="hidden text-xs font-bold text-[var(--ypl-red)] mt-2"></p>
         <div id="ask-result" class="hidden mt-3"></div>
       </div>
     </div>
     <div id="aa-panel" class="hidden mx-auto max-w-2xl mt-3 px-3">
-      <div class="bg-[#f5f1e8] text-slate-800 rounded-2xl p-4 shadow-xl flex flex-wrap items-center gap-4 text-sm font-semibold">
+      <div class="bg-[var(--ypl-reader-panel)] text-slate-800 rounded-2xl p-4 shadow-xl flex flex-wrap items-center gap-4 text-sm font-semibold">
         <label class="flex items-center gap-2">Ukuran huruf
           <select id="sel-zoom" class="rounded-full text-sm font-bold px-3 py-1.5 bg-white border border-slate-300 outline-none cursor-pointer">
             @foreach([75, 100, 125, 150, 200] as $z)<option value="{{ $z }}" {{ (int) $pref->zoom === $z ? 'selected' : '' }}>{{ $z }}%</option>@endforeach
@@ -149,19 +149,19 @@
     </div>
     @auth
     <div id="notes-panel" class="hidden mx-auto max-w-2xl mt-3 px-3">
-      <div class="bg-[#f5f1e8] text-slate-800 rounded-2xl p-4 shadow-xl">
-        <h2 class="text-xs font-bold tracking-widest text-[#002f80] mb-2">CATATAN SAYA</h2>
+      <div class="bg-[var(--ypl-reader-panel)] text-slate-800 rounded-2xl p-4 shadow-xl">
+        <h2 class="text-xs font-bold tracking-widest text-[var(--ypl-navy)] mb-2">CATATAN SAYA</h2>
         <form id="form-note" class="flex gap-2">
           <input id="in-note" maxlength="1000" placeholder="Tulis catatan untuk halaman ini…" class="flex-1 rounded-full bg-white border border-slate-300 px-4 text-sm outline-none min-w-0" aria-label="Isi catatan">
-          <button class="shrink-0 rounded-full bg-[#002f80] text-white font-bold text-sm px-5 py-2">Simpan</button>
+          <button class="shrink-0 rounded-full bg-[var(--ypl-navy)] text-white font-bold text-sm px-5 py-2">Simpan</button>
         </form>
-        <p id="notes-error" class="hidden text-xs font-bold text-[#c90018] mt-1.5"></p>
+        <p id="notes-error" class="hidden text-xs font-bold text-[var(--ypl-red)] mt-1.5"></p>
         <div id="notes-list" class="mt-2 space-y-1.5 max-h-56 overflow-y-auto">
           @forelse($notes as $note)
             <div class="flex items-start gap-2 bg-white rounded-xl px-3 py-2 text-sm" data-note="{{ $note->id }}">
-              <button class="shrink-0 text-[11px] font-bold bg-[#002f80]/10 text-[#002f80] rounded-full px-2 py-0.5" data-jump="{{ $note->page }}" aria-label="Lompat ke halaman {{ $note->page }}">hlm. {{ $note->page }}</button>
+              <button class="shrink-0 text-[11px] font-bold bg-[var(--ypl-navy)]/10 text-[var(--ypl-navy)] rounded-full px-2 py-0.5" data-jump="{{ $note->page }}" aria-label="Lompat ke halaman {{ $note->page }}">hlm. {{ $note->page }}</button>
               <span class="flex-1 min-w-0">{{ $note->body }}</span>
-              <button class="shrink-0 text-slate-300 hover:text-[#c90018] font-bold" data-del="{{ route('api.notes.destroy', [$document, $note]) }}" data-id="{{ $note->id }}" aria-label="Hapus catatan">✕</button>
+              <button class="shrink-0 text-slate-300 hover:text-[var(--ypl-red)] font-bold" data-del="{{ route('api.notes.destroy', [$document, $note]) }}" data-id="{{ $note->id }}" aria-label="Hapus catatan">✕</button>
             </div>
           @empty
             <p id="notes-empty" class="text-xs text-slate-500 py-2">Belum ada catatan. Catatan tersimpan per halaman dan hanya terlihat oleh Anda.</p>
@@ -172,7 +172,7 @@
     @endauth
     @if($safeContent)
     <article id="structured-reader" class="mx-auto max-w-3xl px-4 sm:px-8 py-6">
-      <h1 class="font-reading text-2xl sm:text-3xl font-bold text-[#002f80] mb-1">{{ $document->title }}</h1>
+      <h1 class="font-reading text-2xl sm:text-3xl font-bold text-[var(--ypl-navy)] mb-1">{{ $document->title }}</h1>
       @if($document->subtitle)<p class="text-slate-500 mb-4">{{ $document->subtitle }}</p>@endif
       <div id="structured-content" class="prose font-reading leading-relaxed text-slate-800 text-[calc(1rem*var(--ypl-read-scale,1))]">
         {!! $safeContent !!}
@@ -186,7 +186,7 @@
 </div>
 
 {{-- Bottom toolbar ala blueprint --}}
-<footer class="shrink-0 bg-[#0b1330] border-t border-white/10 text-white">
+<footer class="shrink-0 bg-[var(--ypl-reader-bar)] border-t border-white/10 text-white">
   <div class="max-w-7xl mx-auto px-2 sm:px-4 py-2 flex items-center gap-1 sm:gap-2 text-sm font-bold overflow-x-auto whitespace-nowrap">
     <button id="btn-toc" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="toc-drawer">☰ <span class="hidden sm:inline">Contents</span></button>
     <button id="btn-search" class="px-3 py-2 rounded-full hover:bg-white/10" aria-expanded="false" aria-controls="search-panel">⌕ <span class="hidden sm:inline">Search</span></button>
@@ -241,7 +241,7 @@ const THEME_LABEL = { light: 'Terang', paper: 'Paper', dark: 'Gelap' };
 function applyTheme(next) {
   theme = next;
   const root = document.getElementById('reader-root');
-  const cls = theme === 'dark' ? 'bg-[#141920] text-stone-100' : (theme === 'paper' ? 'bg-[#faf6ec] text-slate-800' : 'bg-[#10182e] text-white');
+  const cls = theme === 'dark' ? 'bg-[var(--ypl-reader-dark)] text-stone-100' : (theme === 'paper' ? 'bg-[var(--ypl-reader-paper)] text-slate-800' : 'bg-[var(--ypl-reader-light)] text-white');
   root.className = cls + ' min-h-screen flex flex-col';
   root.dataset.theme = theme;
   document.getElementById('btn-theme').textContent = 'Tema: ' + (THEME_LABEL[theme] || theme) + ' →';
@@ -299,7 +299,7 @@ function buildGrid() {
   for (let i = 1; i <= n; i++) {
     const b = document.createElement('button');
     b.dataset.page = i;
-    b.className = 'rounded-xl overflow-hidden border border-slate-300 bg-white hover:border-[#002f80] hover:shadow-md transition text-center';
+    b.className = 'rounded-xl overflow-hidden border border-slate-300 bg-white hover:border-[var(--ypl-navy)] hover:shadow-md transition text-center';
     b.setAttribute('aria-label', 'Ke halaman ' + i);
     b.onclick = () => { page = i; render(true); };
     const cv = document.createElement('canvas');
@@ -398,10 +398,10 @@ function askSetError(msg) { askError.textContent = msg || ''; askError.classList
 function askSourceCard(src) {
   const a = document.createElement('a');
   a.href = src.url; a.target = '_blank'; a.rel = 'noopener';
-  a.className = 'block bg-white rounded-xl border border-slate-200 p-3 hover:border-[#002f80] transition';
+  a.className = 'block bg-white rounded-xl border border-slate-200 p-3 hover:border-[var(--ypl-navy)] transition';
   const meta = document.createElement('div');
   meta.className = 'flex flex-wrap gap-1 text-[10px] font-bold';
-  [[src.doc_type, 'bg-[#002f80]/5 text-[#002f80]'], [src.status, 'bg-slate-100 text-slate-500'], ['v' + src.version, 'bg-slate-100 text-slate-500']]
+  [[src.doc_type, 'bg-[var(--ypl-navy)]/5 text-[var(--ypl-navy)]'], [src.status, 'bg-slate-100 text-slate-500'], ['v' + src.version, 'bg-slate-100 text-slate-500']]
     .concat(src.section ? [['§ ' + src.section, 'bg-emerald-50 text-emerald-700']] : [])
     .forEach(([text, cls]) => { const s = document.createElement('span'); s.className = cls + ' px-2 py-0.5 rounded-full'; s.textContent = text; meta.appendChild(s); });
   const title = document.createElement('div');
@@ -433,7 +433,7 @@ async function askYpl(question, explain) {
     const data = await res.json();
     askResult.innerHTML = '';
     const head = document.createElement('div');
-    head.className = 'text-[10px] font-bold tracking-widest ' + (data.found ? 'text-[#002f80]' : 'text-amber-600');
+    head.className = 'text-[10px] font-bold tracking-widest ' + (data.found ? 'text-[var(--ypl-navy)]' : 'text-amber-600');
     head.textContent = data.found ? (data.ai ? 'JAWABAN AI BERBASIS SUMBER 🧪' : 'JAWABAN BERBASIS SUMBER') : 'SUMBER TIDAK DITEMUKAN';
     const body = document.createElement('div');
     body.className = 'whitespace-pre-line text-sm text-slate-700 mt-1.5';
@@ -441,7 +441,7 @@ async function askYpl(question, explain) {
     askResult.append(head, body);
     if (data.found && data.sources.length) {
       const label = document.createElement('h3');
-      label.className = 'text-xs font-bold tracking-widest text-[#002f80] mt-3 mb-1.5';
+      label.className = 'text-xs font-bold tracking-widest text-[var(--ypl-navy)] mt-3 mb-1.5';
       label.textContent = 'SUMBER (' + data.sources.length + ')';
       const list = document.createElement('div');
       list.className = 'space-y-2';
@@ -469,7 +469,7 @@ function noteRow(id, pg, body, delUrl) {
   row.className = 'flex items-start gap-2 bg-white rounded-xl px-3 py-2 text-sm';
   row.dataset.note = id;
   const jump = document.createElement('button');
-  jump.className = 'shrink-0 text-[11px] font-bold bg-[#002f80]/10 text-[#002f80] rounded-full px-2 py-0.5';
+  jump.className = 'shrink-0 text-[11px] font-bold bg-[var(--ypl-navy)]/10 text-[var(--ypl-navy)] rounded-full px-2 py-0.5';
   jump.textContent = 'hlm. ' + pg;
   jump.setAttribute('aria-label', 'Lompat ke halaman ' + pg);
   jump.onclick = () => { page = pg; render(true); };
@@ -477,7 +477,7 @@ function noteRow(id, pg, body, delUrl) {
   tx.className = 'flex-1 min-w-0';
   tx.textContent = body;
   const del = document.createElement('button');
-  del.className = 'shrink-0 text-slate-300 hover:text-[#c90018] font-bold';
+  del.className = 'shrink-0 text-slate-300 hover:text-[var(--ypl-red)] font-bold';
   del.textContent = '✕';
   del.setAttribute('aria-label', 'Hapus catatan');
   del.onclick = () => deleteNote(delUrl, id);

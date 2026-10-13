@@ -1,14 +1,14 @@
 @extends('layout')
 @section('title', 'YPL Insight')
 @section('content')
-<p class="page-eyebrow text-[#c90018] mt-2">PUBLIC / YPL INSIGHT</p>
+<p class="page-eyebrow text-[var(--ypl-red)] mt-2">PUBLIC / YPL INSIGHT</p>
 <h1 class="page-title">YPL Insight</h1>
 <p class="text-sm text-slate-500 mt-1">Etalase publik Yayasan Pendidikan Lokon: dokumen, angka, dan koleksi terbuka.</p>
 
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
   @foreach([['Dokumen Publik', $stats['dokumen']], ['Kali Dibaca', $stats['views']], ['Agenda', $stats['agenda']], ['FAQ', $stats['faq']]] as [$label, $n])
-    <div class="bg-white rounded-2xl border border-[#d6d6d6] p-4 text-center">
-      <div class="text-2xl font-extrabold text-[#002f80] tabular-nums">{{ number_format($n) }}</div>
+    <div class="bg-white rounded-2xl border border-[var(--ypl-gray)] p-4 text-center">
+      <div class="text-2xl font-extrabold text-[var(--ypl-navy)] tabular-nums">{{ number_format($n) }}</div>
       <div class="text-[11px] font-bold tracking-widest text-slate-400 mt-1">{{ strtoupper($label) }}</div>
     </div>
   @endforeach

@@ -1,15 +1,15 @@
 @php
 $grads = [
-  'linear-gradient(135deg,#001c55,#002f80)',
-  'linear-gradient(135deg,#002f80,#3b6fd4)',
-  'linear-gradient(135deg,#7a0010,#c90018)',
-  'linear-gradient(135deg,#334155,#64748b)',
-  'linear-gradient(135deg,#002f80,#5b8bd6)',
+  'linear-gradient(135deg,var(--ypl-navy-800),var(--ypl-navy))',
+  'linear-gradient(135deg,var(--ypl-navy),#3b6fd4)',
+  'linear-gradient(135deg,var(--ypl-red-800),var(--ypl-red))',
+  'linear-gradient(135deg,#334155,var(--ypl-muted))',
+  'linear-gradient(135deg,var(--ypl-navy),#5b8bd6)',
   'linear-gradient(135deg,#4a1215,#8a1c28)',
 ];
 $g = $grads[$d->id % count($grads)];
 @endphp
-<a href="{{ route('documents.show', $d) }}" class="card-hover bg-white rounded-2xl border border-[#d6d6d6] overflow-hidden flex flex-col shadow-sm">
+<a href="{{ route('documents.show', $d) }}" class="card-hover bg-white rounded-2xl border border-[var(--ypl-gray)] overflow-hidden flex flex-col shadow-sm">
   <div class="p-4 pb-3 text-white relative overflow-hidden" style="background:{{ $g }}">
     <span class="absolute -right-4 -bottom-5 opacity-15">@include('components.icon', ['name' => 'file', 'class' => 'w-28 h-28'])</span>
     <div class="relative flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
