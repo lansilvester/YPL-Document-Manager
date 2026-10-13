@@ -242,4 +242,58 @@ class YplReaderTest extends TestCase
             ->assertSee('bg-[#10182e]', false)
             ->assertSee('data-theme="light"', false);
     }
+
+    public function test_structured_html_reader_untuk_dokumen_editor(): void
+    {
+        $user = User::factory()->create();
+        $doc = Document::factory()->for($user)->create([
+            'slug' => 'reader-struktur', 'title' => 'Panduan Terstruktur', 'visibility' => 'public',
+            'status' => 'active', 'source_type' => 'editor', 'file_path' => null,
+            'content' => '<h2>Pendahuluan</h2><p>Isi pembuka dokumen.</p><h2>Ketentuan</h2><p>Aturan wajib dipatuhi.</p><script>alert(1)</script>',
+        ]);
+
+        $html = $this->get(route('reader.show', $doc))->assertOk()->getContent();
+
+        // Rendering structured HTML: artikel + konten + daftar bagian.
+        $this->assertStringContainsString('id="structured-reader"', $html);
+        $this->assertStringContainsString('id="structured-content"', $html);
+        $this->assertStringContainsString('BAGIAN DOKUMEN', $html);
+        $this->assertStringContainsString('Pendahuluan', $html);
+        $this->assertStringContainsString('Ketentuan', $html);
+        // Setiap h2 diberi anchor untuk TOC + lompat bagian.
+        $this->assertStringContainsString('id="bagian-1"', $html);
+        $this->assertStringContainsString('data-section-jump="bagian-2"', $html);
+        // Sanitasi: skrip dibuang.
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $html);
+        // Tidak merender wadah PDF pdf.js.
+        $this->assertStringNotContainsString('id="pages"', $html);
+    }
+
+    public function test_structured_reader_tanpa_bagian_tetap_tampil(): void
+    {
+        $user = User::factory()->create();
+        $doc = Document::factory()->for($user)->create([
+            'slug' => 'reader-struktur-tanpa-bagian', 'title' => 'Tanpa Bagian', 'visibility' => 'public',
+            'status' => 'active', 'source_type' => 'editor', 'file_path' => null,
+            'content' => '<p>Paragraf tanpa heading.</p>',
+        ]);
+
+        // Konten tetap tampil walau tidak ada h2 → tidak ada "BAGIAN DOKUMEN".
+        $this->get(route('reader.show', $doc))->assertOk()
+            ->assertSee('id="structured-content"', false)
+            ->assertSee('Paragraf tanpa heading.')
+            ->assertDontSee('BAGIAN DOKUMEN');
+    }
+
+    public function test_reader_dokumen_editor_privat_ditolak(): void
+    {
+        $owner = User::factory()->create();
+        $doc = Document::factory()->for($owner)->create([
+            'slug' => 'reader-struktur-privat', 'title' => 'Struktur Privat', 'visibility' => 'private',
+            'source_type' => 'editor', 'file_path' => null, 'content' => '<p>Rahasia.</p>',
+        ]);
+
+        $this->get(route('reader.show', $doc))->assertForbidden();
+        $this->actingAs($owner)->get(route('reader.show', $doc))->assertOk();
+    }
 }

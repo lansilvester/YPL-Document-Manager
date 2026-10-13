@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\ReadingNote;
 use App\Models\ReadingPosition;
 use App\Models\ReadingPref;
+use App\Services\HtmlSanitizer;
 use App\Services\RecommendationEngine;
 
 class ReaderController extends Controller
@@ -20,7 +21,7 @@ class ReaderController extends Controller
         if (! $document->isVisibleTo(auth()->user())) {
             abort(403, 'Dokumen bersifat privat.');
         }
-        abort_unless($document->file_path, 404, 'Dokumen belum memiliki berkas.');
+        abort_unless($document->file_path || $document->usesStructuredReader(), 404, 'Dokumen belum memiliki berkas.');
 
         $document->load(['category', 'tags', 'user']);
 
@@ -49,6 +50,46 @@ class ReaderController extends Controller
                 ->orderBy('page')->orderBy('id')->get()
             : collect();
 
-        return view('reader.show', compact('document', 'pref', 'position', 'isMarked', 'chapters', 'recommendations', 'notes'));
+        // Structured HTML Reader (BAB 8/16) untuk dokumen bersumber editor.
+        $safeContent = $document->usesStructuredReader()
+            ? HtmlSanitizer::clean($document->content)
+            : null;
+        $sections = $safeContent ? $this->extractSections($safeContent) : ['html' => null, 'toc' => []];
+
+        return view('reader.show', [
+            'document' => $document,
+            'pref' => $pref,
+            'position' => $position,
+            'isMarked' => $isMarked,
+            'chapters' => $chapters,
+            'recommendations' => $recommendations,
+            'notes' => $notes,
+            'safeContent' => $sections['html'],
+            'sections' => $sections['toc'],
+        ]);
+    }
+
+    /**
+     * Tambahkan id anchor pada tiap <h2> agar bisa dijadikan daftar isi
+     * structured reader, sekaligus mengembalikan daftar seksi (BAB 8).
+     *
+     * @return array{html: ?string, toc: array<int, array{id: string, label: string}>}
+     */
+    private function extractSections(string $html): array
+    {
+        $toc = [];
+        $n = 0;
+        $withIds = preg_replace_callback('/<h2(\s[^>]*)?>(.*?)<\/h2>/is', function (array $m) use (&$toc, &$n): string {
+            $n++;
+            $id = 'bagian-'.$n;
+            $label = trim(preg_replace('/\s+/', ' ', strip_tags($m[2])));
+            if ($label !== '') {
+                $toc[] = ['id' => $id, 'label' => $label];
+            }
+
+            return '<h2 id="'.$id.'"'.($m[1] ?? '').'>'.$m[2].'</h2>';
+        }, $html);
+
+        return ['html' => $withIds, 'toc' => $toc];
     }
 }

@@ -5,7 +5,7 @@
 
 ![Home — desktop](presentasi/screenshots/desktop-home.png)
 
-- **Status (13 Okt 2026):** 161 tests lolos (982 assertions) · 113 routes · branch `main`
+- **Status (13 Okt 2026):** 164 tests lolos (998 assertions) · 113 routes · branch `main`
 - **Repo:** `lansilvester/YPL-Document-Manager`
 - **Presentasi progress:** [`presentasi/LOSNITO-Progress-Report.pptx`](presentasi/LOSNITO-Progress-Report.pptx) (18 slide, desktop + mobile)
 
@@ -48,7 +48,7 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 
 ![Library — desktop](presentasi/screenshots/desktop-library.png)
 
-- **Reader `/baca/{slug}`** — **default two-page spread di desktop**, single-page adaptif di mobile (BAB 20), page-flip 550ms + reduced-motion, TOC drawer, lompat halaman + grid, search-in-book, toolbar (Contents/Search/Bookmark/Aa/Ask YPL/counter/Reading %), keyboard + swipe, persist posisi & preferensi, thumbnails lazy, catatan per halaman, panel rekomendasi. **Ask YPL inline** (konteks dokumen, §8/§14) — tanya & ringkas dokumen tanpa meninggalkan Reader; sumber dibuka di tab baru.
+- **Reader `/baca/{slug}`** — **default two-page spread di desktop**, single-page adaptif di mobile (BAB 20), page-flip 550ms + reduced-motion, TOC drawer, lompat halaman + grid, search-in-book, toolbar (Contents/Search/Bookmark/Aa/Ask YPL/counter/Reading %), keyboard + swipe, persist posisi & preferensi, thumbnails lazy, catatan per halaman, panel rekomendasi. **Dokumen bersumber editor** memakai **Structured HTML Reader** (BAB 8/16): konten HTML ter-sanitasi + daftar **Bagian Dokumen** (heading `h2` ber-anchor) + progres baca berbasis scroll. **Ask YPL inline** (konteks dokumen, §8/§14) — tanya & ringkas dokumen tanpa meninggalkan Reader; sumber dibuka di tab baru.
 
 ![Reader — desktop](presentasi/screenshots/desktop-reader.png)
 
@@ -121,7 +121,7 @@ database/migrations/  # 32 migrations (users+audience, documents+FTS, categories
                       #   relations, versions+snapshot, events, faqs, systems, units, contacts, ...)
 resources/views/      # home, library (termasuk peta-pengetahuan), reader, governance,
                       #   search, ask, portal, dashboard, systems, admin, sa, ...
-tests/Feature/        # 16 file test (±161 tests)
+tests/Feature/        # 16 file test (±164 tests)
 presentasi/           # slide progress + screenshot desktop & mobile
 ```
 
@@ -140,7 +140,7 @@ php artisan serve               # http://localhost:8000
 ```
 
 ```bash
-php artisan test --compact      # 161 tests, ~4 detik
+php artisan test --compact      # 164 tests, ~4 detik
 vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
 ```
 
@@ -159,7 +159,7 @@ Akun demo per audiens (opsional): `php artisan db:seed --class=AudienceDemoSeede
 
 ## 8. Testing & Kualitas
 
-- `php artisan test --compact` → **161 passed, 982 assertions** (13 Okt 2026).
+- `php artisan test --compact` → **164 passed, 998 assertions** (13 Okt 2026).
 - Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control + archive policy, **notifikasi review/arsip + pusat notifikasi**), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan + kontrol kedalaman + PIC klikabel, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression.
 - Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, maupun graf.
 

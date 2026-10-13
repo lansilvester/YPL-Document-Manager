@@ -526,6 +526,11 @@ class Document extends Model
         return in_array($this->doc_type, static::GOVERNANCE_TYPES, true);
     }
 
+    public function usesStructuredReader(): bool
+    {
+        return $this->source_type === 'editor' && filled($this->content);
+    }
+
     /**
      * Default kebijakan arsip (BAB 13 — Archive policy), dalam hari.
      * Dapat ditimpa Super Admin lewat Pengaturan Web (kunci `retention_days`).

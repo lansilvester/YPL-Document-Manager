@@ -65,6 +65,16 @@
         <a href="{{ route('reader.show', $c) }}" class="block px-3 py-2 rounded-xl hover:bg-[#002f80]/5 text-sm"><span class="text-slate-400 font-bold mr-2">{{ $i + 2 }}.</span>{{ $c->title }}</a>
       @endforeach
     </div>
+    @if(!empty($sections))
+    <div class="px-5 pb-3">
+      <h2 class="text-xs font-bold tracking-widest text-slate-400 mt-3 mb-2">BAGIAN DOKUMEN</h2>
+      <ol class="space-y-0.5 text-sm max-h-64 overflow-y-auto">
+        @foreach($sections as $s)
+          <li><a href="#{{ $s['id'] }}" data-section-jump="{{ $s['id'] }}" class="block px-3 py-2 rounded-xl hover:bg-[#002f80]/5"><span class="text-slate-400 font-bold mr-2">{{ $loop->iteration }}.</span>{{ $s['label'] }}</a></li>
+        @endforeach
+      </ol>
+    </div>
+    @endif
     <div class="px-5 pb-5">
       <h2 class="text-xs font-bold tracking-widest text-slate-400 mt-3 mb-2">TABLE OF CONTENTS</h2>
       <p class="text-xs text-slate-500">Bab = dokumen lain dalam koleksi {{ $document->category->name ?? 'ini' }}.</p>
@@ -160,7 +170,18 @@
       </div>
     </div>
     @endauth
+    @if($safeContent)
+    <article id="structured-reader" class="mx-auto max-w-3xl px-4 sm:px-8 py-6">
+      <h1 class="font-reading text-2xl sm:text-3xl font-bold text-[#002f80] mb-1">{{ $document->title }}</h1>
+      @if($document->subtitle)<p class="text-slate-500 mb-4">{{ $document->subtitle }}</p>@endif
+      <div id="structured-content" class="prose font-reading leading-relaxed text-slate-800 text-[calc(1rem*var(--ypl-read-scale,1))]">
+        {!! $safeContent !!}
+      </div>
+      <p class="text-xs text-slate-400 mt-10 border-t border-slate-200 pt-3">Dokumen terstruktur (HTML) · Yayasan Pendidikan Lokon</p>
+    </article>
+    @else
     <div id="pages" class="flex flex-wrap justify-center items-start gap-5 p-4 sm:p-6 min-h-[60vh]"></div>
+    @endif
   </main>
 </div>
 
@@ -212,6 +233,7 @@ const NOTE_SAVE_URL = @json(auth()->check() ? route('api.notes.store', $document
 const ASK_URL = @json(route('ask.query'));
 const DOC_SLUG = @json($document->slug);
 const CSRF = @json(csrf_token());
+const STRUCTURED = @json($safeContent !== null);
 let pdf = null, page = START_PAGE, zoom = @json((int) $pref->zoom), layout = @json($pref->layout);
 let theme = @json($pref->normalizedTheme());
 const THEME_ORDER = @json(\App\Models\ReadingPref::THEMES);
@@ -325,6 +347,43 @@ function savePrefs() {
   if (!IS_AUTH) return;
   fetch(SAVE_PREF_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
     body: JSON.stringify({ theme, zoom, layout }) });
+}
+function applyScale() {
+  const el = document.getElementById('structured-content');
+  if (el) el.style.setProperty('--ypl-read-scale', (zoom / 100).toFixed(2));
+}
+function structuredProgress() {
+  const art = document.getElementById('structured-reader');
+  if (!art) return;
+  const max = art.scrollHeight - window.innerHeight;
+  document.getElementById('reading-pct').textContent = 'Reading ' + (max > 0 ? Math.min(100, Math.round((window.scrollY / max) * 100)) : 100) + '%';
+}
+function structuredSearch(q) {
+  const meta = document.getElementById('search-meta'), hits = document.getElementById('search-hits');
+  hits.innerHTML = '';
+  if (window.find) {
+    const found = window.find(q, false, false, true, false, true);
+    meta.textContent = found ? 'Lompat ke kemunculan “' + q + '” di dalam dokumen.' : 'Tidak ditemukan dalam dokumen.';
+    if (found) return;
+  }
+  const needle = q.toLowerCase();
+  const all = document.querySelectorAll('#structured-content h2, #structured-content h3, #structured-content p, #structured-content li');
+  const matched = [];
+  all.forEach((el) => {
+    if (el.textContent.toLowerCase().includes(needle)) {
+      const sec = el.closest('section, article') || el.parentElement;
+      const h = sec.querySelector('h2, h3');
+      if (h && !matched.includes(h)) matched.push(h);
+    }
+  });
+  meta.textContent = matched.length ? matched.length + ' bagian cocok untuk “' + q + '”.' : 'Tidak ditemukan dalam dokumen.';
+  matched.slice(0, 20).forEach((h) => {
+    const b = document.createElement('button');
+    b.className = 'block w-full text-left text-xs bg-white/10 hover:bg-white/20 rounded-xl px-3 py-2 text-white';
+    b.textContent = '→ ' + h.textContent.trim().slice(0, 60);
+    b.onclick = () => h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    hits.appendChild(b);
+  });
 }
 const toc = document.getElementById('toc-drawer'), btnToc = document.getElementById('btn-toc');
 function setToc(open) { toc.classList.toggle('hidden', !open); btnToc.setAttribute('aria-expanded', String(open)); }
@@ -455,18 +514,30 @@ document.getElementById('notes-list')?.addEventListener('click', (e) => {
   const d = e.target.closest('[data-del]');
   if (d) deleteNote(d.dataset.del, d.dataset.id);
 });
-document.getElementById('form-search').onsubmit = (e) => { e.preventDefault(); const q = document.getElementById('in-search').value.trim(); if (q) searchBook(q); };
-document.getElementById('form-jump').onsubmit = (e) => { e.preventDefault(); const v = parseInt(document.getElementById('in-jump').value, 10); if (v >= 1) { page = v; render(true); } };
-document.getElementById('btn-prev').onclick = () => step(-1);
-document.getElementById('btn-next').onclick = () => step(1);
-document.getElementById('sel-zoom').onchange = (e) => { zoom = +e.target.value; savePrefs(); render(false); };
-document.getElementById('sel-layout').onchange = (e) => { layout = e.target.value; savePrefs(); render(false); };
+document.getElementById('form-search').onsubmit = (e) => { e.preventDefault(); const q = document.getElementById('in-search').value.trim(); if (!q) return; if (STRUCTURED) structuredSearch(q); else searchBook(q); };
+document.getElementById('form-jump').onsubmit = (e) => {
+  e.preventDefault();
+  if (STRUCTURED) {
+    const toc = document.querySelectorAll('#structured-content h2[id]');
+    const target = toc[parseInt(document.getElementById('in-jump').value, 10) - 1];
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  const v = parseInt(document.getElementById('in-jump').value, 10); if (v >= 1) { page = v; render(true); }
+};
+function structuredStep(d) {
+  window.scrollBy({ top: d * (window.innerHeight * 0.85), behavior: 'smooth' });
+}
+document.getElementById('btn-prev').onclick = () => STRUCTURED ? structuredStep(-1) : step(-1);
+document.getElementById('btn-next').onclick = () => STRUCTURED ? structuredStep(1) : step(1);
+document.getElementById('sel-zoom').onchange = (e) => { zoom = +e.target.value; savePrefs(); if (STRUCTURED) applyScale(); else render(false); };
+document.getElementById('sel-layout').onchange = (e) => { layout = e.target.value; savePrefs(); if (!STRUCTURED) render(false); };
 const menu = document.getElementById('menu-panel'), btnMenu = document.getElementById('btn-menu');
 btnMenu.onclick = (e) => { e.stopPropagation(); const open = menu.classList.toggle('hidden'); btnMenu.setAttribute('aria-expanded', String(!open)); };
 document.addEventListener('click', (e) => { if (!menu.classList.contains('hidden') && !menu.contains(e.target)) menu.classList.add('hidden'); });
 document.getElementById('btn-theme').onclick = () => {
   applyTheme(THEME_ORDER[(THEME_ORDER.indexOf(theme) + 1) % THEME_ORDER.length]);
-  savePrefs(); render(false);
+  savePrefs(); if (!STRUCTURED) render(false);
 };
 document.getElementById('btn-full').onclick = () => {
   const r = document.getElementById('reader-root');
@@ -476,6 +547,7 @@ document.getElementById('btn-full').onclick = () => {
 let touchX = null;
 document.getElementById('stage').addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
 document.getElementById('stage').addEventListener('touchend', (e) => {
+  if (STRUCTURED) return;
   if (touchX === null) return;
   const dx = e.changedTouches[0].clientX - touchX;
   if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1);
@@ -483,10 +555,19 @@ document.getElementById('stage').addEventListener('touchend', (e) => {
 }, { passive: true });
 document.addEventListener('keydown', (e) => {
   if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
-  if (e.key === 'ArrowRight') step(1);
-  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'ArrowRight') STRUCTURED ? structuredStep(1) : step(1);
+  if (e.key === 'ArrowLeft') STRUCTURED ? structuredStep(-1) : step(-1);
   if (e.key === 'Escape') { setToc(false); menu.classList.add('hidden'); }
 });
+document.querySelectorAll('[data-section-jump]').forEach((a) => {
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    setToc(false);
+    const t = document.getElementById(a.dataset.sectionJump);
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+window.addEventListener('scroll', () => { if (STRUCTURED) structuredProgress(); }, { passive: true });
 document.addEventListener('submit', (e) => {
   const form = e.target.closest('form[data-bookmark-form]');
   if (!form) return;
@@ -550,7 +631,7 @@ document.addEventListener('submit', (e) => {
     btn.classList.remove('opacity-70', 'scale-95');
   });
 });
-render(false);
+if (STRUCTURED) { applyScale(); structuredProgress(); document.getElementById('pg-now').textContent = '§'; document.getElementById('pg-total').textContent = '1'; } else { render(false); }
 </script>
 </body>
 </html>
