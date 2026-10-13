@@ -1,6 +1,6 @@
 # Report — YPL Smart Digital Library (Losnito)
 
-Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 164 test lolos, Pint bersih.
+Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 176 test lolos, Pint bersih.
 
 ## 1. Ringkasan Website
 
@@ -17,7 +17,7 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 | 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (**version control nyata**: bump otomatis + revisi saat edit + "What changed?"; snapshot isi per versi; otomasi review-due + archive policy retensi otomatis) |
 | 4 Services (forms, workflow, My Requests) | ✅ Selesai (kurang: integrasi Odoo) |
 | 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | ✅ Fungsional — Ask YPL v1 + driver Gemini testing, Recommendations selesai, universal search selesai, **Peta Pengetahuan `/peta-pengetahuan`** + blok terkait selesai |
-| 6 Ecosystem (Odoo, role dashboard, analitik) | 🔄 Berjalan — **dashboard per peran `/dashboard` (audience-aware) selesai**; Community/Calendar/Insight nyata; **analytics `activity_logs` selesai**; sisa: Odoo |
+| 6 Ecosystem (Odoo, role dashboard, analitik) | 🔄 Berjalan — **dashboard per peran `/dashboard` (audience-aware) selesai**; Community/Calendar/Insight nyata; **analytics `activity_logs` selesai**; **Event/agenda CRUD staff/admin/SA (`/staff/agenda`)**; sisa: Odoo |
 
 ## 3. Daftar Fitur
 
@@ -29,6 +29,7 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 - **Services `/layanan`:** katalog 8 layanan ("Saya ingin…"), pengajuan + Permintaan Saya, kelola + putusan staff (pending→approved/rejected→done).
 - **Systems `/sistem`:** registri 8 sistem operasional (Odoo, Akademik, Asrama, HR, Keuangan, Fleet, Maintenance, ICT) + dokumen tertaut.
 - **Community `/community`:** direktori unit, peran, dan orang (login untuk direktori orang) + **kontak PIC publik** (email/telepon) + pengetahuan komunitas (FAQ). Unit & kontak dikelola admin (`/admin/unit`, `/admin/kontak`).
+- **Calendar `/calendar` + Kelola Agenda `/staff/agenda`:** agenda/event nyata + detail `/calendar/{slug}`; **CRUD untuk staff/admin/super admin** (judul, deskripsi, 5 kategori, jadwal mulai–selesai, lokasi, visibilitas publik/internal) — tombol akses dari Kalender, dash admin, dan nav staf; slug stabil saat edit, activity log `event_create/update/delete`.
 - **Ask YPL `/tanya`:** jawaban ekstraktif **bersitasi section-level** (§ heading) dari knowledge sesuai otoritas user; driver Gemini (`gemini-3.8-flash`) untuk testing — gagal/timeout otomatis fallback ekstraktif. Tamu→publik; anggota→+restricted+milik sendiri; admin→semua.
 - **Akun & peran:** registrasi/login, reset password, profil + avatar + ganti password, pengajuan kenaikan peran, panel staff/admin/superadmin, CRUD definisi peran role-aware (superadmin).
 - **Admin:** dashboard, kelola kategori/handbook, pengguna, riwayat aktivitas, persetujuan peran. **Superadmin:** kelola pengguna, pengaturan web + sakelar fitur, definisi peran.

@@ -12,6 +12,9 @@ $map = [
   'role_approve' => ['Setujui Peran', 'background:#dbe4f7;color:#002f80;border-color:#b9c9ec'],
   'user_delete' => ['Hapus Akun', 'background:#f3d9d4;color:#7c2d12;border-color:#e8b4a6'],
   'settings_update' => ['Pengaturan', 'background:#e2e6ec;color:#263245;border-color:#c2cad6'],
+  'event_create' => ['Tambah Agenda', 'background:#f0fdfa;color:#0f766e;border-color:#ccfbf1'],
+  'event_update' => ['Ubah Agenda', 'background:#ecfdf5;color:#047857;border-color:#d1fae5'],
+  'event_delete' => ['Hapus Agenda', 'background:#fbe0e4;color:#a30014;border-color:#f3b7c0'],
 ];
 [$label, $style] = $map[$action] ?? [ucfirst(str_replace('_', ' ', $action)), 'background:#eef0f2;color:#5b6470;border-color:#d6d6d6'];
 @endphp

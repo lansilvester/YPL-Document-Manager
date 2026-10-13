@@ -107,6 +107,7 @@
                   <div class="px-3 pt-1 text-[11px] font-bold tracking-widest text-slate-400">KELOLA</div>
                   <a href="{{ route('staff.documents') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[var(--ypl-navy)]/5 hover:text-[var(--ypl-navy)]">@include('components.icon', ['name' => 'tool', 'class' => 'w-4 h-4']) Ruang Staff</a>
                   <a href="{{ route('staff.analytics') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[var(--ypl-navy)]/5 hover:text-[var(--ypl-navy)]">@include('components.icon', ['name' => 'chart', 'class' => 'w-4 h-4']) Analytics</a>
+                  <a href="{{ route('staff.events.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[var(--ypl-navy)]/5 hover:text-[var(--ypl-navy)]">@include('components.icon', ['name' => 'clock', 'class' => 'w-4 h-4']) Kelola Agenda</a>
                   @if(auth()->user()->isAdmin())
                     <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[var(--ypl-navy)]/5 hover:text-[var(--ypl-navy)]">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Dasbor Admin</a>
                   @endif
@@ -164,6 +165,7 @@
         @if(\App\Models\Setting::feature('bookmark'))<a href="{{ route('bookmarks.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--ypl-navy)]/5 hover:text-[var(--ypl-navy)]">@include('components.icon', ['name' => 'star', 'class' => 'w-4 h-4']) Bookmark Saya</a>@endif
         @if(auth()->user()->isStaff())<a href="{{ route('staff.documents') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--ypl-navy)]/5 hover:text-[var(--ypl-navy)]">@include('components.icon', ['name' => 'tool', 'class' => 'w-4 h-4']) Ruang Staff</a>@endif
         @if(auth()->user()->isStaff())<a href="{{ route('staff.analytics') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--ypl-navy)]/5 hover:text-[var(--ypl-navy)]">@include('components.icon', ['name' => 'chart', 'class' => 'w-4 h-4']) Analytics</a>@endif
+        @if(auth()->user()->isStaff())<a href="{{ route('staff.events.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--ypl-navy)]/5 hover:text-[var(--ypl-navy)]">@include('components.icon', ['name' => 'clock', 'class' => 'w-4 h-4']) Kelola Agenda</a>@endif
         @if(auth()->user()->isAdmin())<a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[var(--ypl-navy)] text-white">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Dasbor Admin</a>@endif
         @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[var(--ypl-red)] text-white">@include('components.icon', ['name' => 'shield', 'class' => 'w-4 h-4']) Pusat Kendali SA</a>@endif
       @endauth

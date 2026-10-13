@@ -134,6 +134,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/permintaan', [ServiceRequestController::class, 'manage'])->name('requests');
         Route::post('/permintaan/{serviceRequest}/putus', [ServiceRequestController::class, 'decide'])->middleware('throttle:sensitive')->name('requests.decide');
         Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
+        Route::get('/agenda', [EventController::class, 'index'])->name('events.index');
+        Route::post('/agenda', [EventController::class, 'store'])->name('events.store');
+        Route::put('/agenda/{event:slug}', [EventController::class, 'update'])->name('events.update');
+        Route::delete('/agenda/{event:slug}', [EventController::class, 'destroy'])->name('events.destroy');
     });
 
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

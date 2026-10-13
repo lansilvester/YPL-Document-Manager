@@ -5,7 +5,7 @@
 
 ![Home — desktop](presentasi/screenshots/desktop-home.png)
 
-- **Status (13 Okt 2026):** 164 tests lolos (998 assertions) · 113 routes · branch `main`
+- **Status (13 Okt 2026):** 176 tests lolos (1034 assertions) · 117 routes · branch `main`
 - **Repo:** `lansilvester/YPL-Document-Manager`
 - **Presentasi progress:** [`presentasi/LOSNITO-Progress-Report.pptx`](presentasi/LOSNITO-Progress-Report.pptx) (18 slide, desktop + mobile)
 
@@ -33,6 +33,8 @@ Alur pakai tipikal: `Home → /perpustakaan → /baca/{slug} → /governance/{sl
 | 4 Services (forms, workflow, My Requests) | ✅ Selesai (kurang: integrasi Odoo) |
 | 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | ✅ Fungsional — search + Ask YPL v1 + rekomendasi + graf 2-hop permission-aware + halaman **Peta Pengetahuan `/peta-pengetahuan`** |
 | 6 Ecosystem (role dashboards, analytics, Odoo) | 🔄 Berjalan — Community, Calendar, Insight sudah nyata (prioritas-1); dashboard per peran (`/dashboard`, audience-aware) selesai |
+
+Phase 1–5 tuntas; Phase 6 berjalan: integrasi Odoo menunggu API (placeholder di `/layanan`) · feature-frozen 30 Okt. **Update terbaru (13 Okt):** Event/agenda jadi first-class knowledge (**CRUD staff/admin/superadmin** di `/staff/agenda` — kelola dari Kalender, dash admin, dan nav staf; slug stabil, activity log, badge aksen baru).
 
 Update terbaru (8–12 Okt): Event + FAQ jadi first-class knowledge · graf node-link 2-hop permission-aware di impact map ·
 halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik ini"** di detail dokumen · dashboard per peran
@@ -66,7 +68,7 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 
 ![Community — desktop](presentasi/screenshots/desktop-community.png)
 
-- **Calendar `/calendar`** — agenda/event nyata + detail `/calendar/{slug}`.
+- **Calendar `/calendar`** — agenda/event nyata + detail `/calendar/{slug}`. **Kelola Agenda `/staff/agenda`** untuk staff/admin/super admin: tambah/ubah/hapus (kategori, jadwal, lokasi, visibilitas publik/internal) dengan slug URL stabil + activity log.
 - **Insight `/insight`** — etalase publik: angka (dokumen publik, kali dibaca, agenda, FAQ) + terbaru untuk publik.
 
 ![Insight — desktop](presentasi/screenshots/desktop-insight.png)
@@ -121,7 +123,7 @@ database/migrations/  # 32 migrations (users+audience, documents+FTS, categories
                       #   relations, versions+snapshot, events, faqs, systems, units, contacts, ...)
 resources/views/      # home, library (termasuk peta-pengetahuan), reader, governance,
                       #   search, ask, portal, dashboard, systems, admin, sa, ...
-tests/Feature/        # 16 file test (±164 tests)
+tests/Feature/        # 17 file test (±176 tests)
 presentasi/           # slide progress + screenshot desktop & mobile
 ```
 
@@ -140,7 +142,7 @@ php artisan serve               # http://localhost:8000
 ```
 
 ```bash
-php artisan test --compact      # 164 tests, ~4 detik
+php artisan test --compact      # 176 tests, ~4 detik
 vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
 ```
 
@@ -159,8 +161,8 @@ Akun demo per audiens (opsional): `php artisan db:seed --class=AudienceDemoSeede
 
 ## 8. Testing & Kualitas
 
-- `php artisan test --compact` → **164 passed, 998 assertions** (13 Okt 2026).
-- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control + archive policy, **notifikasi review/arsip + pusat notifikasi**), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan + kontrol kedalaman + PIC klikabel, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression.
+- `php artisan test --compact` → **176 passed, 1034 assertions** (13 Okt 2026).
+- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control + archive policy, **notifikasi review/arsip + pusat notifikasi**), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan + kontrol kedalaman + PIC klikabel, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression, **Event admin (otorisasi 4 peran, validasi, CRUD + slug stabil + activity log)**.
 - Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, maupun graf.
 
 ---

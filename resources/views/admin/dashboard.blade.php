@@ -17,6 +17,7 @@
   <a href="{{ route('admin.users') }}" class="btn-ghost">Kelola Pengguna</a>
   <a href="{{ route('admin.units') }}" class="btn-ghost">Unit</a>
   <a href="{{ route('admin.contacts') }}" class="btn-ghost">Kontak PIC</a>
+  <a href="{{ route('staff.events.index') }}" class="btn-ghost">Kelola Agenda</a>
   @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.users') }}" class="btn-ghost">Panel Super Admin</a>@endif
   @if(auth()->user()->isSuperAdmin())<a href="{{ route('sa.settings') }}" class="btn-ghost">Pengaturan Web</a>@endif
 </div>

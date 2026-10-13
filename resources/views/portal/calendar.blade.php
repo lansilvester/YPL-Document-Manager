@@ -5,6 +5,10 @@
 <h1 class="page-title">Kalender YPL</h1>
 <p class="text-sm text-slate-500 mt-1">Agenda foundation, akademik, asrama, event, dan deadline penting.</p>
 
+@if(auth()->check() && auth()->user()->isStaff())
+  <div class="mt-3"><a href="{{ route('staff.events.index') }}" class="btn-primary !py-2">@include('components.icon', ['name' => 'clock', 'class' => 'w-4 h-4']) Kelola Agenda</a></div>
+@endif
+
 <div class="flex flex-wrap gap-2 mt-4" role="group" aria-label="Filter kategori">
   <a href="{{ route('calendar.index') }}" class="px-4 py-2 rounded-full text-xs font-bold {{ ! $category ? 'bg-[var(--ypl-navy)] text-white' : 'bg-white border border-[var(--ypl-gray)] hover:border-[var(--ypl-navy)]' }}">Semua</a>
   @foreach($categories as $c)
