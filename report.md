@@ -1,12 +1,12 @@
 # Report — YPL Smart Digital Library (Losnito)
 
-Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 176 test lolos, Pint bersih.
+Tanggal: 13 Oktober 2026 · Baseline terverifikasi: 215 test lolos, Pint bersih.
 
 ## 1. Ringkasan Website
 
 Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PDF, melainkan **Digital Knowledge, Governance & Community Platform** dengan prinsip **DISCOVER → KNOW → UNDERSTAND → ACT**. Dua mode utama: **Library Mode** (discovery) dan **Reader Mode** (baca imersif). Blueprint acuan: dokumen briefing 21 bab (BAB 1–21).
 
-**Teknologi:** Laravel 13 (PHP ^8.3), Tailwind 4 + Vite 8, SQLite (lokal/testing) / MySQL (production InfinityFree), `barryvdh/laravel-dompdf` (ekspor PDF), `ezyang/htmlpurifier` (sanitasi HTML), PHPUnit 12, Laravel Pint, Laravel Boost MCP.
+**Teknologi:** Laravel 13 (PHP ^8.3), Tailwind 4 + Vite 8, SQLite (lokal/testing) / MySQL (production InfinityFree), `barryvdh/laravel-dompdf` (ekspor PDF), `ezyang/htmlpurifier` (sanitasi HTML), Laravel Sanctum (REST API token), PHPUnit 12, Laravel Pint, Laravel Boost MCP.
 
 ## 2. Progress per Phase (Blueprint BAB 18)
 
@@ -37,6 +37,7 @@ Platform knowledge digital Yayasan Pendidikan Lokon: bukan sekadar repository PD
 - **Universal Search `/cari`:** dokumen (kelompok per tipe) + layanan + orang + **PIC/kontak publik** + Ask YPL panel.
 - **Peta Pengetahuan `/peta-pengetahuan`:** halaman eksplorasi graf knowledge lintas koleksi (BAB 12) — pilih dokumen pusat, render graf node-link 2-hop (dokumen/sistem/agenda/FAQ/PIC) dengan kontrol kedalaman 1/2, simpul PIC klikabel menuju kontak publik, legenda warna + fallback daftar aksesibel; permission-aware. Blok **"Terkait dengan topik ini"** di detail dokumen & governance.
 - **Dashboard Saya `/dashboard`:** satu templat role-aware; seksi per audiens (`users.audience`) — ringkasan, agenda, koleksi, formulir, review jatuh tempo, persetujuan (staff/admin), layanan menunggu, permintaan saya, rekomendasi.
+- **REST API `/api/v1`:** 84 endpoint JSON dengan autentikasi Sanctum token — autentikasi, katalog publik, dokumen, governance, pencarian/Ask YPL, layanan, akun & interaksi, panel admin, dan panel Super Admin. Dokumentasi: [`docs/API.md`](docs/API.md).
 
 ## 4. Tabel `users` — Deskripsi Kolom
 
@@ -116,6 +117,8 @@ Sumber: `0001_01_01_000000_create_users_table.php`, `2026_09_25_000001_create_lo
 - Privacy: `visibleTo($user)` diterapkan — dokumen private orang lain tidak pernah bocor ke rekomendasi (teruji)
 
 ## 9. Sisa Pekerjaan
+
+**REST API v1:** ✅ Selesai — 84 endpoint JSON (Sanctum token) di `/api/v1`, mencakup katalog publik, dokumen, governance, pencarian/Ask, layanan, akun, panel admin, dan panel Super Admin. Dokumentasi lengkap: [`docs/API.md`](docs/API.md).
 
 **Phase 5 Intelligence:** ✅ Selesai — Knowledge Graph visual (halaman Peta Pengetahuan + graf impact map + blok terkait).
 

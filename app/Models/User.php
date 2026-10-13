@@ -9,13 +9,14 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'avatar_path', 'academic_info', 'birth_place', 'birth_date', 'wa_number', 'role', 'audience', 'ypl_verified'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /** Audiens BAB 11 yang dapat dipetakan ke pengalaman role-aware. */
     public const AUDIENCES = ['siswa', 'orang_tua', 'guru', 'karyawan', 'pimpinan', 'mitra', 'publik'];

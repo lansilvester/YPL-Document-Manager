@@ -5,8 +5,9 @@
 
 ![Home — desktop](presentasi/screenshots/desktop-home.png)
 
-- **Status (13 Okt 2026):** 176 tests lolos (1034 assertions) · 117 routes · branch `main`
+- **Status (13 Okt 2026):** 215 tests lolos (1178 assertions) · 117 routes web + 84 endpoint REST API · branch `main`
 - **Repo:** `lansilvester/YPL-Document-Manager`
+- **REST API:** [`docs/API.md`](docs/API.md) — 84 endpoint `/api/v1` (Sanctum token), dokumentasi lengkap.
 - **Presentasi progress:** [`presentasi/LOSNITO-Progress-Report.pptx`](presentasi/LOSNITO-Progress-Report.pptx) (18 slide, desktop + mobile)
 
 ---
@@ -91,6 +92,11 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 - Peran: `anggota` (baca publik/restricted, unggah, ajukan) · `staff` (+kelola dokumen, proses layanan) · `admin` (+kategori/pengguna, publish) · `superadmin` (pengaturan web + definisi peran). Registrasi → `anggota`.
 - **Dashboard Saya `/dashboard`** — satu templat role-aware dengan seksi berbeda per audiens (`siswa`, `orang_tua`, `guru`, `karyawan`, `pimpinan`, `mitra`, `publik`; kolom `users.audience`, fallback ke peran sistem). Seksi: ringkasan, agenda, koleksi, formulir, review jatuh tempo, persetujuan (staff/admin), layanan menunggu, permintaan saya, plus rekomendasi personal. **Mitra** mendapat seksi panduan mitra + kontak/kolaborasi + resource publik; **publik** mendapat profil & publikasi institusi + pendidikan/program. Audiens ditetapkan langsung oleh Admin/SA, atau diajukan pengguna dari profil lalu disetujui Admin/SA.
 
+### REST API `/api/v1`
+- **84 endpoint** JSON dengan autentikasi **Sanctum personal access token** (`Authorization: Bearer <token>`) — dokumentasi lengkap di [`docs/API.md`](docs/API.md).
+- Cakupan: autentikasi (`login`/`register`/`me`/`logout`), katalog publik (kategori, sistem, FAQ, unit, kontak, agenda, insight, community, help, layanan), dokumen (baca/unggah/ubah/hapus + konten + terkait), governance (passport, versi, impact map, transisi, relasi), pencarian & Ask YPL, profil & interaksi (bookmark, like, catatan, notifikasi), layanan, panel admin, dan panel Super Admin (pengguna, peran, pengaturan).
+- Otorisasi memakai middleware peran yang sama dengan web (`staff`/`admin`/`superadmin`) **dan** aturan visibilitas dokumen `scopeVisibleTo()` — tidak ada kebocoran dokumen privat.
+
 ---
 
 ## 4. Tech Stack
@@ -114,16 +120,22 @@ app/
   Http/Controllers/   # 26 controller: Home, Library (termasuk Peta Pengetahuan),
                       #   Reader, Governance, Notification, Search, Ask, Document, Event, Faq, Staff,
                       #   Admin, SuperAdmin, RoleDashboard, Unit, Contact, ...
+  Http/Controllers/Api/  # 9 controller REST API v1 (Auth, Catalog, Document, Governance,
+                      #   Search, Service, Account, Admin, SuperAdmin)
+  Http/Resources/     # 14 API Resource (Document, Category, Event, Faq, User, ...)
   Models/             # 21 model: Document, Category, DocumentRelation,
                       #   DocumentVersion, Event, Faq, System, Role, Unit, Contact, ...
   Services/           # AskYpl, RecommendationEngine, ImpactMap, GeminiLlm,
                       #   HtmlSanitizer, DocumentFiles, WaNumber
-routes/web.php        # 113 routes: public • auth • staff/ • admin/ • sa/
-database/migrations/  # 32 migrations (users+audience, documents+FTS, categories B01–B10,
-                      #   relations, versions+snapshot, events, faqs, systems, units, contacts, ...)
+routes/web.php        # 117 routes: public • auth • staff/ • admin/ • sa/
+routes/api.php        # 84 endpoint REST API v1 (Sanctum token)
+docs/API.md           # dokumentasi REST API lengkap
+database/migrations/  # 33 migrations (users+audience, documents+FTS, categories B01–B10,
+                      #   relations, versions+snapshot, events, faqs, systems, units, contacts,
+                      #   personal_access_tokens, ...)
 resources/views/      # home, library (termasuk peta-pengetahuan), reader, governance,
                       #   search, ask, portal, dashboard, systems, admin, sa, ...
-tests/Feature/        # 17 file test (±176 tests)
+tests/Feature/        # 18 file test (±215 tests)
 presentasi/           # slide progress + screenshot desktop & mobile
 ```
 
@@ -161,9 +173,9 @@ Akun demo per audiens (opsional): `php artisan db:seed --class=AudienceDemoSeede
 
 ## 8. Testing & Kualitas
 
-- `php artisan test --compact` → **176 passed, 1034 assertions** (13 Okt 2026).
-- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control + archive policy, **notifikasi review/arsip + pusat notifikasi**), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan + kontrol kedalaman + PIC klikabel, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression, **Event admin (otorisasi 4 peran, validasi, CRUD + slug stabil + activity log)**.
-- Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, maupun graf.
+- `php artisan test --compact` → **215 passed, 1178 assertions** (13 Okt 2026).
+- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control + archive policy, **notifikasi review/arsip + pusat notifikasi**), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan + kontrol kedalaman + PIC klikabel, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression, **Event admin (otorisasi 4 peran, validasi, CRUD + slug stabil + activity log)**, **REST API (autentikasi token, izin per peran, visibilitas dokumen, CRUD, transisi governance, layanan, pencarian)**.
+- Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, graf, maupun **REST API**.
 
 ---
 
