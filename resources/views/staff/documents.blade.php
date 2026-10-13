@@ -5,7 +5,7 @@
 @include('components.back-bar', ['trail' => [['Beranda', route('home')], ['Ruang Kerja Staff']]])
 <div class="rounded-3xl p-6 sm:p-7 text-white shadow-xl shadow-[var(--ypl-navy)]/25 mb-6 relative overflow-hidden" style="background:linear-gradient(120deg,var(--ypl-navy-900),var(--ypl-navy) 60%,var(--ypl-navy-500))">
   <div class="absolute -right-8 -top-8 w-48 h-48 rounded-full opacity-20" style="background:radial-gradient(circle,var(--ypl-red) 0%,transparent 70%)" aria-hidden="true"></div>
-  <h1 class="page-title flex items-center gap-2.5 relative">@include('components.icon', ['name' => 'tool', 'class' => 'w-6 h-6']) Ruang Kerja Staff</h1>
+  <h1 class="page-title flex items-center gap-2.5 relative text-white mb-4">@include('components.icon', ['name' => 'tool', 'class' => 'w-6 h-6']) Ruang Kerja Staff</h1>
   <p class="text-sm text-slate-300 relative">Halo, <strong class="text-white">{{ auth()->user()->name }}</strong> — kelola perpustakaan dalam satu tampilan: tambah/upload PDF, ganti file, beri badge/tag, dan hapus.</p>
   <form action="{{ route('staff.documents') }}" method="get" class="mt-4 flex gap-2 bg-white rounded-full p-1.5 max-w-md relative">
     <input name="q" value="{{ $q }}" placeholder="Cari dokumen…" class="flex-1 bg-transparent text-slate-800 text-sm px-4 outline-none min-w-0">

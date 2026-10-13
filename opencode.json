@@ -9,6 +9,10 @@
                 "artisan",
                 "boost:mcp"
             ]
+        },
+        "eraser": {
+            "type": "remote",
+            "url": "https://app.eraser.io/api/mcp"
         }
     }
 }

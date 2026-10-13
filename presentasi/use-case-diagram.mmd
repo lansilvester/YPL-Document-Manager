@@ -1,0 +1,137 @@
+---
+title: Use Case Diagram — YPL Smart Digital Library (LOSNITO)
+---
+flowchart LR
+    subgraph AKTOR["Aktor"]
+        direction TB
+        Guest["👤 Tamu"]
+        Member["👤 Anggota"]
+        StaffU["👤 Staff"]
+        AdminU["👤 Admin"]
+        SuperadminU["👤 Superadmin"]
+        Guest -.->|"Anggota ⊃ Tamu"| Member
+        Member -.->|"Staff ⊃ Anggota"| StaffU
+        StaffU -.->|"Admin ⊃ Staff"| AdminU
+        AdminU -.->|"SA ⊃ Admin"| SuperadminU
+    end
+
+    subgraph S1["Auth & Akun"]
+        UC01["Daftar Akun"]
+        UC02["Masuk Login"]
+        UC03["Reset Password"]
+        UC04["Kelola Profil Foto & Kata Sandi"]
+        UC05["Ajukan Kenaikan Peran"]
+    end
+
+    subgraph S2["Library & Reader"]
+        UC10["Jelajahi Perpustakaan B01-B10"]
+        UC11["Lihat Detail Buku/Dokumen"]
+        UC12["Baca Dokumen Reader Mode"]
+        UC13["Cari Dalam Dokumen"]
+        UC14["Bookmark & Suka"]
+        UC15["Catatan Baca per Halaman"]
+        UC16["Bagikan Dokumen"]
+        UC17["Unduh PDF/HTML"]
+        UC18["Peta Pengetahuan Graf 2-hop"]
+    end
+
+    subgraph S3["Kelola Dokumen & Governance"]
+        UC20["Unggah PDF maks 9MB"]
+        UC21["Tulis via Editor HTML"]
+        UC22["Kelola Dokumen Saya"]
+        UC23["Edit / Hapus Dokumen"]
+        UC24["Transisi Lifecycle draft-active"]
+        UC25["Kelola Relasi Antar Dokumen"]
+        UC26["Semat Embed"]
+        UC30["Document Passport"]
+        UC31["Riwayat Versi & What Changed"]
+        UC32["Impact Map 2-hop"]
+        UC33["Approval Workflow"]
+        UC34["Ekspor Daftar CSV"]
+        UC35["Notifikasi Review-due & Arsip"]
+    end
+
+    subgraph S4["Services, Community & Intelligence"]
+        UC40["Lihat Katalog Layanan"]
+        UC41["Ajukan Layanan"]
+        UC42["Pantau Permintaan Saya"]
+        UC43["Putus Permintaan"]
+        UC50["Direktori Unit/Peran/Orang"]
+        UC51["Kontak PIC Publik"]
+        UC52["Kalender Agenda"]
+        UC53["FAQ"]
+        UC54["Registri Sistem Operasional"]
+        UC55["Insight Etalase"]
+        UC60["Universal Search"]
+        UC61["Ask YPL Bertanya + Sitasi"]
+        UC62["Ask YPL Inline di Reader"]
+        UC63["Rekomendasi Dokumen"]
+    end
+
+    subgraph S5["Staff / Admin / Superadmin"]
+        UC90["Kelola Dokumen & Badge"]
+        UC92["Analytics Dashboard"]
+        UC70["Kelola Kategori & Handbook"]
+        UC71["Kelola Pengguna"]
+        UC72["Kelola Unit & Kontak PIC"]
+        UC73["Setujui Peran/Audiens"]
+        UC74["Riwayat Aktivitas"]
+        UC80["Kelola Semua Pengguna"]
+        UC81["Definisikan Peran"]
+        UC82["Pengaturan Web & Kebijakan"]
+    end
+
+    Guest --> UC01
+    Guest --> UC02
+    Guest --> UC03
+    Guest --> UC10
+    Guest --> UC11
+    Guest --> UC12
+    Guest --> UC18
+    Guest --> UC30
+    Guest --> UC40
+    Guest --> UC50
+    Guest --> UC51
+    Guest --> UC52
+    Guest --> UC53
+    Guest --> UC54
+    Guest --> UC55
+    Guest --> UC60
+
+    Member --> UC04
+    Member --> UC05
+    Member --> UC13
+    Member --> UC14
+    Member --> UC15
+    Member --> UC16
+    Member --> UC17
+    Member --> UC20
+    Member --> UC21
+    Member --> UC22
+    Member --> UC23
+    Member --> UC24
+    Member --> UC25
+    Member --> UC26
+    Member --> UC31
+    Member --> UC32
+    Member --> UC35
+    Member --> UC41
+    Member --> UC42
+    Member --> UC61
+    Member --> UC62
+    Member --> UC63
+
+    StaffU --> UC43
+    StaffU --> UC90
+    StaffU --> UC92
+
+    AdminU --> UC70
+    AdminU --> UC71
+    AdminU --> UC72
+    AdminU --> UC73
+    AdminU --> UC33
+    AdminU --> UC74
+
+    SuperadminU --> UC80
+    SuperadminU --> UC81
+    SuperadminU --> UC82
