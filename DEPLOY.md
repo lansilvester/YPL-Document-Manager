@@ -9,6 +9,26 @@
   - Kredensial MySQL sudah terisi (host `sql312.infinityfree.com`).
 - Pastikan `APP_DEBUG=false`.
 
+## 1b. Konfigurasi SMTP (Zoho Mail)
+Kode reset kata sandi & notifikasi governance dikirim lewat email, jadi mailer harus nyata (bukan `log`). Tambah/isi di `.env` produksi:
+
+```
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.zoho.com
+MAIL_PORT=587
+MAIL_SCHEME=smtp          # 587 = STARTTLS. Bila memakai SSL port 465, set MAIL_SCHEME=smtps
+MAIL_USERNAME=noreply@lokon.or.id
+MAIL_PASSWORD=<App Password dari Zoho>
+MAIL_FROM_ADDRESS="noreply@lokon.or.id"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+Catatan Zoho:
+- Domain pengirim (`@lokon.or.id`) harus dikelola di Zoho Mail (SPF/DKIM idealnya diatur agar tidak masuk spam).
+- Jika 2FA aktif di akun Zoho, gunakan **App Password** (bukan password login biasa).
+- Verifikasi setelah upload: `php artisan ypl:mail-test email-anda@lokon.or.id`. Buka email hasilnya; cek juga folder spam.
+- Bila SMTP bermasalah saat darurat, `MAIL_MAILER=log` membuat kode reset hanya tertulis di `storage/logs/laravel.log` (reset tak sampai ke pengguna) — jangan dipakai di production.
+
 ## 2. Upload file
 - Upload **isi folder `public/`** ke `htdocs/` di hosting.
 - Upload **seluruh folder aplikasi** (app, bootstrap, config, database, resources, routes, storage, vendor, artisan, composer.json) ke **satu level di atas** `htdocs` (sejajar, bukan di dalam).

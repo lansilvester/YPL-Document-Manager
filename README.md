@@ -172,8 +172,20 @@ Akun demo per audiens (opsional): `php artisan db:seed --class=AudienceDemoSeede
 Panduan lengkap: [`DEPLOY.md`](DEPLOY.md). Ringkasnya:
 
 1. Salin `.env.production` → `.env`, sesuaikan `APP_URL`, kredensial MySQL, `DEPLOY_SA_EMAIL`. `APP_DEBUG=false`.
-2. Upload isi `public/` → `htdocs/`; upload app (sejajar `htdocs`); `storage/` writable.
-3. Jalankan migrasi dari lokal (tanpa SSH): arahkan `DB_*` ke MySQL produksi → `php artisan migrate --force && php artisan db:seed --force && php artisan ypl:superadmin --email=superadmin@lokon.or.id`. (Rute `/deploy/{secret}` sudah dihapus demi keamanan — lihat [`DEPLOY.md`](DEPLOY.md).)
+2. **Konfigurasi SMTP (Zoho Mail)** — kode reset & notifikasi email butuh mailer nyata. Di `.env` produksi:
+   ```
+   MAIL_MAILER=smtp
+   MAIL_HOST=smtp.zoho.com
+   MAIL_PORT=587
+   MAIL_SCHEME=smtp          # 587 = STARTTLS; pakai smtps bila port 465
+   MAIL_USERNAME=noreply@lokon.or.id
+   MAIL_PASSWORD=<app-password Zoho>
+   MAIL_FROM_ADDRESS="noreply@lokon.or.id"
+   MAIL_FROM_NAME="${APP_NAME}"
+   ```
+   Uji sebelum go-live: `php artisan ypl:mail-test email-anda@lokon.or.id` (email percobaan; cek juga folder spam).
+3. Upload isi `public/` → `htdocs/`; upload app (sejajar `htdocs`); `storage/` writable.
+4. Jalankan migrasi dari lokal (tanpa SSH): arahkan `DB_*` ke MySQL produksi → `php artisan migrate --force && php artisan db:seed --force && php artisan ypl:superadmin --email=superadmin@lokon.or.id`. (Rute `/deploy/{secret}` sudah dihapus demi keamanan — lihat [`DEPLOY.md`](DEPLOY.md).)
 
 Batasan InfinityFree: PDF ≤ 9 MB · tanpa worker/cron (semua `sync`) · seed tanpa 15 PDF besar dev.
 
