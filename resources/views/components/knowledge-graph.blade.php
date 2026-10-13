@@ -23,7 +23,7 @@
     </li>
   @endforeach
 </ul>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var svg = document.getElementById(@json($id));
   if (!svg) return;

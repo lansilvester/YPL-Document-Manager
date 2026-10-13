@@ -300,7 +300,7 @@
 </section>
 @endif
 
-<style>#reader:fullscreen #pages { max-height: 100vh; }</style>
+<style nonce="{{ csp_nonce() }}">#reader:fullscreen #pages { max-height: 100vh; }</style>
 
 @if($canEmbed && \App\Models\Setting::feature('embed'))
 {{-- Modal kode semat --}}
@@ -322,7 +322,7 @@
 
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const PDF_URL = @json($document->fileUrl());
 const START_PAGE = @json(auth()->check() && $position ? (int)$position->page : 1);

@@ -201,7 +201,7 @@ $allCount = $roleCounts->sum();
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ csp_nonce() }}">
 const EDITOR_ROLE = @json(auth()->user()->role);
 function show(el){ el.classList.remove('hidden'); }
 function hide(el){ el.classList.add('hidden'); }

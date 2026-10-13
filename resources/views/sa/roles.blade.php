@@ -98,7 +98,7 @@
     </table>
   </div>
 </div>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   // Buka/tutup baris form.
   document.querySelectorAll('[data-role-toggle]').forEach(function (btn) {

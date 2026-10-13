@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ $document->title }} — Lokon Dokumen Digital</title>
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-<style>
+<style nonce="{{ csp_nonce() }}">
   @include('components.tokens')
   body{font-family:ui-sans-serif,system-ui,sans-serif}
 </style>
@@ -21,7 +21,7 @@
 </div>
 <div id="pages" class="flex flex-col items-center gap-4 p-4"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 let pdf = null, page = 1;
 async function render() {

@@ -24,7 +24,11 @@ class StaffController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
 
+        // Hormati privasi: dokumen `private` milik orang lain tidak boleh
+        // tampil/terindeks di ruang kerja staff (kecuali milik staff itu sendiri).
         $docs = Document::query()
+            ->where(fn ($w) => $w->where('visibility', '!=', 'private')
+                ->orWhere('user_id', auth()->id()))
             ->when($q, fn ($s) => $s->search($q))
             ->select([
                 'id', 'title', 'slug', 'category_id', 'user_id', 'description',

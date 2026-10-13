@@ -217,7 +217,7 @@ $roleLabel = ['superadmin' => 'SUPER ADMIN', 'admin' => 'ADMIN', 'staff' => 'STA
 </div>
 
 @push('scripts')
-<script>
+<script nonce="{{ csp_nonce() }}">
 function openProfileModal(e) { if (e) e.preventDefault(); document.getElementById('profile-modal').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); document.body.style.overflow = ''; }
 function togglePasswordForm() {

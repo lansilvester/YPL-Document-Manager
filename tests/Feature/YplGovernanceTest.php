@@ -203,7 +203,12 @@ class YplGovernanceTest extends TestCase
             'file_path' => 'documents/priv3.pdf',
         ]);
 
-        $res = $this->post(route('governance.export'), [])->assertOk();
+        // Tamu tidak boleh mengekspor (hardening: rute di balik auth).
+        $this->post(route('governance.export'), [])->assertRedirect('/masuk');
+
+        // Anggota lain: hanya dokumen publik yang terlihat, privat bukan miliknya disembunyikan.
+        $anggota = User::factory()->create(['role' => 'anggota']);
+        $res = $this->actingAs($anggota)->post(route('governance.export'), [])->assertOk();
         $res->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $body = $res->streamedContent() ?? $res->getContent();
         $this->assertStringContainsString('Dokumen Ekspor Publik', $body);

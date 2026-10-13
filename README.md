@@ -87,7 +87,7 @@ halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik 
 - **Recommendations** — skor berbobot 6 sinyal (relasi 30, kategori 20, tag 20, penulis/co-read/sistem @10), query batch tanpa query per kandidat atau seed, maksimal 10 dokumen baca + 10 bookmark terbaru sebagai seed dan 200 kandidat. Daftar dokumen memakai scope `forCard()` agar hanya kolom/relasi yang dirender yang diambil; rekomendasi tampil di detail dokumen + drawer Reader.
 
 ### Akun & Peran
-- Registrasi/login, reset password, profil + avatar + ganti password, pengajuan kenaikan peran, panel staff/admin/superadmin.
+- Registrasi/login, reset password (kode 8 karakter dikirim ke email terdaftar — tidak pernah ditampilkan di layar), profil + avatar + ganti password, pengajuan kenaikan peran, panel staff/admin/superadmin.
 - Peran: `anggota` (baca publik/restricted, unggah, ajukan) · `staff` (+kelola dokumen, proses layanan) · `admin` (+kategori/pengguna, publish) · `superadmin` (pengaturan web + definisi peran). Registrasi → `anggota`.
 - **Dashboard Saya `/dashboard`** — satu templat role-aware dengan seksi berbeda per audiens (`siswa`, `orang_tua`, `guru`, `karyawan`, `pimpinan`, `mitra`, `publik`; kolom `users.audience`, fallback ke peran sistem). Seksi: ringkasan, agenda, koleksi, formulir, review jatuh tempo, persetujuan (staff/admin), layanan menunggu, permintaan saya, plus rekomendasi personal. **Mitra** mendapat seksi panduan mitra + kontak/kolaborasi + resource publik; **publik** mendapat profil & publikasi institusi + pendidikan/program. Audiens ditetapkan langsung oleh Admin/SA, atau diajukan pengguna dari profil lalu disetujui Admin/SA.
 
@@ -197,7 +197,14 @@ Aplikasi responsif penuh — contoh Home dan Library di viewport 390px:
 
 - **Phase 5:** ✅ Selesai — visualisasi Knowledge Graph penuh (halaman Peta Pengetahuan + blok terkait & graf impact map).
 - **Phase 6:** Role Dashboards ✅ selesai (`/dashboard` audience-aware penuh 7 audiens termasuk mitra & publik) · Analytics dashboard dari `activity_logs` ✅ selesai · Integrasi Odoo (terakhir; API akan disediakan).
-- **Hardening:** ✅ cabut key testing, hapus rute `/deploy/{secret}` (commit `caa423f`), rate limiter sensitif (`login`/`register`/`uploads`/`interactions`).
+- **Hardening (uji keamanan):**
+  - **Reset password aman** — kode 8 karakter dikirim ke email terdaftar via Mailable (mailer produksi), tak pernah tampil di respons; respons seragam anti-enumerasi; semua sesi lama akun dicabut saat reset.
+  - **Privasi ruang staff** — dokumen `private` milik orang lain tak tampil di `/staff/dokumen`.
+  - **CSP ketat + nonce** — script hanya dari self/CDN dengan `nonce` per-request; tanpa `unsafe-inline` untuk script; `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`; HSTS otomatis saat HTTPS.
+  - **Ekspor governance** dipindah ke dalam `auth` + `throttle:sensitive`.
+  - **Cookie sesi produksi** — `.env.example`: `SESSION_ENCRYPT=true`, `SESSION_SECURE_COOKIE=true`, `SESSION_SAME_SITE=lax`, `SESSION_HTTP_ONLY=true`.
+  - **Sembunyikan versi PHP** — set `expose_php=Off` di `php.ini` server (header `X-Powered-By` juga dihapus middleware).
+  - Rate limiter sensitif (`login`/`register`/`uploads`/`interactions`); rute `/deploy/{secret}` telah dihapus.
 
 ---
 

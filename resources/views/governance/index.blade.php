@@ -48,12 +48,14 @@
             <a href="{{ route('governance.index') }}" class="text-xs font-bold text-[var(--ypl-red)]">Reset ✕</a>
         @endif
     </form>
+    @auth
     <form action="{{ route('governance.export') }}" method="post" class="mt-3 flex justify-end">@csrf
         @foreach(['q', 'tipe', 'status', 'audiens', 'unit'] as $k)
             <input type="hidden" name="{{ $k }}" value="{{ $filters[$k] ?? '' }}">
         @endforeach
         <button class="text-xs font-bold text-[var(--ypl-navy)] border border-[var(--ypl-navy)]/30 rounded-full px-4 py-1.5 hover:bg-[var(--ypl-navy)] hover:text-white transition">Ekspor CSV</button>
     </form>
+    @endauth
 </div>
 
 {{-- Hasil --}}

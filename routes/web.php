@@ -39,7 +39,6 @@ Route::get('/perpustakaan/{category:slug}', [LibraryController::class, 'show'])-
 
 // Governance (BAB 13) — Document Control & Governance
 Route::get('/governance', [GovernanceController::class, 'index'])->name('governance.index');
-Route::post('/governance/ekspor', [GovernanceController::class, 'export'])->middleware('throttle:sensitive')->name('governance.export');
 Route::get('/governance/{document:slug}', [GovernanceController::class, 'show'])->name('governance.show');
 Route::get('/governance/{document:slug}/versi', [GovernanceController::class, 'versions'])->name('governance.versions');
 Route::get('/governance/{document:slug}/impact', [GovernanceController::class, 'impactMap'])->name('governance.impact');
@@ -102,6 +101,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/permintaan-saya', [ServiceRequestController::class, 'my'])->name('services.my');
 
     // Phase 3 — Governance lifecycle + connected knowledge.
+    Route::post('/governance/ekspor', [GovernanceController::class, 'export'])->middleware('throttle:sensitive')->name('governance.export');
     Route::post('/dokumen/{document:slug}/transisi', [DocumentController::class, 'transition'])->middleware('throttle:sensitive')->name('documents.transition');
     Route::post('/dokumen/{document:slug}/relasi', [DocumentController::class, 'attachRelation'])->middleware('throttle:sensitive')->name('documents.relations.store');
     Route::delete('/dokumen/{document:slug}/relasi/{relation}', [DocumentController::class, 'detachRelation'])->middleware('throttle:sensitive')->name('documents.relations.destroy');

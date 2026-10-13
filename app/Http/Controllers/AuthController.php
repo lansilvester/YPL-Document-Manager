@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PasswordResetCode;
 use App\Models\ActivityLog;
 use App\Models\Setting;
 use App\Models\User;
@@ -11,6 +12,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
@@ -118,57 +120,61 @@ class AuthController extends Controller
     }
 
     /**
-     * Tanpa layanan email, kode reset ditampilkan sekali pada layar.
-     * Hanya diterbitkan bila email DAN nama lengkap cocok dengan akun,
-     * untuk mempersempit tebakan orang lain.
+     * Reset kata sandi tanpa layanan email dedicated: kode 8 karakter dibuat
+     * dan dikirim ke EMAIL TERDAFTAR. Kode tidak pernah dikembalikan dalam
+     * respons HTTP (mencegah penyadapan/take-over). Respons selalu sama
+     * (issued) untuk menghindari enumerasi akun.
      */
     public function sendResetToken(Request $request)
     {
         $data = $request->validate([
             'email' => ['required', 'email', 'max:255'],
-            'name' => ['required', 'string', 'max:255'],
         ]);
         $email = strtolower(trim($data['email']));
 
-        $user = User::where('email', $email)
-            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])
-            ->first();
+        $user = User::where('email', $email)->first();
+        $ttl = (int) env('PASSWORD_RESET_TTL', 15);
 
-        $token = null;
         if ($user) {
             $token = strtoupper(Str::random(8));
             DB::table('password_resets')->where('email', $email)->delete();
             DB::table('password_resets')->insert([
                 'email' => $email,
                 'token_hash' => Hash::make($token),
-                'expires_at' => now()->addMinutes((int) env('PASSWORD_RESET_TTL', 15)),
+                'expires_at' => now()->addMinutes($ttl),
                 'ip' => request()->ip(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
             ActivityLog::record($user->id, null, 'password_reset_request');
+
+            try {
+                Mail::to($email)->send(new PasswordResetCode($token, $ttl));
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
-        return view('auth.forgot-result')->with([
-            'issued' => $token !== null,
-            'reset_token' => $token,
+        return view('auth.forgot-result', [
             'reset_email' => $email,
-            'ttl' => (int) env('PASSWORD_RESET_TTL', 15),
+            'ttl' => $ttl,
         ]);
     }
 
     public function showReset(Request $request)
     {
-        abort_if($request->missing(['token', 'email']), 404);
+        abort_if($request->missing('email'), 404);
 
         return view('auth.reset', [
-            'token' => $request->query('token'),
             'email' => $request->query('email'),
         ]);
     }
 
     public function resetPassword(Request $request)
     {
+        // Normalisasi kode (huruf besar, tanpa spasi) sebelum validasi format.
+        $request->merge(['token' => strtoupper(trim((string) $request->input('token')))]);
+
         $data = $request->validate([
             'token' => ['required', 'string', 'size:8', 'regex:/^[A-Z0-9]+$/'],
             'email' => ['required', 'email'],
@@ -188,6 +194,8 @@ class AuthController extends Controller
         $user->update(['password' => $data['password']]);
 
         DB::table('password_resets')->where('email', $email)->delete();
+        // Cabut semua sesi lama akun ini (kode reset membatalkan sesi aktif).
+        DB::table('sessions')->where('user_id', $user->id)->delete();
         ActivityLog::record($user->id, null, 'password_reset');
 
         return redirect()->route('login')->with('ok', 'Kata sandi berhasil diatur ulang. Silahkan masuk dengan kata sandi baru.');

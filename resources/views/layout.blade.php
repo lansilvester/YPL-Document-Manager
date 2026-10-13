@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<style>
+<style nonce="{{ csp_nonce() }}">
 @layer components {
   /* ============================================================
      Design tokens BAB 16 — sumber tunggal warna, radius, bayangan,
@@ -207,7 +207,7 @@
     </div>
   </div>
 </footer>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   // Toggle menu mobile (hamburger)
   var navToggle = document.getElementById('nav-toggle');
@@ -256,7 +256,7 @@
 })();
 </script>
 {{-- Notifikasi global ala SweetAlert untuk setiap simpan/ubah --}}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function () {
   var navy = '#002f80', red = '#c90018';
 

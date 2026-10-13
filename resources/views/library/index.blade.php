@@ -13,7 +13,7 @@
 </div>
 
 <h2 class="text-lg font-extrabold tracking-tight text-slate-900 mt-6 mb-3">THE YPL HANDBOOK COLLECTION</h2>
-<style>
+<style nonce="{{ csp_nonce() }}">
   .book { position: relative; aspect-ratio: 3/4.2; border-radius: 4px 12px 12px 4px; transition: transform .3s ease, box-shadow .3s ease; box-shadow: 0 10px 24px -12px rgba(0,20,60,.5); }
   .book:hover { transform: translateY(-6px) rotateY(-6deg); box-shadow: 0 24px 40px -16px rgba(0,20,60,.55); }
   .book::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 14px; border-radius: 4px 0 0 4px; background: linear-gradient(90deg, rgba(0,0,0,.45), rgba(255,255,255,.25) 55%, rgba(0,0,0,.25)); }

@@ -6,7 +6,7 @@
 <title>{{ $document->title }} — Reader Mode · YPL</title>
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<style>
+<style nonce="{{ csp_nonce() }}">
   @include('components.tokens')
   .grad-navy { background: var(--ypl-grad-navy); }
   .grad-red { background: var(--ypl-grad-red); }
@@ -222,7 +222,7 @@
   </div>
 </footer>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const PDF_URL = @json($document->fileUrl());
 const START_PAGE = @json(auth()->check() && $position ? (int) $position->page : 1);
