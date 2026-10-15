@@ -5,233 +5,261 @@
 
 ![Home — desktop](presentasi/screenshots/desktop-home.png)
 
-- **Status (13 Okt 2026):** 215 tests lolos (1178 assertions) · 117 routes web + 84 endpoint REST API · branch `main`
+- **Status:** 215 tests lolos (1178 assertions) · 202 routes (114 web + 88 REST API) · branch `main`
 - **Repo:** `lansilvester/YPL-Document-Manager`
-- **REST API:** [`docs/API.md`](docs/API.md) — 84 endpoint `/api/v1` (Sanctum token), dokumentasi lengkap.
-- **Presentasi progress:** [`presentasi/LOSNITO-Progress-Report.pptx`](presentasi/LOSNITO-Progress-Report.pptx) (18 slide, desktop + mobile)
 
 ---
 
-## 1. Tentang
+## 📖 Panduan Membaca Repo Ini
 
-Bukan sekadar repository PDF, melainkan satu rumah digital untuk:
+Pilih jalur sesuai kebutuhan Anda:
 
-1. **Knowledge** — bookshelf 10 Handbook (B01–B10), dokumen Policy/SOP/Form/WI, sistem operasional, FAQ, agenda.
-2. **Governance** — Document Passport, lifecycle, versioning + snapshot, approval workflow, relasi antar-dokumen, impact map graf 2-hop.
-3. **Community** — direktori orang/unit/peran, kalender agenda, etalase publik (Insight), layanan pengajuan.
-
-Alur pakai tipikal: `Home → /perpustakaan → /baca/{slug} → /governance/{slug} → /tanya`.
-
----
-
-## 2. Progress per Phase (Blueprint BAB 18)
-
-| Phase | Status (12 Okt 2026) |
+| Saya ingin… | Buka… |
 |---|---|
-| 1 Foundation (IA, taxonomy, Library Mode) | ✅ Selesai |
-| 2 Living Books (bookshelf B01–B10, book detail, Reader Mode) | ✅ Selesai |
-| 3 Governance (passport, lifecycle, versioning, approval, relasi, impact map) | ✅ Selesai (version control nyata: bump otomatis + revisi saat edit + "What changed?", snapshot per versi, otomasi review-due + **archive policy** retensi otomatis terjadwal) |
-| 4 Services (forms, workflow, My Requests) | ✅ Selesai (kurang: integrasi Odoo) |
-| 5 Intelligence (universal search, Ask YPL, rekomendasi, graph) | ✅ Fungsional — search + Ask YPL v1 + rekomendasi + graf 2-hop permission-aware + halaman **Peta Pengetahuan `/peta-pengetahuan`** |
-| 6 Ecosystem (role dashboards, analytics, Odoo) | 🔄 Berjalan — Community, Calendar, Insight sudah nyata (prioritas-1); dashboard per peran (`/dashboard`, audience-aware) selesai |
-
-Phase 1–5 tuntas; Phase 6 berjalan: integrasi Odoo menunggu API (placeholder di `/layanan`) · feature-frozen 30 Okt. **Update terbaru (13 Okt):** Event/agenda jadi first-class knowledge (**CRUD staff/admin/superadmin** di `/staff/agenda` — kelola dari Kalender, dash admin, dan nav staf; slug stabil, activity log, badge aksen baru).
-
-Update terbaru (8–12 Okt): Event + FAQ jadi first-class knowledge · graf node-link 2-hop permission-aware di impact map ·
-halaman **Peta Pengetahuan** `/peta-pengetahuan` + blok **"Terkait dengan topik ini"** di detail dokumen · dashboard per peran
-**`/dashboard`** audience-aware (`users.audience`) · penetapan audiens oleh Admin/SA + **pengajuan audiens** dari profil (disetujui Admin/SA, kolom `role_requests.requested_audience`) · seeder demo audiens opsional (`--class=AudienceDemoSeeder`) · Community/Calendar/Insight nyata · **tipe governance penuh** (organization/risk/compliance/quality/document_control) · **sitasi Ask YPL section-level** (§ heading) · **Unit & Kontak PIC** dengan CRUD admin + **PIC publik di pencarian** · thumbnails lazy + catatan pembaca per halaman di Reader · eliminasi N+1 doc-card.
+| Presentasi ke atasan / memahami aplikasi secara umum | [§1 Presentasi](#1-presentasi--dokumentasi-visual) → [`presentasi/README.md`](presentasi/README.md) |
+| Melihat daftar fitur per halaman web | [§2 Katalog Fitur](#2-katalog-fitur) |
+| Integrasi / konsumsi REST API (mobile, frontend lain) | [§3 REST API](#3-rest-api--apiv1) → [`docs/API.md`](docs/API.md) |
+| Tahu rencana fitur berikutnya | [§4 Roadmap](#4-roadmap--fitur-ke-depan) |
+| Develop / deploy / testing | [§5 Developer Essentials](#5-developer-essentials) |
 
 ---
 
-## 3. Fitur Utama
+## 1. Presentasi & Dokumentasi Visual
 
-### Library & Reader
-- **Home `/`** — hero + universal search, quick actions **role-aware** (urutan + scope per peran, `Role::orderedQuick()`), kartu Explore tersaring scope koleksi (`scopedExplore()`), blok **"Untuk Anda"**, What's New, YPL Today (deadline review nyata; pantauan review & layanan hanya untuk peran operasional).
-- **Library `/perpustakaan`** — bookshelf 10 Handbook B01–B10 (buku 3D), filter koleksi, book detail (cover besar, TOC, Open Book, Bookmark).
+Panduan lengkap (teknis + non-teknis): [`presentasi/README.md`](presentasi/README.md).
 
-![Library — desktop](presentasi/screenshots/desktop-library.png)
+### 1.1 Slide deck
 
-- **Reader `/baca/{slug}`** — **default two-page spread di desktop**, single-page adaptif di mobile (BAB 20), page-flip 550ms + reduced-motion, TOC drawer, lompat halaman + grid, search-in-book, toolbar (Contents/Search/Bookmark/Aa/Ask YPL/counter/Reading %), keyboard + swipe, persist posisi & preferensi, thumbnails lazy, catatan per halaman, panel rekomendasi. **Dokumen bersumber editor** memakai **Structured HTML Reader** (BAB 8/16): konten HTML ter-sanitasi + daftar **Bagian Dokumen** (heading `h2` ber-anchor) + progres baca berbasis scroll. **Ask YPL inline** (konteks dokumen, §8/§14) — tanya & ringkas dokumen tanpa meninggalkan Reader; sumber dibuka di tab baru.
+| Deck | Isi | Kapan dipakai |
+|---|---|---|
+| [`YPL-SDL-Laporan-Lengkap.pptx`](presentasi/YPL-SDL-Laporan-Lengkap.pptx) | **Slide utama 22 slide** — angka kunci, kesesuaian briefing 21 BAB, fitur, keamanan, UML, roadmap | Presentasi ke atasan (pakai ini) |
+| `LOSNITO-Progress-Report.pptx` | Laporan progress 18 slide (versi awal) | Arsip |
+| `ERD-DFD-UseCase.pptx` | Slide diagram UML (versi awal) | Arsip |
 
-![Reader — desktop](presentasi/screenshots/desktop-reader.png)
+### 1.2 Dokumen sumber & diagram
 
-### Dokumen & Governance
-- **Design system** — token warna institusi (navy/red/blue + varian), radius, bayangan, ring fokus, dan gerak didefinisikan sekali sebagai CSS variables (`--ypl-*`) di partial bersama `resources/views/components/tokens.blade.php` (dipakai layout utama, Reader, dan embed). Seluruh tampilan mengonsumsinya lewat utility `var(--ypl-*)` dan komponen kanonis (`.btn-primary`, `.btn-accent`, `.field`, `.page-title`, `.grad-navy`, `.brand-line`, dst.) sehingga perubahan tema cukup di satu tempat (BAB 16).
-- **Dokumen** — unggah PDF (maks 9 MB), tulis via editor (sanitasi HTML), unduh PDF/HTML, semat (embed), suka, bagikan, Dokumen Saya, visibilitas public/restricted/private.
-- **Governance `/governance`** — Document Passport (DOC ID, tipe, owner, approver, PIC, effective/review, klasifikasi, status, audience, unit), lifecycle `draft → review → approval → active → review-due → archived`, approval workflow, View History + snapshot isi per versi + **"What changed?"** (diff bidang antar revisi), relasi Handbook→Policy→SOP→Form→PIC→System, impact map graf 2-hop, listing filter tipe/status/audience/unit, ekspor CSV (throttled). **Version control nyata:** nomor versi naik otomatis saat edit (bila tidak diisi eksplisit), setiap perubahan metadata/isi mencatat revisi + catatan perubahan. **Archive policy (BAB 13):** dokumen `review_due` yang melewati masa retensi (default 1095 hari, diatur SA) diarsipkan otomatis via `governance:archive-stale` (dry-run tersedia). **Notifikasi governance:** review-due & arsip otomatis mengirim notifikasi in-app (lonceng + badge di header, pusat notifikasi `/notifikasi` dengan tandai-baca per item/semua; email otomatis bila mailer produksi aktif). Tipe dokumen mencakup governance penuh: `policy, regulation, standard, sop, work_instruction, decision, organization, risk, compliance, quality, document_control, form, evidence, handbook, other`.
+| File | Isi |
+|---|---|
+| [`YPL Smart Digital Library Website.docx`](presentasi/YPL%20Smart%20Digital%20Library%20Website.docx) | Briefing awal — sumber requirements (21 BAB) |
+| [`Use Case Diagram`](presentasi/Use%20Case%20Diagram%20—%20YPL%20Smart%20Digital%20Library%20(LOSNITO).png) | Aktor vs fitur (Tamu → Super Admin) |
+| [`ERD`](presentasi/ERD%20—%20YPL%20Smart%20Digital%20Library%20(LOSNITO).png) | 23 tabel + 29 FK, digambar dari skema MySQL aktual (`presentasi/generate_erd.py`) |
 
-![Governance — desktop](presentasi/screenshots/desktop-governance.png)
+### 1.3 Screenshot (`presentasi/screenshots/`)
 
-### Services, Systems, Community
-- **Services `/layanan`** — katalog 8 layanan ("Saya ingin…"), pengajuan + Permintaan Saya, kelola + putusan staff (`pending → approved/rejected → done`).
-- **Systems `/sistem`** — registri 8 sistem operasional (Odoo, Akademik, Asrama, HR, Keuangan, Fleet, Maintenance, ICT) + dokumen tertaut.
-- **Community `/community`** — direktori unit/peran/orang (login untuk direktori orang) + **kontak PIC publik** (email/telepon) + pengetahuan komunitas (FAQ).
+| Desktop | Mobile (390px) |
+|---|---|
+| Home, Library, Reader, Governance, Search, Ask, Community, Calendar, Insight, Systems | Home, Library, Reader, Search, Ask |
 
-![Community — desktop](presentasi/screenshots/desktop-community.png)
+### 1.4 Urutan presentasi yang disarankan
 
-- **Calendar `/calendar`** — agenda/event nyata + detail `/calendar/{slug}`. **Kelola Agenda `/staff/agenda`** untuk staff/admin/super admin: tambah/ubah/hapus (kategori, jadwal, lokasi, visibilitas publik/internal) dengan slug URL stabil + activity log.
-- **Insight `/insight`** — etalase publik: angka (dokumen publik, kali dibaca, agenda, FAQ) + terbaru untuk publik.
-
-![Insight — desktop](presentasi/screenshots/desktop-insight.png)
-
-### Intelligence
-- **Universal Search `/cari`** — dokumen dikelompokkan per tipe + badge versi-status, layanan/aksi (`Start →`), orang (login, tanpa email), **PIC/kontak publik**, FAQ & agenda, panel Ask YPL di atas hasil. Selalu hormati `visibleTo()`.
-
-![Search — desktop](presentasi/screenshots/desktop-search-query.png)
-
-- **Peta Pengetahuan `/peta-pengetahuan`** — halaman eksplorasi graf knowledge lintas koleksi (BAB 12): pilih dokumen pusat, render graf node-link 2-hop (dokumen, sistem, agenda, FAQ, PIC) dengan **kontrol kedalaman 1/2 dan simpul PIC yang bisa diklik** menuju kontak publik (`/community#kontak-pic`), legenda warna, fallback daftar teks untuk aksesibilitas. Permission-aware: simpul privat tidak pernah tampil untuk tamu. Blok **"Terkait dengan topik ini"** muncul di detail dokumen biasa & governance dengan tautan langsung ke peta.
-
-- **Ask YPL `/tanya`** — jawaban ekstraktif **bersitasi section-level** (§ heading) dari knowledge sesuai otoritas user; driver Gemini untuk testing — gagal/timeout otomatis fallback ekstraktif. Tamu → publik; anggota → +restricted + milik sendiri; admin → semua. Tiap pertanyaan diaudit ke `activity_logs`. Endpoint sama menyajikan **JSON** untuk panel inline Reader (ter-scoped ke dokumen yang dibaca).
-
-![Ask YPL — desktop](presentasi/screenshots/desktop-ask.png)
-
-- **Recommendations** — skor berbobot 6 sinyal (relasi 30, kategori 20, tag 20, penulis/co-read/sistem @10), query batch tanpa query per kandidat atau seed, maksimal 10 dokumen baca + 10 bookmark terbaru sebagai seed dan 200 kandidat. Daftar dokumen memakai scope `forCard()` agar hanya kolom/relasi yang dirender yang diambil; rekomendasi tampil di detail dokumen + drawer Reader.
-
-### Akun & Peran
-- Registrasi/login, reset password (kode 8 karakter dikirim ke email terdaftar — tidak pernah ditampilkan di layar), profil + avatar + ganti password, pengajuan kenaikan peran, panel staff/admin/superadmin.
-- Peran: `anggota` (baca publik/restricted, unggah, ajukan) · `staff` (+kelola dokumen, proses layanan) · `admin` (+kategori/pengguna, publish) · `superadmin` (pengaturan web + definisi peran). Registrasi → `anggota`.
-- **Dashboard Saya `/dashboard`** — satu templat role-aware dengan seksi berbeda per audiens (`siswa`, `orang_tua`, `guru`, `karyawan`, `pimpinan`, `mitra`, `publik`; kolom `users.audience`, fallback ke peran sistem). Seksi: ringkasan, agenda, koleksi, formulir, review jatuh tempo, persetujuan (staff/admin), layanan menunggu, permintaan saya, plus rekomendasi personal. **Mitra** mendapat seksi panduan mitra + kontak/kolaborasi + resource publik; **publik** mendapat profil & publikasi institusi + pendidikan/program. Audiens ditetapkan langsung oleh Admin/SA, atau diajukan pengguna dari profil lalu disetujui Admin/SA.
-
-### REST API `/api/v1`
-- **84 endpoint** JSON dengan autentikasi **Sanctum personal access token** (`Authorization: Bearer <token>`) — dokumentasi lengkap di [`docs/API.md`](docs/API.md).
-- Cakupan: autentikasi (`login`/`register`/`me`/`logout`), katalog publik (kategori, sistem, FAQ, unit, kontak, agenda, insight, community, help, layanan), dokumen (baca/unggah/ubah/hapus + konten + terkait), governance (passport, versi, impact map, transisi, relasi), pencarian & Ask YPL, profil & interaksi (bookmark, like, catatan, notifikasi), layanan, panel admin, dan panel Super Admin (pengguna, peran, pengaturan).
-- Otorisasi memakai middleware peran yang sama dengan web (`staff`/`admin`/`superadmin`) **dan** aturan visibilitas dokumen `scopeVisibleTo()` — tidak ada kebocoran dokumen privat.
+1. Buka `YPL-SDL-Laporan-Lengkap.pptx` (sudah sistematis 22 slide).
+2. Demo aplikasi hidup: Beranda → Perpustakaan → Baca → Tanya.
+3. Tutup dengan roadmap (§4): Odoo terakhir, lalu go-live bertahap.
 
 ---
 
-## 4. Tech Stack
+## 2. Katalog Fitur
+
+| Area | Rute Web | Inti |
+|---|---|---|
+| Home | `/` | Hero + universal search, quick action role-aware, blok "Untuk Anda", YPL Today |
+| Library | `/perpustakaan`, `/perpustakaan/{kategori}` | Bookshelf 10 Handbook B01–B10 (buku 3D), filter koleksi, book detail |
+| Reader | `/baca/{slug}` | Two-page desktop / single mobile, flip + TOC + search-in-book, posisi & preferensi tersimpan, thumbnail lazy, catatan per halaman, Ask inline |
+| Dokumen | `/dokumen`, `/dokumen/{slug}`, `/unggah`, `/tulis` | Unggah PDF (≤9 MB), editor HTML tersanitasi, unduh PDF/HTML, embed, suka, bagikan, Dokumen Saya; visibilitas public/restricted/private |
+| Governance | `/governance`, `/governance/{slug}`, `/versi`, `/impact` | Document Passport, lifecycle `draft → review → approval → active → review-due → archived`, approval workflow, versioning + snapshot + "What changed?", relasi, impact map 2-hop, ekspor CSV |
+| Search & Ask | `/cari`, `/tanya` | Universal search per tipe + panel Ask YPL bersitasi section-level (permission-aware, fallback ekstraktif) |
+| Peta Pengetahuan | `/perpustakaan/peta-pengetahuan` | Graf node-link 2-hop (dokumen, sistem, agenda, FAQ, PIC), kontrol kedalaman, PIC klikabel |
+| Services | `/layanan`, `/layanan/minta/{tipe}`, `/permintaan-saya` | Katalog 8 layanan ("Saya ingin…"), workflow `pending → approved/rejected → done` |
+| Community | `/community` | Direktori unit/peran/orang (login), kontak PIC publik, FAQ komunitas |
+| Calendar | `/calendar`, `/calendar/{slug}`, `/staff/agenda` | Agenda nyata + kelola agenda staff/admin/SA (slug stabil, activity log) |
+| Insight | `/insight` | Etalase publik: angka + dokumen terbaru |
+| Dashboard | `/dashboard` | Role-aware per 7 audiens (siswa, orang_tua, guru, karyawan, pimpinan, mitra, publik) |
+| Akun & Peran | `/profil`, `/admin/*`, `/sa/*` | Registrasi/login, reset via kode email, avatar, pengajuan peran/audiens, panel staff/admin/superadmin |
+
+Detail tiap fitur + peran: [`docs/API.md` §3](docs/API.md) (matriks hak akses) dan slide deck (§1.1).
+
+---
+
+## 3. REST API (`/api/v1`)
+
+Dokumentasi lengkap + contoh request/response: [`docs/API.md`](docs/API.md).
+Base URL: `{APP_URL}/api/v1`. Format respons: `{ message, data }` / koleksi paginasi `{ data, meta }`.
+
+Legenda **Auth**: `—` publik · `A` anggota (token Sanctum) · `S` staff · `AD` admin · `SA` superadmin.
+Otorisasi memakai middleware peran yang sama dengan web + `scopeVisibleTo()` — dokumen privat tidak bocor.
+
+### 3.1 Mulai cepat (dapat token)
+
+```bash
+curl -s -X POST {APP_URL}/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"staf@lokon.or.id","password":"Rahasia1!","device_name":"mobile-app"}'
+# → { "data": { "token": "3|ab12...", "token_type": "Bearer", "user": {...} } }
+
+curl -s {APP_URL}/api/v1/documents \
+  -H 'Authorization: Bearer 3|ab12...'
+```
+
+### 3.2 Autentikasi (4 endpoint)
+
+| Method | Path | Auth | Keterangan |
+|---|---|---|---|
+| POST | `/auth/register` | — | Daftar (`anggota`), mengembalikan token |
+| POST | `/auth/login` | — | Login, mengembalikan token |
+| GET | `/auth/me` | A | Profil + hitungan dokumen/bookmark |
+| POST | `/auth/logout` | A | Cabut token aktif |
+
+### 3.3 Katalog Publik (13 endpoint)
+
+| Method | Path | Auth | Keterangan |
+|---|---|---|---|
+| GET | `/categories` | — | Kategori + jumlah dokumen |
+| GET | `/systems`, `/systems/{system:slug}` | — | Registri sistem operasional + detail |
+| GET | `/faqs`, `/faqs/{faq:slug}` | — | FAQ (tamu: publik saja) |
+| GET | `/units`, `/contacts` | — | Unit + kontak PIC publik |
+| GET | `/events`, `/events/{event:slug}` | — | Agenda (tamu: publik; `?category=`) |
+| GET | `/insight` | — | Statistik etalase publik |
+| GET | `/community` | — | Direktori unit & kontak (`people` perlu login) |
+| GET | `/help` | — | FAQ per kategori |
+| GET | `/services` | — | Katalog 8 tipe layanan |
+
+### 3.4 Dokumen (12 endpoint)
+
+| Method | Path | Auth | Keterangan |
+|---|---|---|---|
+| GET | `/documents` | — | Daftar permission-aware (`?q=&category=&type=`) |
+| GET | `/documents/{slug}` | — | Detail dokumen |
+| GET | `/documents/{slug}/content` | — | Isi editor (HTML sanitasi) / URL berkas |
+| GET | `/documents/{slug}/related` | — | Rekomendasi berbobot |
+| POST | `/documents` | A | Unggah PDF (`multipart`, ≤9 MB) |
+| PUT | `/documents/{slug}` | A | Ubah metadata / ganti berkas (policy) |
+| DELETE | `/documents/{slug}` | A | Hapus (policy) |
+| POST | `/documents/{slug}/bookmark`, `/like` | A | Toggle bookmark / suka |
+| GET/POST/DELETE | `/documents/{slug}/notes` (`/{note}`) | A | Catatan pembaca per halaman |
+
+### 3.5 Governance (7 endpoint)
+
+| Method | Path | Auth | Keterangan |
+|---|---|---|---|
+| GET | `/governance/documents` | — | Listing terfilter (tipe/status/audiens/unit) |
+| GET | `/governance/documents/{slug}` | — | Passport dokumen |
+| GET | `…/versions`, `…/impact-map` | — | Riwayat versi + graf impact |
+| POST | `/documents/{slug}/transition` | A | Transisi lifecycle (policy per target status) |
+| POST/DELETE | `/documents/{slug}/relations` (`/{relation}`) | A | Kelola relasi (tepat satu target) |
+
+### 3.6 Pencarian & Ask YPL (2 endpoint)
+
+| Method | Path | Auth | Keterangan |
+|---|---|---|---|
+| GET | `/search?q=` | — | Cari permission-aware per grup |
+| POST | `/ask` | — | Tanya jawab bersitasi (`{question, doc?}`) |
+
+### 3.7 Profil & Interaksi (12 endpoint)
+
+| Method | Path | Auth | Keterangan |
+|---|---|---|---|
+| PATCH/PUT/GET/POST | `/profile`, `/profile/password`, `/profile/stats`, `/profile/role-request` | A | Profil, ganti password, statistik, pengajuan peran |
+| GET | `/bookmarks` | A | Bookmark saya |
+| GET/POST | `/notifications`, `/notifications/{id}/read`, `/notifications/read-all` | A | Notifikasi in-app |
+
+> API internal web (sesi, bukan token): `POST /api/dokumen/{slug}/posisi`, `POST /api/preferensi-baca`, `POST|DELETE /api/dokumen/{slug}/catatan` — dipakai Reader untuk autosave.
+
+### 3.8 Layanan (5 endpoint)
+
+| Method | Path | Auth | Keterangan |
+|---|---|---|---|
+| POST | `/service-requests` | A | Ajukan layanan |
+| GET | `/service-requests/my` | A | Permintaan saya |
+| GET | `/service-requests` | S | Kelola semua pengajuan |
+| POST | `/service-requests/{id}/decide` | S | Putusan (`approved/rejected/done`) |
+
+### 3.9 Panel Admin (20 endpoint, `AD`)
+
+Dashboard, analytics, logs · CRUD pengguna · CRUD kategori · CRUD unit · CRUD kontak · persetujuan peran (`/role-requests`, `/approve`, `/reject`).
+
+| Method | Path |
+|---|---|
+| GET | `/admin/dashboard`, `/admin/analytics`, `/admin/logs` |
+| GET/PUT/DELETE | `/admin/users`, `/admin/users/{user}` |
+| GET/POST/PUT/DELETE | `/admin/categories`, `/admin/units`, `/admin/contacts` (+ `/{slug\|id}`) |
+| GET/POST | `/admin/role-requests`, `/admin/role-requests/{id}/approve`, `/admin/role-requests/{id}/reject` |
+
+### 3.10 Panel Super Admin (10 endpoint, `SA`)
+
+| Method | Path |
+|---|---|
+| GET | `/sa/dashboard` |
+| GET/PUT/DELETE | `/sa/users`, `/sa/users/{user}/role`, `/sa/users/{user}` |
+| GET/PUT | `/sa/settings` |
+| GET/POST/PUT/DELETE | `/sa/roles`, `/sa/roles/{role}` |
+
+---
+
+## 4. Roadmap & Fitur Ke Depan
+
+### 4.1 Status phase (Blueprint BAB 18)
+
+| Phase | Status |
+|---|---|
+| 1 Foundation · 2 Living Books · 3 Governance · 4 Services · 5 Intelligence | ✅ Selesai |
+| 6 Ecosystem (role dashboard, analytics, community) | ✅ Selesai |
+| Hardening keamanan (reset via email, CSP nonce, privasi staff, SMTP) | ✅ Selesai |
+
+### 4.2 Rencana berikutnya
+
+| # | Fitur | Status | Prioritas | Catatan |
+|---|---|---|---|---|
+| 1 | **Integrasi Odoo** (BAB 16) | 📋 Direncanakan — terakhir | Tinggi | Discovery → read-only sync `systems` via queue → tulis bila perlu; degradasi anggun bila Odoo offline. Butuh akses server/API dari pihak yayasan |
+| 2 | Checklist go-live produksi | 🟡 Di tangan owner | Tinggi | `APP_DEBUG=false`, `APP_KEY` generate, kredensial MySQL server, `storage:link`, isi kredensial SMTP Zoho, user DB khusus, backup terjadwal |
+| 3 | Hardening lanjutan | 📋 Direncanakan | Sedang | Hapus `unsafe-inline` tersisa di `style-src` (58 atribut `style=""` → kelas CSS); purge history git file dump ber-hash bila repo publik |
+| 4 | Suite MySQL | 📋 Opsional | Rendah | 2 test Ask gagal di transaksi MySQL (artefak FULLTEXT, bukan bug); suite resmi tetap SQLite 215/215 |
+| 5 | Housekeeping `presentasi/` | 💬 Menunggu keputusan | Rendah | 18 MB termasuk 2 pptx arsip; keluarkan bila repo terasa berat (laporan lengkap sudah mencakup semua) |
+
+---
+
+## 5. Developer Essentials
+
+### 5.1 Tech stack
 
 | Lapisan | Teknologi |
 |---|---|
-| Backend | Laravel 13.33, PHP ^8.3 (berjalan 8.5.8), Blade + Eloquent, queue `sync` |
-| Frontend | Tailwind CSS 4 + Vite 8, Blade components, **design tokens** (CSS variables `--ypl-*` di `components/tokens.blade.php`: warna, radius, shadow, ring fokus, motion; diadopsi menyeluruh via `var(--ypl-*)` di semua view) |
-| Database | SQLite (lokal/testing) / MySQL (production), FTS triggers |
-| Library | `barryvdh/laravel-dompdf` (ekspor PDF), `ezyang/htmlpurifier` (sanitasi HTML) |
-| AI | `GeminiLlm` (`gemini-3.8-flash`, testing) + fallback ekstraktif bersitasi |
-| Quality | PHPUnit 12, Laravel Pint, Laravel Boost MCP, GitHub Actions (`laravel.yml`) |
-| Hosting | InfinityFree shared (tanpa SSH/cron/worker) — lihat [`DEPLOY.md`](DEPLOY.md) |
+| Backend | Laravel 13, PHP ^8.3, Blade + Eloquent, queue `sync` |
+| Frontend | Tailwind 4 + Vite, Blade components, design tokens `--ypl-*` |
+| Database | SQLite (lokal/testing) / MySQL (produksi), FULLTEXT + FTS5 |
+| Library | `barryvdh/laravel-dompdf`, `ezyang/htmlpurifier` |
+| AI | Ask YPL ekstraktif bersitasi + driver Gemini opsional (testing) |
+| Quality | PHPUnit 12, Laravel Pint, GitHub Actions |
 
----
-
-## 5. Struktur Proyek
+### 5.2 Struktur
 
 ```text
-app/
-  Http/Controllers/   # 26 controller: Home, Library (termasuk Peta Pengetahuan),
-                      #   Reader, Governance, Notification, Search, Ask, Document, Event, Faq, Staff,
-                      #   Admin, SuperAdmin, RoleDashboard, Unit, Contact, ...
-  Http/Controllers/Api/  # 9 controller REST API v1 (Auth, Catalog, Document, Governance,
-                      #   Search, Service, Account, Admin, SuperAdmin)
-  Http/Resources/     # 14 API Resource (Document, Category, Event, Faq, User, ...)
-  Models/             # 21 model: Document, Category, DocumentRelation,
-                      #   DocumentVersion, Event, Faq, System, Role, Unit, Contact, ...
-  Services/           # AskYpl, RecommendationEngine, ImpactMap, GeminiLlm,
-                      #   HtmlSanitizer, DocumentFiles, WaNumber
-routes/web.php        # 117 routes: public • auth • staff/ • admin/ • sa/
-routes/api.php        # 84 endpoint REST API v1 (Sanctum token)
-docs/API.md           # dokumentasi REST API lengkap
-database/migrations/  # 33 migrations (users+audience, documents+FTS, categories B01–B10,
-                      #   relations, versions+snapshot, events, faqs, systems, units, contacts,
-                      #   personal_access_tokens, ...)
-resources/views/      # home, library (termasuk peta-pengetahuan), reader, governance,
-                      #   search, ask, portal, dashboard, systems, admin, sa, ...
-tests/Feature/        # 18 file test (±215 tests)
-presentasi/           # slide progress + screenshot desktop & mobile
+app/Http/Controllers/        # 26 controller web (Home, Library, Reader, Governance, ...)
+app/Http/Controllers/Api/    # 9 controller REST API v1
+app/Http/Resources/          # 14 API Resource
+app/Models/                  # 21 model (Document, Category, Event, Faq, ...)
+app/Services/                # AskYpl, RecommendationEngine, ImpactMap, ...
+routes/web.php | routes/api.php
+docs/API.md                   # dokumentasi REST API lengkap
+database/migrations/          # 33 migrations
+tests/Feature/                # 18 file test
+presentasi/                   # slide + diagram + screenshot (lihat §1)
 ```
 
----
-
-## 6. Cara Menjalankan Lokal
+### 5.3 Lokal & kualitas
 
 ```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-touch database/database.sqlite
-php artisan migrate --seed
-npm install && npm run build   # atau npm run dev saat develop
-php artisan serve               # http://localhost:8000
+composer install && cp .env.example .env && php artisan key:generate
+touch database/database.sqlite && php artisan migrate --seed
+npm install && npm run build && php artisan serve   # http://localhost:8000
+php artisan test --compact      # 215 tests, ~5 detik
+vendor/bin/pint --dirty         # rapikan gaya kode
 ```
 
-```bash
-php artisan test --compact      # 176 tests, ~4 detik
-vendor/bin/pint --dirty         # rapikan gaya kode PHP yang diubah
-```
+Akun bawaan: `admin@lokon.or.id` / `password` (ganti setelah masuk!) · Super Admin via `php artisan ypl:superadmin --email=...`.
+Deploy: [`DEPLOY.md`](DEPLOY.md) (InfinityFree, tanpa SSH) — termasuk konfigurasi SMTP Zoho.
 
 ---
 
-## 7. Akun Bawaan (ganti password setelah masuk!)
-
-| Peran | Email | Password |
-|---|---|---|
-| Admin | `admin@lokon.or.id` | `password` |
-| Super Admin | dibuat saat deploy via `php artisan ypl:superadmin --email=...` | diatur saat pembuatan |
-
-Akun demo per audiens (opsional): `php artisan db:seed --class=AudienceDemoSeeder` membuat `demo-{audiens}@lokon.or.id` untuk siswa, orang_tua, guru, karyawan, pimpinan, mitra, publik (password `password`).
-
----
-
-## 8. Testing & Kualitas
-
-- `php artisan test --compact` → **215 passed, 1178 assertions** (13 Okt 2026).
-- Cakupan: Foundation, Reader, Governance (lifecycle penuh, passport, relasi, impact map, version control + archive policy, **notifikasi review/arsip + pusat notifikasi**), Knowledge (sistem tertaut, audience/unit), KnowledgeGraph (permission-aware, halaman Peta Pengetahuan + kontrol kedalaman + PIC klikabel, blok terkait), Ask (privasi dokumen), Search (privasi + pengelompokan), Recommendation (personal + kontekstual), Services, Roles (termasuk beranda role-aware), Dashboard (audience-aware + privasi), doc-card N+1 regression, **Event admin (otorisasi 4 peran, validasi, CRUD + slug stabil + activity log)**, **REST API (autentikasi token, izin per peran, visibilitas dokumen, CRUD, transisi governance, layanan, pencarian)**.
-- Prinsip keamanan yang diuji: dokumen private orang lain **tidak pernah bocor** ke tamu — di search, ask, rekomendasi, graf, maupun **REST API**.
-
----
-
-## 9. Deploy Production
-
-Panduan lengkap: [`DEPLOY.md`](DEPLOY.md). Ringkasnya:
-
-1. Salin `.env.production` → `.env`, sesuaikan `APP_URL`, kredensial MySQL, `DEPLOY_SA_EMAIL`. `APP_DEBUG=false`.
-2. **Konfigurasi SMTP (Zoho Mail)** — kode reset & notifikasi email butuh mailer nyata. Di `.env` produksi:
-   ```
-   MAIL_MAILER=smtp
-   MAIL_HOST=smtp.zoho.com
-   MAIL_PORT=587
-   MAIL_SCHEME=smtp          # 587 = STARTTLS; pakai smtps bila port 465
-   MAIL_USERNAME=noreply@lokon.or.id
-   MAIL_PASSWORD=<app-password Zoho>
-   MAIL_FROM_ADDRESS="noreply@lokon.or.id"
-   MAIL_FROM_NAME="${APP_NAME}"
-   ```
-   Uji sebelum go-live: `php artisan ypl:mail-test email-anda@lokon.or.id` (email percobaan; cek juga folder spam).
-3. Upload isi `public/` → `htdocs/`; upload app (sejajar `htdocs`); `storage/` writable.
-4. Jalankan migrasi dari lokal (tanpa SSH): arahkan `DB_*` ke MySQL produksi → `php artisan migrate --force && php artisan db:seed --force && php artisan ypl:superadmin --email=superadmin@lokon.or.id`. (Rute `/deploy/{secret}` sudah dihapus demi keamanan — lihat [`DEPLOY.md`](DEPLOY.md).)
-
-Batasan InfinityFree: PDF ≤ 9 MB · tanpa worker/cron (semua `sync`) · seed tanpa 15 PDF besar dev.
-
----
-
-## 10. Tampilan Mobile
-
-Aplikasi responsif penuh — contoh Home dan Library di viewport 390px:
-
-| Home (mobile) | Library (mobile) |
-|---|---|
-| ![Home — mobile](presentasi/screenshots/mobile-home.png) | ![Library — mobile](presentasi/screenshots/mobile-library.png) |
-
-| Reader (mobile) | Search & Ask (mobile) |
-|---|---|
-| ![Reader — mobile](presentasi/screenshots/mobile-reader.png) | ![Search — mobile](presentasi/screenshots/mobile-search.png) ![Ask — mobile](presentasi/screenshots/mobile-ask.png) |
-
----
-
-## 11. Sisa Pekerjaan / Roadmap
-
-- **Phase 5:** ✅ Selesai — visualisasi Knowledge Graph penuh (halaman Peta Pengetahuan + blok terkait & graf impact map).
-- **Phase 6:** Role Dashboards ✅ selesai (`/dashboard` audience-aware penuh 7 audiens termasuk mitra & publik) · Analytics dashboard dari `activity_logs` ✅ selesai · Integrasi Odoo (terakhir; API akan disediakan).
-- **Hardening (uji keamanan):**
-  - **Reset password aman** — kode 8 karakter dikirim ke email terdaftar via Mailable (mailer produksi), tak pernah tampil di respons; respons seragam anti-enumerasi; semua sesi lama akun dicabut saat reset.
-  - **Privasi ruang staff** — dokumen `private` milik orang lain tak tampil di `/staff/dokumen`.
-  - **CSP ketat + nonce** — script hanya dari self/CDN dengan `nonce` per-request; tanpa `unsafe-inline` untuk script; `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`; HSTS otomatis saat HTTPS.
-  - **Ekspor governance** dipindah ke dalam `auth` + `throttle:sensitive`.
-  - **Cookie sesi produksi** — `.env.example`: `SESSION_ENCRYPT=true`, `SESSION_SECURE_COOKIE=true`, `SESSION_SAME_SITE=lax`, `SESSION_HTTP_ONLY=true`.
-  - **Sembunyikan versi PHP** — set `expose_php=Off` di `php.ini` server (header `X-Powered-By` juga dihapus middleware).
-  - Rate limiter sensitif (`login`/`register`/`uploads`/`interactions`); rute `/deploy/{secret}` telah dihapus.
-
----
-
-## 12. Lisensi
+## 6. Lisensi
 
 Kerangka Laravel berlisensi [MIT](https://opensource.org/licenses/MIT). Konten/dokumen YPL milik Yayasan Pendidikan Lokon.
